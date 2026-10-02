@@ -8,6 +8,9 @@ import SwiftUI
     terminalConfiguration: TerminalConfiguration {
         // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
         $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
+        // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
+        // sans ça, le défilement est deux fois plus lent que dans Ghostty.
+        $0.withCustom("mouse-scroll-multiplier", "precision:2")
         // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
         // on les rend au menu de l'app.
         for key in ["t", "n", "d", "shift+d", "[", "]", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {

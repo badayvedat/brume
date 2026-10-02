@@ -74,6 +74,16 @@ private struct TerminalPane: View {
                     Color.black.opacity(0.3).allowsHitTesting(false)
                 }
             }
+            .overlay {
+                ScrollbarOverlay(
+                    position: state.scrollbar.map {
+                        ScrollbarPosition(total: Int($0.total), offset: Int($0.offset), visible: Int($0.len))
+                    },
+                    isDark: state.backgroundColor.isDark,
+                    onScroll: { state.attachedPlatformView?.scrollWheel(with: $0) },
+                    onScrollToRow: { state.surface?.scrollToRow(UInt($0)) }
+                )
+            }
             .onChange(of: state.isFocused) { _, isFocused in
                 if isFocused { onFocus() }
             }
@@ -89,5 +99,11 @@ struct TerminalWindowChrome: ViewModifier {
             .navigationTitle(state.title)
             // La barre de titre prend la couleur du terminal, comme dans Ghostty.
             .containerBackground(Color(state.backgroundColor), for: .window)
+    }
+}
+
+private extension TerminalColor {
+    var isDark: Bool {
+        0.299 * Double(red) + 0.587 * Double(green) + 0.114 * Double(blue) < 128
     }
 }
