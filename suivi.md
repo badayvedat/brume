@@ -27,7 +27,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 ## 3. Base d'un terminal moderne (au niveau de Ghostty)
 
 - [x] nano en SSH : garder `xterm-ghostty` sur le Mac, installer la fiche sur le serveur ou se replier sur `xterm-256color` (options `ssh-env` et `ssh-terminfo` de Ghostty)
-- [ ] Coloration syntaxique des commandes active par défaut
+- [x] Coloration syntaxique des commandes active par défaut
 - [ ] Autocomplétion depuis l'historique (texte grisé) active par défaut
 - [ ] Onglets (Cmd+T) et nouvelle fenêtre (Cmd+N) : partager un seul `TerminalController`, aujourd'hui chaque fenêtre crée le sien
 - [ ] Splits : côte à côte (Cmd+D), dessous (Cmd+Shift+D), passer de l'un à l'autre

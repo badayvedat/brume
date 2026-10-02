@@ -33,6 +33,12 @@ cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 # Dans Contents/Resources : codesign refuse tout ajout à la racine de l'app (voir Patches/).
 cp -R "$(dirname "$BIN_PATH")"/*.bundle "$APP_BUNDLE/Contents/Resources/"
 
+mkdir -p "$APP_BUNDLE/Contents/Resources/zsh"
+# Seulement ce qui tourne : ses README sont des liens vers docs/, que codesign refuse une fois cassés.
+rsync -a --prune-empty-dirs --exclude .git --exclude tests --exclude test-data \
+    --include '*/' --include '*.zsh' --include .version --include .revision-hash --include COPYING.md --exclude '*' \
+    Vendor/zsh-syntax-highlighting "$APP_BUNDLE/Contents/Resources/zsh/"
+
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 fi
