@@ -34,10 +34,14 @@ cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 cp -R "$(dirname "$BIN_PATH")"/*.bundle "$APP_BUNDLE/Contents/Resources/"
 
 mkdir -p "$APP_BUNDLE/Contents/Resources/zsh"
-# Seulement ce qui tourne : ses README sont des liens vers docs/, que codesign refuse une fois cassés.
-rsync -a --prune-empty-dirs --exclude .git --exclude tests --exclude test-data \
-    --include '*/' --include '*.zsh' --include .version --include .revision-hash --include COPYING.md --exclude '*' \
-    Vendor/zsh-syntax-highlighting "$APP_BUNDLE/Contents/Resources/zsh/"
+# Seulement ce qui tourne : les README de zsh-syntax-highlighting sont des liens vers docs/,
+# que codesign refuse une fois cassés.
+for plugin in zsh-syntax-highlighting zsh-autosuggestions; do
+    rsync -a --prune-empty-dirs --exclude .git --exclude tests --exclude test-data --exclude src --exclude spec \
+        --include '*/' --include '*.zsh' --include .version --include .revision-hash --include VERSION \
+        --include COPYING.md --include LICENSE --exclude '*' \
+        "Vendor/$plugin" "$APP_BUNDLE/Contents/Resources/zsh/"
+done
 
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"

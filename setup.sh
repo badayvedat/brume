@@ -31,11 +31,13 @@ if [ ! -f "$DEST/.brume-stamp" ] || [ "$(cat "$DEST/.brume-stamp")" != "$STAMP" 
     echo "libghostty-spm $TAG prêt."
 fi
 
-HL_TAG="0.8.0"
-HL_COMMIT="db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e"
-HL_DEST="Vendor/zsh-syntax-highlighting"
-
-if [ "$(git -C "$HL_DEST" rev-parse HEAD 2>/dev/null)" != "$HL_COMMIT" ]; then
-    clone_pinned https://github.com/zsh-users/zsh-syntax-highlighting.git "$HL_TAG" "$HL_COMMIT" "$HL_DEST"
-    echo "zsh-syntax-highlighting $HL_TAG prêt."
-fi
+# Greffons zsh embarqués dans l'app et actifs par défaut.
+pin_plugin() {
+    local name="$1" tag="$2" commit="$3"
+    if [ "$(git -C "Vendor/$name" rev-parse HEAD 2>/dev/null)" != "$commit" ]; then
+        clone_pinned "https://github.com/zsh-users/$name.git" "$tag" "$commit" "Vendor/$name"
+        echo "$name $tag prêt."
+    fi
+}
+pin_plugin zsh-syntax-highlighting 0.8.0 db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e
+pin_plugin zsh-autosuggestions v0.7.1 e52ee8ca55bcc56a17c828767a3f98f22a68d4eb

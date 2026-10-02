@@ -1,0 +1,17 @@
+--- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
++++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
+@@ -139,3 +139,14 @@
+         fi
+     }
+ fi
++
++# Ajout Brume : autocomplétion grisée et coloration des commandes par défaut,
++# sauf si le .zshrc les a déjà chargées. La coloration en dernier, comme elle le demande.
++if (( ! ${+functions[_zsh_autosuggest_start]} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
++    builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
++    # Son hook precmd arrive pendant un precmd : il ne tournerait qu'au prompt suivant.
++    _zsh_autosuggest_start
++fi
++if (( ! ${+ZSH_HIGHLIGHT_VERSION} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
++    builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
++fi
