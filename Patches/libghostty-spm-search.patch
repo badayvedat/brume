@@ -1,0 +1,133 @@
+diff --git a/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift b/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
+index a441bf2..01ee6cd 100644
+--- a/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
++++ b/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
+@@ -181,6 +181,26 @@ final class TerminalCallbackBridge {
+                     )
+                 )
+ 
++        case GHOSTTY_ACTION_START_SEARCH:
++            let needle = action.action.start_search.needle.map { String(cString: $0) } ?? ""
++            (delegate as? any TerminalSurfaceSearchDelegate)?
++                .terminalDidStartSearch(needle: needle)
++
++        case GHOSTTY_ACTION_END_SEARCH:
++            (delegate as? any TerminalSurfaceSearchDelegate)?
++                .terminalDidEndSearch()
++
++        // The core sends -1 for "unknown".
++        case GHOSTTY_ACTION_SEARCH_TOTAL:
++            let total = action.action.search_total.total
++            (delegate as? any TerminalSurfaceSearchDelegate)?
++                .terminalDidUpdateSearchTotal(total < 0 ? nil : Int(total))
++
++        case GHOSTTY_ACTION_SEARCH_SELECTED:
++            let selected = action.action.search_selected.selected
++            (delegate as? any TerminalSurfaceSearchDelegate)?
++                .terminalDidUpdateSearchSelected(selected < 0 ? nil : Int(selected))
++
+         default:
+             TerminalDebugLog.log(
+                 .actions,
+diff --git a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+index d0bb15e..bdacc1b 100644
+--- a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
++++ b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+@@ -24,6 +24,8 @@ struct TerminalPendingPublishes {
+         case desktopNotification
+         case workingDirectory
+         case scrollbar
++        case searchTotal
++        case searchSelected
+         case background
+         case commandFinished
+     }
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+index ea0831b..66b8509 100644
+--- a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+@@ -17,6 +17,7 @@ extension TerminalViewState:
+     TerminalSurfaceDesktopNotificationDelegate,
+     TerminalSurfacePwdDelegate,
+     TerminalSurfaceScrollbarDelegate,
++    TerminalSurfaceSearchDelegate,
+     TerminalSurfaceCommandFinishedDelegate,
+     TerminalSurfaceLifecycleDelegate,
+     TerminalSurfaceTextSelectionRequestDelegate,
+@@ -109,6 +110,28 @@ extension TerminalViewState:
+         onClose?(processAlive)
+     }
+ 
++    public func terminalDidStartSearch(needle: String) {
++        onStartSearch?(needle)
++    }
++
++    public func terminalDidEndSearch() {
++        onEndSearch?()
++    }
++
++    public func terminalDidUpdateSearchTotal(_ total: Int?) {
++        publishSoon(.searchTotal) {
++            guard $0.searchTotal != total else { return }
++            $0.searchTotal = total
++        }
++    }
++
++    public func terminalDidUpdateSearchSelected(_ selected: Int?) {
++        publishSoon(.searchSelected) {
++            guard $0.searchSelected != selected else { return }
++            $0.searchSelected = selected
++        }
++    }
++
+     public func terminalDidRingBell() {
+         // The instant the bell rang, not the instant it was published.
+         let at = Date()
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState.swift b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+index 6aeae41..95f1aca 100644
+--- a/Sources/GhosttyTerminal/State/TerminalViewState.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+@@ -31,6 +31,11 @@ public final class TerminalViewState: ObservableObject {
+     /// update). Drives a host-drawn scrollbar.
+     @Published public internal(set) var scrollbar: TerminalScrollbar?
+ 
++    /// Matches of the running search and the selected one, zero-based (nil
++    /// while unknown or without a search). Brume.
++    @Published public internal(set) var searchTotal: Int?
++    @Published public internal(set) var searchSelected: Int?
++
+     /// The effective config's `background`, or the color a program set with
+     /// OSC 11 while the surface lives.
+     @Published public internal(set) var backgroundColor: TerminalColor
+@@ -67,6 +72,9 @@ public final class TerminalViewState: ObservableObject {
+ 
+     @Published public var configuration: TerminalSurfaceOptions = .init()
+     public var onClose: ((Bool) -> Void)?
++    /// The core asked to open or close the search UI (Brume).
++    public var onStartSearch: ((String) -> Void)?
++    public var onEndSearch: (() -> Void)?
+     @Published public internal(set) var controller: TerminalController
+ 
+     #if canImport(UIKit)
+diff --git a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+index 2b97d72..49819ef 100644
+--- a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
++++ b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+@@ -263,6 +263,17 @@ public protocol TerminalSurfaceScrollbarDelegate: TerminalSurfaceViewDelegate {
+     func terminalDidUpdateScrollbar(_ scrollbar: TerminalScrollbar)
+ }
+ 
++/// Search reported by the terminal core (Brume). `start_search` and
++/// `search_selection` start one, with the selection as needle for the
++/// latter; `end_search` ends it. Counts are nil while unknown.
++@MainActor
++public protocol TerminalSurfaceSearchDelegate: TerminalSurfaceViewDelegate {
++    func terminalDidStartSearch(needle: String)
++    func terminalDidEndSearch()
++    func terminalDidUpdateSearchTotal(_ total: Int?)
++    func terminalDidUpdateSearchSelected(_ selected: Int?)
++}
++
+ /// User long-pressed to request a selection-page presentation.
+ public struct TerminalTextSelectionRequest: Sendable {
+     /// Viewport text snapshot. Lines separated by `\n`.

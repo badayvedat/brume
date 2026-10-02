@@ -25,4 +25,5 @@ bash build-app.sh            # release
 - Les raccourcis Cmd par défaut de Ghostty (Cmd+D, Cmd+F, Cmd+plus...) sont avalés par le terminal avant le menu, et le paquet ne transmet pas leurs actions : un raccourci de l'app doit être libéré par `keybind = <touche>=unbind` (voir `TerminalWorkspace.swift`).
 - Une vue terminal recréée par SwiftUI tue son shell : garder son identité (volets à plat dans un `ForEach` par identifiant, jamais déplacés d'un conteneur à l'autre).
 - Tout code repris de Muxy (MIT) garde sa mention de copyright dans le dépôt.
+- Pas de `Image(systemName:)` : passer par `SystemSymbol` (`DesignSystem/`). Chargés après le moteur, des symboles sortent vides, au hasard du lancement.
 - Jamais `windowBackgroundDragBehavior(.enabled)` : déplacer la fenêtre par le fond casse la sélection de texte du terminal.

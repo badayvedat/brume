@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct BrumeApp: App {
     init() {
+        SystemSymbol.preload()
         // Le shell hérite de cette variable : le patch zsh y trouve les greffons embarqués.
         if let resources = Bundle.main.resourcePath {
             setenv("BRUME_RESOURCES_DIR", resources, 1)
@@ -23,6 +24,7 @@ struct BrumeApp: App {
                 NewTabButton()
             }
             SplitCommands()
+            SearchCommands()
         }
     }
 }

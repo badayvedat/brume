@@ -18,8 +18,11 @@ struct TerminalSplitView: View {
                     if let state = workspace.states[id], let frame = frames[id] {
                         TerminalPane(
                             state: state,
+                            search: workspace.searches[id],
                             dimmed: workspace.isSplit && id != workspace.focusedID,
-                            onFocus: { workspace.didFocus(id) }
+                            onFocus: { workspace.didFocus(id) },
+                            onLeaveSearch: { workspace.focus(id) },
+                            onCloseSearch: { workspace.endSearch(in: id) }
                         )
                         .frame(width: frame.width, height: frame.height)
                         .offset(x: frame.minX, y: frame.minY)
@@ -63,8 +66,11 @@ private struct SplitHandle: View {
 
 private struct TerminalPane: View {
     @ObservedObject var state: TerminalViewState
+    let search: TerminalSearch?
     let dimmed: Bool
     let onFocus: () -> Void
+    let onLeaveSearch: () -> Void
+    let onCloseSearch: () -> Void
 
     var body: some View {
         TerminalSurfaceView(context: state)
@@ -83,6 +89,16 @@ private struct TerminalPane: View {
                     onScroll: { state.attachedPlatformView?.scrollWheel(with: $0) },
                     onScrollToRow: { state.surface?.scrollToRow(UInt($0)) }
                 )
+            }
+            .overlay(alignment: .topTrailing) {
+                if let search {
+                    TerminalSearchBar(
+                        search: search,
+                        count: SearchCount(total: state.searchTotal, selected: state.searchSelected),
+                        onLeave: onLeaveSearch,
+                        onClose: onCloseSearch
+                    )
+                }
             }
             .onChange(of: state.isFocused) { _, isFocused in
                 if isFocused { onFocus() }

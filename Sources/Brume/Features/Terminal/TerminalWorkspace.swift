@@ -13,7 +13,7 @@ import SwiftUI
         $0.withCustom("mouse-scroll-multiplier", "precision:2")
         // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
         // on les rend au menu de l'app.
-        for key in ["t", "n", "d", "shift+d", "[", "]", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
+        for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
             $0.withCustom("keybind", "super+\(key)=unbind")
         }
     }
@@ -25,6 +25,7 @@ final class TerminalWorkspace {
     private(set) var tree: SplitTree<UUID>
     private(set) var focusedID: UUID
     private(set) var states: [UUID: TerminalViewState] = [:]
+    private(set) var searches: [UUID: TerminalSearch] = [:]
     var onEmpty: () -> Void = {}
 
     init() {
@@ -36,6 +37,10 @@ final class TerminalWorkspace {
 
     var focused: TerminalViewState {
         states[focusedID]!
+    }
+
+    var focusedSearch: TerminalSearch? {
+        searches[focusedID]
     }
 
     var isSplit: Bool {
@@ -75,6 +80,35 @@ final class TerminalWorkspace {
         focusedID = id
     }
 
+    func toggleSearch() {
+        if searches[focusedID] == nil {
+            openSearch(in: focusedID, needle: "")
+        } else {
+            endSearch(in: focusedID)
+        }
+    }
+
+    /// Le moteur répond par `start_search` avec la sélection : voir `makeState`.
+    func searchSelection() {
+        focused.surface?.performBindingAction("search_selection")
+    }
+
+    func endSearch(in id: UUID) {
+        guard let search = searches.removeValue(forKey: id) else { return }
+        search.end()
+        focus(id)
+    }
+
+    private func openSearch(in id: UUID, needle: String) {
+        guard let state = states[id] else { return }
+        if let search = searches[id] {
+            if !needle.isEmpty { search.needle = needle }
+        } else {
+            searches[id] = TerminalSearch(state: state, needle: needle)
+        }
+        searches[id]?.focusField()
+    }
+
     private func close(_ id: UUID) {
         let order = tree.panes
         guard let index = order.firstIndex(of: id) else { return }
@@ -84,6 +118,7 @@ final class TerminalWorkspace {
         }
         tree = remaining
         states[id] = nil
+        searches[id] = nil
         if focusedID == id {
             focus(remaining.panes[max(index - 1, 0)])
         }
@@ -92,6 +127,8 @@ final class TerminalWorkspace {
     private func makeState(_ id: UUID) -> TerminalViewState {
         let state = TerminalViewState(controller: sharedController)
         state.onClose = { [weak self] _ in self?.close(id) }
+        state.onStartSearch = { [weak self] in self?.openSearch(in: id, needle: $0) }
+        state.onEndSearch = { [weak self] in self?.endSearch(in: id) }
         return state
     }
 }

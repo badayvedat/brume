@@ -1,0 +1,82 @@
+import BrumeCore
+import SwiftUI
+
+/// Barre de recherche d'un volet, calquée sur celle de Ghostty.
+struct TerminalSearchBar: View {
+    @Bindable var search: TerminalSearch
+    let count: SearchCount
+    let onLeave: () -> Void
+    let onClose: () -> Void
+
+    @FocusState private var isFieldFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 4) {
+            TextField("Rechercher", text: $search.needle)
+                .textFieldStyle(.plain)
+                .frame(width: 180)
+                .padding(.leading, 8)
+                .padding(.trailing, 50)
+                .padding(.vertical, 6)
+                .background(Color.primary.opacity(0.1), in: .rect(cornerRadius: 6))
+                .overlay(alignment: .trailing) {
+                    if let label = count.label {
+                        Text(label)
+                            .font(.caption)
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .padding(.trailing, 8)
+                    }
+                }
+                .accessibilityValue(count.label ?? "")
+                .focused($isFieldFocused)
+                .onSubmit { search.next() }
+                .onKeyPress(.return, phases: .down) { press in
+                    guard press.modifiers.contains(.shift) else { return .ignored }
+                    search.previous()
+                    return .handled
+                }
+                // Comme Ghostty : Échap rend la main au terminal, puis ferme si le champ est vide.
+                .onExitCommand {
+                    search.needle.isEmpty ? onClose() : onLeave()
+                }
+
+            SearchButton(icon: "chevron.up", label: "Résultat suivant", action: search.next)
+            SearchButton(icon: "chevron.down", label: "Résultat précédent", action: search.previous)
+            SearchButton(icon: "xmark", label: "Fermer la recherche", action: onClose)
+        }
+        .padding(8)
+        .background(.background, in: .rect(cornerRadius: 8))
+        .shadow(radius: 4)
+        .padding(8)
+        // Comme Ghostty : le champ vient d'entrer dans la fenêtre, le focus ne prend qu'un tour plus tard.
+        .onAppear { focusField() }
+        .onChange(of: search.focusRequest) { focusField() }
+    }
+
+    private func focusField() {
+        DispatchQueue.main.async { isFieldFocused = true }
+    }
+}
+
+private struct SearchButton: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            SystemSymbol.image(icon)
+                .foregroundStyle(isHovered ? .primary : .secondary)
+                .padding(.horizontal, 2)
+                .frame(height: 26)
+                .background(isHovered ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .help(label)
+        .onHover { isHovered = $0 }
+    }
+}
