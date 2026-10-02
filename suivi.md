@@ -30,7 +30,8 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Coloration syntaxique des commandes active par défaut
 - [x] Autocomplétion depuis l'historique (texte grisé) active par défaut
 - [x] Onglets (Cmd+T) et nouvelle fenêtre (Cmd+N) : partager un seul `TerminalController`, aujourd'hui chaque fenêtre crée le sien
-- [ ] Splits : côte à côte (Cmd+D), dessous (Cmd+Shift+D), passer de l'un à l'autre
+- [x] Splits : côte à côte (Cmd+D), dessous (Cmd+Shift+D), passer de l'un à l'autre
+- [ ] Redimensionner les splits en glissant la séparation (ratio 0,15 à 0,85 comme Muxy)
 - [ ] Barre de défilement et défilement fluide au trackpad
 - [ ] Recherche dans le terminal (Cmd+F)
 - [ ] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)

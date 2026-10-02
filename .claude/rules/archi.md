@@ -23,7 +23,7 @@ Même idée que l'archi Nuxt : depuis un bouton de l'interface, on remonte vite 
 
 ```
 Sources/
-  BrumeCore/            # Foundation seulement, zéro SwiftUI/AppKit
+  BrumeCore/            # Foundation et CoreGraphics seulement, zéro SwiftUI/AppKit
   Brume/                # app SwiftUI
 Tests/BrumeCoreTests/   # Swift Testing
 ```

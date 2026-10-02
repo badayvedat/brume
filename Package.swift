@@ -12,12 +12,15 @@ let package = Package(
         .package(path: "Vendor/libghostty-spm")
     ],
     targets: [
+        .target(name: "BrumeCore"),
         .executableTarget(
             name: "Brume",
             dependencies: [
+                "BrumeCore",
                 .product(name: "GhosttyTerminal", package: "libghostty-spm")
             ],
             path: "Sources/Brume"
-        )
+        ),
+        .testTarget(name: "BrumeCoreTests", dependencies: ["BrumeCore"])
     ]
 )

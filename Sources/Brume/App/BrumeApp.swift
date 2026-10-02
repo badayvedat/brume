@@ -22,6 +22,7 @@ struct BrumeApp: App {
             CommandGroup(after: .newItem) {
                 NewTabButton()
             }
+            SplitCommands()
         }
     }
 }
