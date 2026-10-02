@@ -1,0 +1,58 @@
+--- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
++++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
+@@ -19,8 +19,9 @@
+ #
+ # Features come from GHOSTTY_SHELL_FEATURES, a comma-separated list the
+ # terminal exports (`cursor`, `cursor:blink`, `cursor:steady`, `title`, …).
+-# Anything else in the list is ignored; sudo, ssh-* and path need a ghostty
+-# binary or change the user's environment, and this integration does neither.
++# Anything else in the list is ignored; sudo and path need a ghostty binary
++# or change the user's environment, and this integration does neither.
++# ssh-env and ssh-terminfo are handled at the end of this file (Brume).
+ #
+ # Loaded by the .zshenv next to it after the user's .zshrc, or sourced by
+ # hand from a .zshrc — both work; it only attaches hooks.
+@@ -98,3 +99,43 @@
+ 
+ add-zsh-hook precmd _ghostty_precmd
+ add-zsh-hook preexec _ghostty_preexec
++
++# Ajout Brume. Les serveurs ne connaissent pas xterm-ghostty : ssh-terminfo
++# y copie la fiche une fois par user@hôte, ssh-env se replie sinon sur
++# xterm-256color. Écrit pour Brume, sans reprendre le code GPL de Ghostty.
++if _ghostty_feature ssh-env || _ghostty_feature ssh-terminfo; then
++    ssh() {
++        emulate -L zsh
++        [[ "$TERM" == xterm-ghostty ]] || { command ssh "$@"; return }
++
++        local installed=0 reuse=()
++        if _ghostty_feature ssh-terminfo; then
++            local target cache socket
++            target="$(command ssh -G "$@" 2>/dev/null | command awk '$1 == "user" { u = $2 } $1 == "hostname" { h = $2 } END { if (h != "") print u "@" h }')"
++            cache="${XDG_CACHE_HOME:-$HOME/.cache}/brume/ssh-terminfo"
++            if [[ -n "$target" ]] && command grep -qxF -- "$target" "$cache" 2>/dev/null; then
++                installed=1
++            elif [[ -n "$target" ]]; then
++                # La connexion d'installation reste ouverte 60 s et sert à la
++                # session : on ne s'authentifie qu'une fois.
++                socket="${TMPDIR:-/tmp}/brume-ssh-$$-$RANDOM"
++                builtin print -r -- "Brume : installation de xterm-ghostty sur ${target#*@}..." >&2
++                if command infocmp -x xterm-ghostty 2>/dev/null | command ssh \
++                    -o ControlMaster=yes -o ControlPath="$socket" -o ControlPersist=60 "$@" \
++                    'infocmp xterm-ghostty >/dev/null 2>&1 || tic -x - >/dev/null 2>&1'; then
++                    installed=1
++                    reuse=(-o "ControlPath=$socket")
++                    command mkdir -p "${cache:h}" && builtin print -r -- "$target" >> "$cache"
++                else
++                    builtin print -r -- "Brume : échec, repli sur xterm-256color." >&2
++                fi
++            fi
++        fi
++
++        if (( installed )) || ! _ghostty_feature ssh-env; then
++            command ssh "${reuse[@]}" "$@"
++        else
++            TERM=xterm-256color command ssh "$@"
++        fi
++    }
++fi

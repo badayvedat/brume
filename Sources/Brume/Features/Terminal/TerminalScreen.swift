@@ -2,7 +2,12 @@ import GhosttyTerminal
 import SwiftUI
 
 struct TerminalScreen: View {
-    @StateObject private var terminal = TerminalViewState()
+    // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
+    @StateObject private var terminal = TerminalViewState(
+        terminalConfiguration: TerminalConfiguration {
+            $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
+        }
+    )
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
