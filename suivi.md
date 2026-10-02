@@ -35,7 +35,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Barre de défilement et défilement fluide au trackpad
 - [x] Recherche dans le terminal (Cmd+F)
 - [x] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)
-- [ ] Nouveau split ou onglet ouvert dans le dossier du terminal actif (comme Ghostty)
+- [x] Nouveau split ou onglet ouvert dans le dossier du terminal actif (comme Ghostty)
 - [ ] Réinitialiser les tailles : texte de tous les terminaux, splits remis à parts égales
 - [ ] Confirmation avant de fermer un terminal où une commande tourne
 - [ ] Raccourcis de l'app interceptés avant le terminal

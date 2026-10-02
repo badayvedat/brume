@@ -1,0 +1,22 @@
+diff --git a/Sources/GhosttyTerminal/Surface/TerminalSurface.swift b/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
+index b676402..18f728b 100644
+--- a/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
++++ b/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
+@@ -180,6 +180,17 @@ public final class TerminalSurface {
+         performBindingAction("jump_to_prompt:\(offset)")
+     }
+ 
++    /// What a surface opened from this one starts with, per the `*-inherit-*`
++    /// options: font size in points (0 for the config's) and working directory
++    /// (nil for the config's). Brume.
++    public func inheritedOptions(
++        for context: TerminalSurfaceContext
++    ) -> (fontSize: Float, workingDirectory: String?) {
++        guard let s = surface else { return (0, nil) }
++        let config = ghostty_surface_inherited_config(s, context.ghosttyValue)
++        return (config.font_size, config.working_directory.map { String(cString: $0) })
++    }
++
+     /// Reveal an absolute scrollback row, where zero is the first row.
+     @discardableResult
+     public func scrollToRow(_ row: UInt) -> Bool {
