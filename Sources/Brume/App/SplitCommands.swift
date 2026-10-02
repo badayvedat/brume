@@ -24,6 +24,8 @@ struct SplitCommands: Commands {
                 .keyboardShortcut(.upArrow, modifiers: [.command, .option])
             Button("Split en dessous") { workspace?.focus(toward: .down) }
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+            Button("Égaliser les splits") { workspace?.equalizeSplits() }
+                .keyboardShortcut("=", modifiers: [.command, .control])
             Divider()
         }
     }

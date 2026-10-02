@@ -13,7 +13,7 @@ import SwiftUI
         $0.withCustom("mouse-scroll-multiplier", "precision:2")
         // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
         // on les rend au menu de l'app.
-        for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
+        for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
             $0.withCustom("keybind", "super+\(key)=unbind")
         }
     }
@@ -63,6 +63,18 @@ final class TerminalWorkspace {
 
     func setRatio(_ ratio: CGFloat, at path: [Int]) {
         tree = tree.settingRatio(ratio, at: path)
+    }
+
+    func equalizeSplits() {
+        tree = tree.equalized()
+    }
+
+    /// Cmd+0 ne remet que le terminal actif, comme Ghostty : ici, toute la fenêtre.
+    func resetSizes() {
+        for state in states.values {
+            state.surface?.performBindingAction("reset_font_size")
+        }
+        equalizeSplits()
     }
 
     func focusNext() {

@@ -107,6 +107,15 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
             : .split(axis, ratio: ratio, first, second.settingRatio(newRatio, at: rest))
     }
 
+    /// Tous les volets à la même taille, comme `equalize_splits` de Ghostty : chaque côté
+    /// pèse le nombre de volets qu'il aligne dans le sens de la division.
+    public func equalized() -> SplitTree {
+        guard case let .split(axis, _, first, second) = self else { return self }
+        let firstWeight = first.weight(along: axis)
+        let ratio = CGFloat(firstWeight) / CGFloat(firstWeight + second.weight(along: axis))
+        return .split(axis, ratio: ratio, first.equalized(), second.equalized())
+    }
+
     public func pane(after pane: Pane) -> Pane? {
         cycle(from: pane, by: 1)
     }
@@ -132,6 +141,11 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         return candidates.min { lhs, rhs in
             Self.distance(frames[lhs]!, origin, direction) < Self.distance(frames[rhs]!, origin, direction)
         }
+    }
+
+    private func weight(along axis: SplitAxis) -> Int {
+        guard case let .split(splitAxis, _, first, second) = self, splitAxis == axis else { return 1 }
+        return first.weight(along: axis) + second.weight(along: axis)
     }
 
     private func cycle(from pane: Pane, by step: Int) -> Pane? {

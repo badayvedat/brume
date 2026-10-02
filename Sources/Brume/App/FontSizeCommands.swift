@@ -13,6 +13,8 @@ struct FontSizeCommands: Commands {
                 .keyboardShortcut("-")
             Button("Taille réelle") { workspace?.changeFontSize(.reset) }
                 .keyboardShortcut("0")
+            Button("Réinitialiser les tailles") { workspace?.resetSizes() }
+                .keyboardShortcut("0", modifiers: [.command, .control])
             Divider()
         }
     }

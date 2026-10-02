@@ -78,4 +78,21 @@ struct SplitTreeTests {
         #expect(tree.neighbor(of: "c", toward: .up) == "b")
         #expect(tree.neighbor(of: "a", toward: .left) == nil)
     }
+
+    @Test func equalizedSharesTheSameAxisByPaneCount() {
+        // a | b | c : chacun un tiers.
+        let tree = SplitTree.pane("a")
+            .splitting("a", axis: .horizontal, adding: "b")
+            .splitting("b", axis: .horizontal, adding: "c")
+            .equalized()
+        let frames = tree.frames(in: CGRect(x: 0, y: 0, width: 90, height: 10))
+        #expect(frames["a"]?.width == 30)
+        #expect(frames["b"]?.width == 30)
+        #expect(frames["c"]?.width == 30)
+    }
+
+    @Test func equalizedCountsACrossSplitAsOne() {
+        let tree = threePanes.settingRatio(0.8, at: []).settingRatio(0.2, at: [1]).equalized()
+        #expect(tree == .split(.horizontal, ratio: 0.5, .pane("a"), .split(.vertical, ratio: 0.5, .pane("b"), .pane("c"))))
+    }
 }
