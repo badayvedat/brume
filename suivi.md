@@ -34,7 +34,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Redimensionner les splits en glissant la séparation (ratio 0,15 à 0,85 comme Muxy)
 - [x] Barre de défilement et défilement fluide au trackpad
 - [x] Recherche dans le terminal (Cmd+F)
-- [ ] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)
+- [x] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)
+- [ ] Nouveau split ou onglet ouvert dans le dossier du terminal actif (comme Ghostty)
+- [ ] Réinitialiser les tailles : texte de tous les terminaux, splits remis à parts égales
 - [ ] Confirmation avant de fermer un terminal où une commande tourne
 - [ ] Raccourcis de l'app interceptés avant le terminal
 - [ ] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt

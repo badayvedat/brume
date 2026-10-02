@@ -25,6 +25,7 @@ struct BrumeApp: App {
             }
             SplitCommands()
             SearchCommands()
+            FontSizeCommands()
         }
     }
 }

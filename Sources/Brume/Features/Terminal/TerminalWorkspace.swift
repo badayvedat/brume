@@ -19,6 +19,13 @@ import SwiftUI
     }
 )
 
+/// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom.
+@MainActor private weak var lastFocused: TerminalViewState?
+
+enum FontSizeChange {
+    case increase, decrease, reset
+}
+
 /// Les terminaux d'une fenêtre (ou d'un onglet) et leur découpage.
 @MainActor @Observable
 final class TerminalWorkspace {
@@ -32,7 +39,7 @@ final class TerminalWorkspace {
         let id = UUID()
         tree = .pane(id)
         focusedID = id
-        states[id] = makeState(id)
+        states[id] = makeState(id, inheriting: lastFocused)
     }
 
     var focused: TerminalViewState {
@@ -49,7 +56,7 @@ final class TerminalWorkspace {
 
     func split(_ axis: SplitAxis) {
         let id = UUID()
-        states[id] = makeState(id)
+        states[id] = makeState(id, inheriting: focused)
         tree = tree.splitting(focusedID, axis: axis, adding: id)
         focus(id)
     }
@@ -72,12 +79,23 @@ final class TerminalWorkspace {
 
     func focus(_ id: UUID) {
         focusedID = id
+        lastFocused = states[id]
         states[id]?.requestFocus()
     }
 
     /// Un clic donne déjà le focus au terminal : on ne fait que suivre.
     func didFocus(_ id: UUID) {
         focusedID = id
+        lastFocused = states[id]
+    }
+
+    func changeFontSize(_ change: FontSizeChange) {
+        let action = switch change {
+        case .increase: "increase_font_size:1"
+        case .decrease: "decrease_font_size:1"
+        case .reset: "reset_font_size"
+        }
+        focused.surface?.performBindingAction(action)
     }
 
     func toggleSearch() {
@@ -124,8 +142,12 @@ final class TerminalWorkspace {
         }
     }
 
-    private func makeState(_ id: UUID) -> TerminalViewState {
+    private func makeState(_ id: UUID, inheriting parent: TerminalViewState?) -> TerminalViewState {
         let state = TerminalViewState(controller: sharedController)
+        // Comme Ghostty : un nouveau terminal part du zoom de celui qui avait le focus.
+        if let size = parent?.surface?.inheritedFontSize, size > 0 {
+            state.configuration.fontSize = size
+        }
         state.onClose = { [weak self] _ in self?.close(id) }
         state.onStartSearch = { [weak self] in self?.openSearch(in: id, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: id) }
