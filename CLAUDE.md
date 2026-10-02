@@ -13,7 +13,7 @@ bash build-app.sh            # release
 
 - Seulement les Command Line Tools sur la machine, pas de Xcode : tout passe par SwiftPM et `build-app.sh`. Jamais de `.xcodeproj` ni de `xcodebuild`.
 - Signer avec le certificat stable « Brume Dev ». En ad-hoc, macOS redemande les permissions (Documents, Bureau...) à chaque build.
-- Claude n'a pas l'enregistrement d'écran : pour vérifier un rendu, demander une capture à Jérémy.
+- Vérifier un rendu : `bash capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran.
 - `swift test` nu ne trouve pas Swift Testing avec les CLT : passer par un wrapper comme `../Yuzu/run-tests.sh`.
 
 ## Contraintes
