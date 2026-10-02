@@ -4,9 +4,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## Décisions
 
-- macOS uniquement : Swift + SwiftUI, moteur GhosttyKit (libghostty).
+- macOS uniquement : Swift + SwiftUI, moteur Ghostty via le paquet libghostty-spm (vue terminal fournie, suit Ghostty officiel).
 - Sans Xcode : `swift build` + script qui fabrique le .app, comme Orby. GhosttyKit téléchargé précompilé.
-- Repo neuf sur le compte GitHub perso, sans historique : on reprend de Muxy (MIT) seulement ce qui sert, en gardant sa mention de licence.
+- Repo neuf sur le compte GitHub perso, sans historique. Muxy (MIT) sert de référence : pièces utiles par étape dans [docs/reprise-muxy.md](docs/reprise-muxy.md).
 - Interface proche de Ghostty en vue terminal : pas de fonctions en trop.
 - DA inspirée de Monocode (MIT) : flou, teinte réglable, image de fond fondue.
 
@@ -19,24 +19,32 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## 2. Reprise de Muxy
 
-- [ ] Lister ce que fait Muxy, trier garder / jeter
-- [ ] Copier uniquement le nécessaire : moteur terminal, sidebar, réglages
-- [ ] Vue terminal aussi épurée que Ghostty
-- [ ] Compiler et lancer un terminal qui marche
+- [x] Lister ce que fait Muxy, trier garder / jeter
+- [x] Moteur : libghostty-spm plutôt que le code de Muxy, incompatible avec ce moteur
+- [x] Vue terminal aussi épurée que Ghostty
+- [x] Compiler et lancer un terminal qui marche
 
-## 3. Base du terminal
+## 3. Base d'un terminal moderne (au niveau de Ghostty)
 
 - [ ] Annoncer `xterm-256color` par défaut (nano en SSH)
 - [ ] Coloration syntaxique des commandes active par défaut
 - [ ] Autocomplétion depuis l'historique (texte grisé) active par défaut
-- [ ] Raccourcis de base (onglets, fermer, nouvelle fenêtre)
+- [ ] Onglets (Cmd+T) et nouvelle fenêtre (Cmd+N)
+- [ ] Splits : côte à côte (Cmd+D), dessous (Cmd+Shift+D), passer de l'un à l'autre
+- [ ] Barre de défilement et défilement fluide au trackpad
+- [ ] Recherche dans le terminal (Cmd+F)
+- [ ] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)
+- [ ] Confirmation avant de fermer un terminal où une commande tourne
+- [ ] Raccourcis de l'app interceptés avant le terminal
+- [ ] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt
+- [ ] Textes d'autorisation macOS (Documents, Bureau...) dans l'Info.plist
 
 ## 4. Réglages en interface
 
 - [ ] Panneau de réglages en sidebar
 - [ ] Opacité et flou
 - [ ] Police et taille du texte
-- [ ] Thèmes de couleurs prêts à choisir
+- [ ] Thèmes de couleurs prêts à choisir (module GhosttyTheme du paquet)
 - [ ] Couleurs de la coloration syntaxique
 - [ ] Image de fond (choix, opacité)
 - [ ] Changements appliqués en direct, sans redémarrer

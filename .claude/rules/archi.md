@@ -25,14 +25,13 @@ Même idée que l'archi Nuxt : depuis un bouton de l'interface, on remonte vite 
 Sources/
   BrumeCore/            # Foundation seulement, zéro SwiftUI/AppKit
   Brume/                # app SwiftUI
-  GhosttyKit/           # module C qui expose libghostty
 Tests/BrumeCoreTests/   # Swift Testing
 ```
 
 ## Règles
 
-- Toute logique testable (presets, thèmes, réglages, complétion, parsing) vit dans `BrumeCore`, avec ses tests. `Brume` ne fait que l'UI et le câblage système (AppKit, GhosttyKit, fichiers).
+- Toute logique testable (presets, thèmes, réglages, complétion, parsing) vit dans `BrumeCore`, avec ses tests. `Brume` ne fait que l'UI et le câblage système (AppKit, moteur Ghostty, fichiers).
 - Une vue passe par le store (`@Environment(XxxStore.self)`), le store appelle le service. Une vue n'appelle pas un service directement.
-- Seul `Brume/Features/Terminal/` importe `GhosttyKit` : le reste de l'app ne connaît pas le moteur.
+- Seul `Brume/Features/Terminal/` importe `GhosttyTerminal` : le reste de l'app ne connaît pas le moteur.
 - Un dossier, et un target SwiftPM, se créent avec leur premier fichier.
 - Une vue qui dépasse ~200 lignes se découpe en sous-vues dans le même dossier de feature.

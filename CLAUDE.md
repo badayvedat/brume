@@ -6,6 +6,7 @@ Terminal macOS perso, simple et beau, qui remplace Ghostty. Étapes et avancemen
 
 ```bash
 bash create-dev-cert.sh      # une fois par machine
+bash setup.sh                # avant un `swift build` nu (build-app.sh le lance seul)
 bash build-app.sh --debug    # build rapide, installe dans /Applications, relance
 bash build-app.sh            # release
 ```
@@ -16,6 +17,7 @@ bash build-app.sh            # release
 
 ## Contraintes
 
-- GhosttyKit s'utilise précompilé (comme le `scripts/setup.sh` de Muxy) : le recompiler demanderait Xcode.
+- Moteur : libghostty-spm, copié dans `Vendor/` (gitignoré) par `setup.sh` qui applique `Patches/`. Ne jamais éditer `Vendor/` à la main : tout changement passe par un patch.
+- Les `.bundle` de ressources SwiftPM vont dans `Contents/Resources` : codesign refuse tout contenu à la racine de l'app, et c'est ce que le patch fait lire au paquet.
 - Tout code repris de Muxy (MIT) garde sa mention de copyright dans le dépôt.
 - Jamais `windowBackgroundDragBehavior(.enabled)` : déplacer la fenêtre par le fond casse la sélection de texte du terminal.

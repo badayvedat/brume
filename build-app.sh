@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+cd "$(dirname "$0")"
 
 # Compile Brume, assemble Brume.app, signe, installe dans /Applications et relance.
 #
@@ -19,6 +20,8 @@ if [ "${1:-}" = "--debug" ]; then
     CONFIG="debug"
 fi
 
+bash setup.sh
+
 echo "Building ($CONFIG)..."
 swift build -c "$CONFIG"
 BIN_PATH="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
@@ -27,6 +30,8 @@ echo "Creating app bundle..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources"
 cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+# Dans Contents/Resources : codesign refuse tout ajout à la racine de l'app (voir Patches/).
+cp -R "$(dirname "$BIN_PATH")"/*.bundle "$APP_BUNDLE/Contents/Resources/"
 
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"

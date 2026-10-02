@@ -1,0 +1,30 @@
+diff --git a/Sources/GhosttyTerminal/Configuration/GhosttyRuntimeResources.swift b/Sources/GhosttyTerminal/Configuration/GhosttyRuntimeResources.swift
+index 659fc21..0cc2581 100644
+--- a/Sources/GhosttyTerminal/Configuration/GhosttyRuntimeResources.swift
++++ b/Sources/GhosttyTerminal/Configuration/GhosttyRuntimeResources.swift
+@@ -12,12 +12,23 @@ public enum GhosttyRuntimeResources {
+     /// Ghostty expects shell integration below this directory and its compiled
+     /// terminfo database in a sibling `terminfo` directory.
+     public static var directoryURL: URL? {
+-        Bundle.module.url(forResource: "Ghostty", withExtension: nil)
++        resourceBundle.url(forResource: "Ghostty", withExtension: nil)
+     }
+ 
+     /// The compiled terminfo database exported to child shells by Ghostty.
+     public static var terminfoDirectoryURL: URL? {
+-        Bundle.module.url(forResource: "terminfo", withExtension: nil)
++        resourceBundle.url(forResource: "terminfo", withExtension: nil)
++    }
++
++    /// An app assembled outside Xcode keeps this bundle in `Contents/Resources`,
++    /// where SwiftPM's `Bundle.module` never looks (the app root cannot hold it:
++    /// codesign rejects unsealed content there).
++    private static var resourceBundle: Bundle {
++        if let url = Bundle.main.resourceURL?.appendingPathComponent("GhosttyKit_GhosttyTerminal.bundle"),
++           let bundle = Bundle(url: url) {
++            return bundle
++        }
++        return Bundle.module
+     }
+ 
+     static func configureEnvironment() {
