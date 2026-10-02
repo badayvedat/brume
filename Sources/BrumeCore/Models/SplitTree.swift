@@ -11,27 +11,48 @@ public enum SplitDirection: Sendable {
     case left, right, up, down
 }
 
+/// Une séparation qu'on peut glisser. `path` la retrouve dans l'arbre : 0 = premier, 1 = second.
+public struct SplitDivider: Hashable, Sendable {
+    public static let ratioRange: ClosedRange<CGFloat> = 0.15 ... 0.85
+
+    public let path: [Int]
+    public let axis: SplitAxis
+    public let line: CGRect
+    /// Toute la zone de la division, pour traduire une position en ratio.
+    public let container: CGRect
+
+    public func ratio(at location: CGPoint) -> CGFloat {
+        let raw = switch axis {
+        case .horizontal: (location.x - container.minX) / container.width
+        case .vertical: (location.y - container.minY) / container.height
+        }
+        return min(max(raw, Self.ratioRange.lowerBound), Self.ratioRange.upperBound)
+    }
+}
+
 public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
     case pane(Pane)
-    case split(SplitAxis, SplitTree, SplitTree)
+    /// `ratio` : la part du premier volet.
+    case split(SplitAxis, ratio: CGFloat, SplitTree, SplitTree)
 
     /// Dans l'ordre de lecture : gauche avant droite, haut avant bas.
     public var panes: [Pane] {
         switch self {
         case let .pane(pane): [pane]
-        case let .split(_, first, second): first.panes + second.panes
+        case let .split(_, _, first, second): first.panes + second.panes
         }
     }
 
     public func splitting(_ target: Pane, axis: SplitAxis, adding new: Pane) -> SplitTree {
         switch self {
         case let .pane(pane) where pane == target:
-            .split(axis, .pane(pane), .pane(new))
+            .split(axis, ratio: 0.5, .pane(pane), .pane(new))
         case .pane:
             self
-        case let .split(splitAxis, first, second):
+        case let .split(splitAxis, ratio, first, second):
             .split(
                 splitAxis,
+                ratio: ratio,
                 first.splitting(target, axis: axis, adding: new),
                 second.splitting(target, axis: axis, adding: new)
             )
@@ -43,9 +64,9 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         switch self {
         case let .pane(pane):
             return pane == target ? nil : self
-        case let .split(axis, first, second):
+        case let .split(axis, ratio, first, second):
             switch (first.removing(target), second.removing(target)) {
-            case let (first?, second?): return .split(axis, first, second)
+            case let (first?, second?): return .split(axis, ratio: ratio, first, second)
             case let (remaining?, nil), let (nil, remaining?): return remaining
             case (nil, nil): return nil
             }
@@ -56,21 +77,34 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         switch self {
         case let .pane(pane):
             return [pane: rect]
-        case let .split(axis, first, second):
-            let (firstRect, secondRect) = Self.halves(of: rect, axis: axis)
+        case let .split(axis, ratio, first, second):
+            let (firstRect, secondRect) = Self.divide(rect, axis: axis, ratio: ratio)
             return first.frames(in: firstRect).merging(second.frames(in: secondRect)) { current, _ in current }
         }
     }
 
-    /// Les traits de séparation, un par division, sur la frontière entre les deux moitiés.
-    public func dividers(in rect: CGRect) -> [CGRect] {
-        guard case let .split(axis, first, second) = self else { return [] }
-        let (firstRect, secondRect) = Self.halves(of: rect, axis: axis)
+    /// Une par division, posée sur la frontière entre ses deux volets.
+    public func dividers(in rect: CGRect, path: [Int] = []) -> [SplitDivider] {
+        guard case let .split(axis, ratio, first, second) = self else { return [] }
+        let (firstRect, secondRect) = Self.divide(rect, axis: axis, ratio: ratio)
         let line = switch axis {
         case .horizontal: CGRect(x: secondRect.minX, y: rect.minY, width: 0, height: rect.height)
         case .vertical: CGRect(x: rect.minX, y: secondRect.minY, width: rect.width, height: 0)
         }
-        return [line] + first.dividers(in: firstRect) + second.dividers(in: secondRect)
+        return [SplitDivider(path: path, axis: axis, line: line, container: rect)]
+            + first.dividers(in: firstRect, path: path + [0])
+            + second.dividers(in: secondRect, path: path + [1])
+    }
+
+    public func settingRatio(_ newRatio: CGFloat, at path: [Int]) -> SplitTree {
+        guard case let .split(axis, ratio, first, second) = self else { return self }
+        guard let step = path.first else {
+            return .split(axis, ratio: newRatio, first, second)
+        }
+        let rest = Array(path.dropFirst())
+        return step == 0
+            ? .split(axis, ratio: ratio, first.settingRatio(newRatio, at: rest), second)
+            : .split(axis, ratio: ratio, first, second.settingRatio(newRatio, at: rest))
     }
 
     public func pane(after pane: Pane) -> Pane? {
@@ -106,12 +140,12 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         return all[(index + step + all.count) % all.count]
     }
 
-    private static func halves(of rect: CGRect, axis: SplitAxis) -> (CGRect, CGRect) {
+    private static func divide(_ rect: CGRect, axis: SplitAxis, ratio: CGFloat) -> (CGRect, CGRect) {
         switch axis {
         case .horizontal:
-            rect.divided(atDistance: rect.width / 2, from: .minXEdge)
+            rect.divided(atDistance: rect.width * ratio, from: .minXEdge)
         case .vertical:
-            rect.divided(atDistance: rect.height / 2, from: .minYEdge)
+            rect.divided(atDistance: rect.height * ratio, from: .minYEdge)
         }
     }
 

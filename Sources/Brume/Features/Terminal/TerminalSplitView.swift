@@ -1,7 +1,10 @@
+import BrumeCore
 import GhosttyTerminal
 import SwiftUI
 
 struct TerminalSplitView: View {
+    static let space = "terminal-splits"
+
     let workspace: TerminalWorkspace
 
     var body: some View {
@@ -22,15 +25,39 @@ struct TerminalSplitView: View {
                         .offset(x: frame.minX, y: frame.minY)
                     }
                 }
-                ForEach(Array(workspace.tree.dividers(in: bounds).enumerated()), id: \.offset) { _, line in
-                    Rectangle()
-                        .fill(Color(nsColor: .separatorColor))
-                        .frame(width: max(line.width, 1), height: max(line.height, 1))
-                        .offset(x: line.minX, y: line.minY)
-                        .allowsHitTesting(false)
+                // Identifiées par leur place dans l'arbre : stable pendant un glissé.
+                ForEach(workspace.tree.dividers(in: bounds), id: \.path) { divider in
+                    SplitHandle(divider: divider) { workspace.setRatio($0, at: divider.path) }
                 }
             }
+            .coordinateSpace(.named(Self.space))
         }
+    }
+}
+
+private struct SplitHandle: View {
+    let divider: SplitDivider
+    let onDrag: (CGFloat) -> Void
+
+    /// Plus large que le trait d'un point, pour l'attraper sans viser.
+    private let grip: CGFloat = 6
+
+    var body: some View {
+        let line = divider.line
+        let isVertical = divider.axis == .horizontal
+        ZStack {
+            Rectangle()
+                .fill(Color(nsColor: .separatorColor))
+                .frame(width: isVertical ? 1 : nil, height: isVertical ? nil : 1)
+        }
+        .frame(width: isVertical ? grip : line.width, height: isVertical ? line.height : grip)
+        .contentShape(Rectangle())
+        .pointerStyle(isVertical ? .columnResize : .rowResize)
+        .offset(x: isVertical ? line.minX - grip / 2 : line.minX, y: isVertical ? line.minY : line.minY - grip / 2)
+        .gesture(
+            DragGesture(minimumDistance: 0, coordinateSpace: .named(TerminalSplitView.space))
+                .onChanged { onDrag(divider.ratio(at: $0.location)) }
+        )
     }
 }
 

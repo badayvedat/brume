@@ -17,7 +17,7 @@ struct BrumeApp: App {
                 .background(WindowReader { WindowTabs.adopt($0) })
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 900, height: 560)
+        .defaultSize(width: 800, height: 500)
         .commands {
             CommandGroup(after: .newItem) {
                 NewTabButton()

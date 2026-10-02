@@ -46,6 +46,10 @@ final class TerminalWorkspace {
         focus(id)
     }
 
+    func setRatio(_ ratio: CGFloat, at path: [Int]) {
+        tree = tree.settingRatio(ratio, at: path)
+    }
+
     func focusNext() {
         tree.pane(after: focusedID).map(focus)
     }
