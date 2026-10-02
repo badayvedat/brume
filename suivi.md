@@ -45,7 +45,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Opacité et flou
 - [ ] Police et taille du texte
 - [ ] Thèmes de couleurs prêts à choisir (module GhosttyTheme du paquet)
-- [ ] Couleurs de la coloration syntaxique
+- [ ] Couleurs de la coloration syntaxique et du texte grisé de l'autocomplétion (gris trop peu contrasté par défaut)
 - [ ] Image de fond (choix, opacité)
 - [ ] Changements appliqués en direct, sans redémarrer
 
