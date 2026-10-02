@@ -1,13 +1,20 @@
 import GhosttyTerminal
 import SwiftUI
 
+// Un seul moteur pour tous les onglets et fenêtres, comme Ghostty.
+@MainActor private let sharedController = TerminalController(
+    terminalConfiguration: TerminalConfiguration {
+        // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
+        $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
+        // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
+        // on les rend au menu de l'app.
+        $0.withCustom("keybind", "super+t=unbind")
+        $0.withCustom("keybind", "super+n=unbind")
+    }
+)
+
 struct TerminalScreen: View {
-    // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
-    @StateObject private var terminal = TerminalViewState(
-        terminalConfiguration: TerminalConfiguration {
-            $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
-        }
-    )
+    @StateObject private var terminal = TerminalViewState(controller: sharedController)
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

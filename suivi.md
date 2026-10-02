@@ -29,7 +29,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] nano en SSH : garder `xterm-ghostty` sur le Mac, installer la fiche sur le serveur ou se replier sur `xterm-256color` (options `ssh-env` et `ssh-terminfo` de Ghostty)
 - [x] Coloration syntaxique des commandes active par défaut
 - [x] Autocomplétion depuis l'historique (texte grisé) active par défaut
-- [ ] Onglets (Cmd+T) et nouvelle fenêtre (Cmd+N) : partager un seul `TerminalController`, aujourd'hui chaque fenêtre crée le sien
+- [x] Onglets (Cmd+T) et nouvelle fenêtre (Cmd+N) : partager un seul `TerminalController`, aujourd'hui chaque fenêtre crée le sien
 - [ ] Splits : côte à côte (Cmd+D), dessous (Cmd+Shift+D), passer de l'un à l'autre
 - [ ] Barre de défilement et défilement fluide au trackpad
 - [ ] Recherche dans le terminal (Cmd+F)
@@ -67,6 +67,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Couleurs et tokens de base
 - [ ] Effet verre sur la sidebar
 - [ ] Effet de fondu de l'image de fond
+- [ ] Boutons nouvel onglet et nouvelle fenêtre dans l'interface (en plus de Cmd+T et Cmd+N)
 
 ## 8. Autocomplétion des commandes connues
 

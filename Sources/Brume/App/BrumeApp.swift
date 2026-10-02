@@ -9,11 +9,19 @@ struct BrumeApp: App {
         }
     }
 
+    static let terminalWindowID = "terminal"
+
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: Self.terminalWindowID) {
             TerminalScreen()
+                .background(WindowReader { WindowTabs.adopt($0) })
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 900, height: 560)
+        .commands {
+            CommandGroup(after: .newItem) {
+                NewTabButton()
+            }
+        }
     }
 }
