@@ -8,10 +8,12 @@ struct TabBar: View {
     let area: UUID
     /// La zone dans l'espace de `TerminalScreen` : la barre en occupe le haut.
     let frame: CGRect
+    let height: CGFloat
     /// La place des boutons rouge, jaune, vert pour la barre du coin haut gauche.
     let leadingInset: CGFloat
     let showsNewWindow: Bool
-    let showsNumbers: Bool
+    /// Vide quand Cmd n'est pas tenu.
+    let numbers: [UUID: Int]
 
     @State private var isDragging = false
     /// Le début de la rangée d'onglets dans l'espace de `TerminalScreen`, défilement compris.
@@ -33,34 +35,41 @@ struct TabBar: View {
         HStack(spacing: 0) {
             GeometryReader { geometry in
                 let width = cellWidth(available: geometry.size.width)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: spacing) {
-                        ForEach(tabs, id: \.self) { id in
-                            if let state = workspace.states[id] {
-                                TabCell(
-                                    state: state,
-                                    id: id,
-                                    workspace: workspace,
-                                    isDragging: isDragging,
-                                    showsNumber: showsNumbers
-                                )
-                                .frame(width: width)
-                                .opacity(workspace.drop?.tab == id ? 0.5 : 1)
-                                // Pendant le renommage, glisser dans le champ sélectionne du texte.
-                                .gesture(drag(id, step: width + spacing), including: workspace.renamingID == id ? .subviews : .all)
+                // Trop d'onglets pour la zone : la rangée défile, et le + reste fixé à droite.
+                let overflows = CGFloat(tabs.count) * (width + spacing) + BarButton.size > geometry.size.width
+                HStack(spacing: spacing) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: spacing) {
+                            ForEach(tabs, id: \.self) { id in
+                                if let state = workspace.states[id] {
+                                    TabCell(
+                                        state: state,
+                                        id: id,
+                                        workspace: workspace,
+                                        isDragging: isDragging,
+                                        number: numbers[id]
+                                    )
+                                    .frame(width: width)
+                                    .opacity(workspace.drop?.tab == id ? 0.5 : 1)
+                                    // Pendant le renommage, glisser dans le champ sélectionne du texte.
+                                    .gesture(drag(id, step: width + spacing), including: workspace.renamingID == id ? .subviews : .all)
+                                }
+                            }
+                            if !overflows {
+                                newTabButton
                             }
                         }
-                        BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T") {
-                            workspace.newTab(in: area)
+                        .animation(.easeInOut(duration: 0.15), value: tabs)
+                        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(TerminalScreen.space)).minX } action: {
+                            stripOriginX = $0
                         }
+                        .frame(maxHeight: .infinity)
+                        .frame(minWidth: geometry.size.width, alignment: .leading)
+                        .background { if isAtTop { WindowDragArea() } }
                     }
-                    .animation(.easeInOut(duration: 0.15), value: tabs)
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(TerminalScreen.space)).minX } action: {
-                        stripOriginX = $0
+                    if overflows {
+                        newTabButton
                     }
-                    .frame(maxHeight: .infinity)
-                    .frame(minWidth: geometry.size.width, alignment: .leading)
-                    .background { if isAtTop { WindowDragArea() } }
                 }
             }
             HStack(spacing: 2) {
@@ -83,8 +92,14 @@ struct TabBar: View {
         }
         .padding(.leading, leadingInset)
         .padding(.trailing, 8)
-        .frame(width: frame.width, height: workspace.barHeight)
+        .frame(width: frame.width, height: height)
         .background { if isAtTop { WindowDragArea() } }
+    }
+
+    private var newTabButton: some View {
+        BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T") {
+            workspace.newTab(in: area)
+        }
     }
 
     /// Dans sa barre, comme Muxy : l'onglet tenu prend la place de celui que survole la souris
@@ -93,7 +108,7 @@ struct TabBar: View {
         DragGesture(minimumDistance: 4, coordinateSpace: .named(TerminalScreen.space))
             .onChanged { value in
                 isDragging = true
-                let bar = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: workspace.barHeight)
+                let bar = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: height)
                 guard bar.contains(value.location) else {
                     return workspace.hoverDrop(dragging: id, at: value.location)
                 }

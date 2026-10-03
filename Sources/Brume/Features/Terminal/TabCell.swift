@@ -8,7 +8,8 @@ struct TabCell: View {
     let id: UUID
     let workspace: TerminalWorkspace
     let isDragging: Bool
-    let showsNumber: Bool
+    /// Le chiffre de son raccourci, montré tant que Cmd est tenu.
+    let number: Int?
 
     @State private var isHovered = false
     @State private var draft = ""
@@ -32,7 +33,7 @@ struct TabCell: View {
         HStack(spacing: 4) {
             // Comme Muxy : l'icône terminal, et à sa place le numéro tant que Cmd est tenu.
             Group {
-                if showsNumber, let number = workspace.layout.shortcutNumber(of: id) {
+                if let number {
                     Text("\(number)")
                         .font(.system(size: 10, weight: .bold).monospacedDigit())
                         .foregroundStyle(.white)

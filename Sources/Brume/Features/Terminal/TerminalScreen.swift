@@ -31,9 +31,11 @@ private struct TerminalWindow: View {
 
     @State private var titlebar = WindowTitlebar()
     @State private var commandKey = CommandKeyHold()
+    /// Cmd+chiffre n'agit que sur la fenêtre active : les autres ne montrent pas de numéros.
+    @Environment(\.appearsActive) private var isActive
 
     var body: some View {
-        TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld)
+        TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld && isActive)
             .coordinateSpace(.named(TerminalScreen.space))
             .ignoresSafeArea(.container, edges: .top)
             .modifier(TerminalWindowChrome(state: workspace.focused, customTitle: workspace.title(of: workspace.focusedID)))

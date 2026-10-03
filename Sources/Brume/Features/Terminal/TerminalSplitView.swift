@@ -14,14 +14,16 @@ struct TerminalSplitView: View {
             let layout = workspace.layout
             let areas = layout.tree.frames(in: bounds)
             let barHeight = titlebar.buttonsCenterY * 2
+            let areaOfTab = layout.areaOfTab
+            let numbers = showsNumbers ? layout.shortcutNumbers : [:]
             // Les terminaux de toutes les zones au même niveau, rangés par identifiant : changer
             // d'onglet, diviser ou déplacer un onglet garde chaque vue. Une vue recréée tuerait
             // le shell qu'elle porte. Les onglets cachés restent montés, transparents.
             ZStack(alignment: .topLeading) {
                 ForEach(layout.tabs, id: \.self) { id in
-                    if let state = workspace.states[id], let area = layout.area(of: id), let frame = areas[area] {
+                    if let state = workspace.states[id], let area = areaOfTab[id], let frame = areas[area] {
                         let content = frame.divided(atDistance: barHeight, from: .minYEdge).remainder
-                        let isShown = layout.isShown(id)
+                        let isShown = layout.areas[area]?.selected == id
                         TerminalPane(
                             state: state,
                             search: workspace.searches[id],
@@ -44,9 +46,10 @@ struct TerminalSplitView: View {
                             workspace: workspace,
                             area: area,
                             frame: frame,
+                            height: barHeight,
                             leadingInset: isTopLeft && !titlebar.isFullScreen ? titlebar.buttonsWidth + 14 : 8,
                             showsNewWindow: frame.minY == 0 && frame.maxX == bounds.maxX,
-                            showsNumbers: showsNumbers
+                            numbers: numbers
                         )
                         .offset(x: frame.minX, y: frame.minY)
                     }

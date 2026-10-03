@@ -29,6 +29,7 @@ final class SessionStore {
     /// La fenêtre suivante de la session, ou une neuve quand il n'en reste plus.
     func makeWorkspace() -> TerminalWorkspace {
         let workspace = TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
+        workspaces.removeAll { $0.value == nil }
         workspaces.append(WeakWorkspace(value: workspace))
         return workspace
     }

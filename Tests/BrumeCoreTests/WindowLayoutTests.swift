@@ -22,13 +22,13 @@ struct WindowLayoutTests {
 
     @Test func tabsAreInReadingOrder() {
         #expect(twoAreas.tabs == [1, 2, 3])
-        #expect(twoAreas.shortcutNumber(of: 3) == 3)
+        #expect(twoAreas.shortcutNumbers[3] == 3)
     }
 
     @Test func numberNineIsAlwaysTheLastTab() {
         let ten = (2 ... 10).reduce(WindowLayout(area: "A", tab: 1)) { $0.addingTab($1) }
-        #expect(ten.shortcutNumber(of: 9) == nil)
-        #expect(ten.shortcutNumber(of: 10) == 9)
+        #expect(ten.shortcutNumbers[9] == nil)
+        #expect(ten.shortcutNumbers[10] == 9)
         #expect(ten.selecting(number: 9).focusedTab == 10)
     }
 
@@ -133,5 +133,13 @@ struct WindowLayoutTests {
         #expect(layout.tabs(besides: 5) == [1, 2])
         #expect(layout.tabs(rightOf: 1) == [5, 2])
         #expect(layout.tabs(rightOf: 2).isEmpty)
+    }
+
+    @Test func areaOfTabIndexesEveryTab() {
+        #expect(twoAreas.areaOfTab == [1: "A", 2: "A", 3: "B"])
+    }
+
+    @Test func aBuiltLayoutIsConsistent() {
+        #expect(twoAreas.moving(1, beside: "B", toward: .down, area: "C").isConsistent)
     }
 }

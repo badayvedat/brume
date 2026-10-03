@@ -32,6 +32,31 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
         areas[focusedArea]!.selected
     }
 
+    /// Une disposition relue d'un fichier peut être abîmée : sans zone active, ou dont l'arbre et
+    /// les barres ne parlent pas des mêmes zones. Restaurée telle quelle, elle planterait Brume.
+    public var isConsistent: Bool {
+        let panes = tree.panes
+        let all = tabs
+        return areas[focusedArea] != nil && Set(panes) == Set(areas.keys) && panes.count == areas.count
+            && Set(all).count == all.count
+    }
+
+    /// La zone de chaque onglet, d'un seul passage : à prendre pour afficher tous les onglets.
+    public var areaOfTab: [Tab: Area] {
+        areas.reduce(into: [:]) { result, entry in
+            for tab in entry.value.tabs { result[tab] = entry.key }
+        }
+    }
+
+    /// Le chiffre du raccourci de chaque onglet : Cmd+1 à Cmd+8 dans l'ordre de lecture, Cmd+9 le dernier.
+    public var shortcutNumbers: [Tab: Int] {
+        let all = tabs
+        var numbers: [Tab: Int] = [:]
+        for (index, tab) in all.prefix(8).enumerated() { numbers[tab] = index + 1 }
+        if all.count > 8, let last = all.last { numbers[last] = 9 }
+        return numbers
+    }
+
     /// Dans l'ordre de lecture : zone par zone, puis dans l'ordre de chaque barre.
     public var tabs: [Tab] {
         tree.panes.flatMap { areas[$0]?.tabs ?? [] }
@@ -89,13 +114,6 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
         var layout = self
         layout.focusedArea = area
         return layout
-    }
-
-    public func shortcutNumber(of tab: Tab) -> Int? {
-        let all = tabs
-        guard let index = all.firstIndex(of: tab) else { return nil }
-        if index == all.count - 1, index >= 8 { return 9 }
-        return index < 8 ? index + 1 : nil
     }
 
     /// Une zone vidée disparaît, sa voisine prend la place. Nil quand plus rien ne reste.

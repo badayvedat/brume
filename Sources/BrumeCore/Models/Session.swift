@@ -45,7 +45,8 @@ public struct Session: Codable, Hashable, Sendable {
 
     /// Nil si les données sont illisibles ou d'un autre format : Brume part alors d'une fenêtre neuve.
     public static func decoded(from data: Data) -> Session? {
-        guard let session = try? JSONDecoder().decode(Session.self, from: data), session.version == version else { return nil }
+        guard var session = try? JSONDecoder().decode(Session.self, from: data), session.version == version else { return nil }
+        session.windows.removeAll { !$0.layout.isConsistent }
         return session
     }
 }

@@ -24,4 +24,13 @@ struct SessionTests {
     @Test func anotherFormatIsIgnored() {
         #expect(Session.decoded(from: Data(#"{"version": 99, "windows": []}"#.utf8)) == nil)
     }
+
+    @Test func anInconsistentWindowIsDropped() throws {
+        let good = SavedWindow(layout: WindowLayout(area: UUID(), tab: UUID()), tabs: [:], frame: nil)
+        // Une zone active absente des barres : la restaurer planterait.
+        let json = #"{"tree":{"pane":{"_0":"\#(UUID())"}},"areas":[],"focusedArea":"\#(UUID())"}"#
+        let broken = try JSONDecoder().decode(WindowLayout<UUID, UUID>.self, from: Data(json.utf8))
+        let session = Session(windows: [good, SavedWindow(layout: broken, tabs: [:], frame: nil)])
+        #expect(Session.decoded(from: try session.encoded())?.windows == [good])
+    }
 }

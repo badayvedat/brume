@@ -46,7 +46,8 @@ final class TerminalWorkspace {
     private(set) var colors: [UUID: TabColor] = [:]
     private(set) var renamingID: UUID?
     private(set) var drop: WindowLayout<UUID, UUID>.Drop?
-    /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalScreen`.
+    /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalSplitView` pour
+    /// calculer les dépôts : les vues prennent la hauteur du `WindowTitlebar`, observé, pas celle-ci.
     @ObservationIgnored var bounds: CGRect = .zero
     @ObservationIgnored var barHeight: CGFloat = 32
     @ObservationIgnored private weak var window: NSWindow?
@@ -60,7 +61,7 @@ final class TerminalWorkspace {
 
     /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.
     init(restoring saved: SavedWindow? = nil) {
-        guard let saved, !saved.layout.tabs.isEmpty else {
+        guard let saved, saved.layout.isConsistent else {
             let id = UUID()
             layout = WindowLayout(area: UUID(), tab: id)
             states[id] = makeState(id, inheriting: lastFocused, as: .window)
@@ -81,8 +82,10 @@ final class TerminalWorkspace {
 
     /// Ce que la fenêtre retrouvera au prochain lancement.
     var snapshot: SavedWindow {
-        let tabs = Dictionary(uniqueKeysWithValues: layout.tabs.map { id in
-            (id, SavedTab(workingDirectory: states[id]?.workingDirectory, customTitle: customTitles[id], color: colors[id]))
+        let tabs = Dictionary(uniqueKeysWithValues: layout.tabs.map { id -> (UUID, SavedTab) in
+            // Le dossier de départ tant que le shell n'a pas encore annoncé le sien.
+            let folder = states[id].flatMap { $0.workingDirectory ?? $0.configuration.workingDirectory }
+            return (id, SavedTab(workingDirectory: folder, customTitle: customTitles[id], color: colors[id]))
         })
         return SavedWindow(layout: layout, tabs: tabs, frame: window?.frame)
     }
@@ -107,10 +110,11 @@ final class TerminalWorkspace {
         guard self.window !== window else { return }
         self.window = window
         window.tabbingMode = .disallowed
-        if let savedFrame {
-            window.setFrame(savedFrame, display: true)
-            self.savedFrame = nil
+        // Pas sur un écran débranché depuis : la fenêtre rouvrirait invisible.
+        if let savedFrame, let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(savedFrame) }) {
+            window.setFrame(window.constrainFrameRect(savedFrame, to: screen), display: true)
         }
+        savedFrame = nil
         closeGuard = WindowCloseGuard(on: window) { [weak self] window in
             guard let self, states.values.contains(where: Self.isRunning) else { return true }
             (states.count > 1 ? CloseConfirmation.window : .terminal).ask(in: window) { window.close() }
@@ -351,8 +355,9 @@ final class TerminalWorkspace {
     private func apply(_ new: WindowLayout<UUID, UUID>) {
         let previous = layout.focusedTab
         layout = new
+        let shown = Set(new.areas.values.map(\.selected))
         for (id, state) in states {
-            state.isSurfaceVisible = new.isShown(id)
+            state.isSurfaceVisible = shown.contains(id)
         }
         if new.focusedTab != previous {
             lastFocused = states[new.focusedTab]

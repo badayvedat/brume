@@ -41,6 +41,7 @@ private struct TooltipAnchor: NSViewRepresentable {
         }
 
         override func mouseEntered(with event: NSEvent) {
+            pending?.cancel()
             let work = DispatchWorkItem { [weak self] in self?.show() }
             pending = work
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
