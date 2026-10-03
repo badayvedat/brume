@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct TerminalScreen: View {
@@ -31,6 +32,8 @@ private struct TerminalWindow: View {
 
     @State private var titlebar = WindowTitlebar()
     @State private var commandKey = CommandKeyHold()
+    @State private var window: WeakWindow?
+    @Environment(SettingsStore.self) private var settings
     /// Cmd+chiffre n'agit que sur la fenêtre active : les autres ne montrent pas de numéros.
     @Environment(\.appearsActive) private var isActive
 
@@ -38,12 +41,30 @@ private struct TerminalWindow: View {
         TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld && isActive)
             .coordinateSpace(.named(TerminalScreen.space))
             .ignoresSafeArea(.container, edges: .top)
-            .modifier(TerminalWindowChrome(state: workspace.focused, customTitle: workspace.title(of: workspace.focusedID)))
+            .modifier(TerminalWindowChrome(
+                state: workspace.focused,
+                customTitle: workspace.title(of: workspace.focusedID),
+                translucency: settings.translucency
+            ))
             .focusedSceneValue(\.terminalWorkspace, workspace)
             .background(WindowReader {
                 workspace.attach(to: $0)
                 titlebar.attach(to: $0)
+                window = WeakWindow(value: $0)
             })
             .onAppear { workspace.focus(workspace.focusedID) }
+            .onChange(of: settings.translucency, initial: true) { applyTranslucency() }
+            .onChange(of: window?.value) { applyTranslucency() }
     }
+
+    private func applyTranslucency() {
+        TerminalWorkspace.applyToEngine(settings.translucency)
+        if let window = window?.value {
+            WindowTranslucency.apply(settings.translucency, to: window)
+        }
+    }
+}
+
+private struct WeakWindow {
+    weak var value: NSWindow?
 }

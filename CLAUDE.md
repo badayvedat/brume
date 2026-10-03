@@ -13,7 +13,7 @@ bash build-app.sh            # release
 
 - Seulement les Command Line Tools sur la machine, pas de Xcode : tout passe par SwiftPM et `build-app.sh`. Jamais de `.xcodeproj` ni de `xcodebuild`. Pas de macros SwiftUI (`@Entry`, `#Preview`) : leur plugin n'existe qu'avec Xcode.
 - Signer avec le certificat stable « Brume Dev ». En ad-hoc, macOS redemande les permissions (Documents, Bureau...) à chaque build.
-- Vérifier un rendu : `bash capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran. Claude a l'Accessibilité : raccourcis et frappe via `osascript` (System Events), clics et glisser via des `CGEvent` postés aux coordonnées de la fenêtre.
+- Vérifier un rendu : `bash capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran. Elle ne montre pas le bureau flouté du style Verre : pour le voir, `screencapture -R` sur les bornes de la fenêtre. Claude a l'Accessibilité : raccourcis et frappe via `osascript` (System Events), clics et glisser via des `CGEvent` postés aux coordonnées de la fenêtre.
 - Le `.zshrc` de Jérémy charge déjà ses greffons brew, qui masquent ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
 - Tests : `bash run-tests.sh`. `swift test` nu ne trouve pas Swift Testing avec les CLT.
 - Brume rouvre au lancement les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. Un arrêt brutal (`killall`, relance par `build-app.sh`) n'enregistre rien.

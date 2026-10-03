@@ -4,6 +4,7 @@ import SwiftUI
 struct BrumeApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @State private var session = SessionStore()
+    @State private var settings = SettingsStore()
 
     init() {
         SystemSymbol.preload()
@@ -20,6 +21,7 @@ struct BrumeApp: App {
         WindowGroup(id: Self.terminalWindowID) {
             TerminalScreen()
                 .environment(session)
+                .environment(settings)
         }
         // Brume rouvre lui-même ses fenêtres (`SessionStore`) : macOS en rouvrirait en double.
         .restorationBehavior(.disabled)

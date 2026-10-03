@@ -164,12 +164,14 @@ private struct TerminalPane: View {
 struct TerminalWindowChrome: ViewModifier {
     @ObservedObject var state: TerminalViewState
     let customTitle: String?
+    let translucency: Translucency
 
     func body(content: Content) -> some View {
         content
             .navigationTitle(customTitle ?? state.title)
-            // La barre de titre prend la couleur du terminal, comme dans Ghostty.
-            .containerBackground(Color(state.backgroundColor), for: .window)
+            // La barre de titre prend la couleur du terminal, comme dans Ghostty. En verre, cette
+            // couleur fait le voile de toute la fenêtre, terminaux compris.
+            .containerBackground(Color(state.backgroundColor).opacity(translucency.opacity), for: .window)
     }
 }
 

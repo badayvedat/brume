@@ -5,27 +5,32 @@ import SwiftUI
 
 // Un seul moteur pour tous les onglets, fenêtres et splits, comme Ghostty.
 @MainActor private let sharedController: TerminalController = {
-    let controller = TerminalController(
-        terminalConfiguration: TerminalConfiguration {
-            // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
-            $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
-            // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
-            // sans ça, le défilement est deux fois plus lent que dans Ghostty.
-            $0.withCustom("mouse-scroll-multiplier", "precision:2")
-            // Repris de la config Ghostty de Jérémy. Shift+Entrée : saut de ligne dans Claude Code.
-            $0.withCustom("keybind", "shift+enter=text:\\n")
-            $0.withCustom("macos-option-as-alt", "left")
-            // Option+flèche brut, sans le « mot précédent / suivant » de Ghostty.
-            $0.withCustom("keybind", "alt+left=unbind")
-            $0.withCustom("keybind", "alt+right=unbind")
-        }
-    )
+    let controller = TerminalController(terminalConfiguration: engineConfiguration(translucency: TranslucencyPreset.normal.translucency))
     // Le moteur part en thème clair jusqu'à ce qu'une vue lui donne l'apparence : un nouveau
     // terminal aurait un fond clair, et sa barre de titre avec, le temps d'une image.
     let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
     controller.setColorScheme(isDark ? .dark : .light)
     return controller
 }()
+
+private func engineConfiguration(translucency: Translucency) -> TerminalConfiguration {
+    TerminalConfiguration {
+        // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
+        $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
+        // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
+        // sans ça, le défilement est deux fois plus lent que dans Ghostty.
+        $0.withCustom("mouse-scroll-multiplier", "precision:2")
+        // Repris de la config Ghostty de Jérémy. Shift+Entrée : saut de ligne dans Claude Code.
+        $0.withCustom("keybind", "shift+enter=text:\\n")
+        $0.withCustom("macos-option-as-alt", "left")
+        // Option+flèche brut, sans le « mot précédent / suivant » de Ghostty.
+        $0.withCustom("keybind", "alt+left=unbind")
+        $0.withCustom("keybind", "alt+right=unbind")
+        // En verre, le voile vient du fond de la fenêtre, d'un seul tenant sous les onglets et
+        // les terminaux : le moteur ne peint plus son fond par-dessus.
+        $0.withBackgroundOpacity(translucency.isTranslucent ? 0 : 1)
+    }
+}
 
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
 @MainActor private weak var lastFocused: TerminalViewState?
@@ -57,6 +62,11 @@ final class TerminalWorkspace {
 
     static var needsConfirmQuit: Bool {
         sharedController.needsConfirmQuit
+    }
+
+    /// Le moteur est commun à toutes les fenêtres : sans changement, l'appel ne fait rien.
+    static func applyToEngine(_ translucency: Translucency) {
+        sharedController.setTerminalConfiguration(engineConfiguration(translucency: translucency))
     }
 
     /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.

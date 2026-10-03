@@ -21,6 +21,7 @@ public enum TextKey: CaseIterable, Sendable {
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
     case resetTabs, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
+    case windowStyle, styleNormal, styleGlass
 
     public func text(in language: Language) -> String {
         switch language {
@@ -94,6 +95,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .colorGreen: "Vert"
         case .colorBlue: "Bleu"
         case .colorPurple: "Violet"
+        case .windowStyle: "Style de la fenêtre"
+        case .styleNormal: "Normal"
+        case .styleGlass: "Verre"
         }
     }
 
@@ -162,6 +166,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .colorGreen: "Green"
         case .colorBlue: "Blue"
         case .colorPurple: "Purple"
+        case .windowStyle: "Window Style"
+        case .styleNormal: "Normal"
+        case .styleGlass: "Glass"
         }
     }
 }

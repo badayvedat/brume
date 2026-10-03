@@ -67,8 +67,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## 5. Réglages en interface
 
-- [ ] Panneau de réglages en sidebar
-- [ ] Opacité et flou
+- [ ] Fenêtre de réglages ouverte depuis « ... » et Cmd+virgule (à la place d'un panneau en sidebar)
+- [x] Style de fenêtre en preset : Verre (bureau flouté sous la couleur du terminal, par défaut) ou Normal. Choix provisoire dans le menu « ... »
+- [ ] Opacité et flou réglables finement (« Personnaliser » sous les presets)
 - [ ] Police et taille du texte
 - [ ] Thèmes de couleurs prêts à choisir (module GhosttyTheme du paquet)
 - [ ] Couleurs de la coloration syntaxique et du texte grisé de l'autocomplétion (gris trop peu contrasté par défaut)
