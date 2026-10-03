@@ -109,3 +109,25 @@ private struct SidebarItem: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
+
+// Essayé puis écarté : le verre des barres latérales de macOS sortait de la DA du terminal.
+// Pour le remettre, le poser sur le fond de la barre latérale quand l'effet verre est activé.
+//
+// private struct SidebarGlass: NSViewRepresentable {
+//     func makeNSView(context: Context) -> NSVisualEffectView {
+//         let view = PassThroughEffectView()
+//         view.material = .sidebar
+//         view.blendingMode = .behindWindow
+//         view.state = .active
+//         return view
+//     }
+//
+//     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+//
+//     /// Les clics vont au `WindowDragArea` dessous : la barre latérale déplace toujours la fenêtre.
+//     private final class PassThroughEffectView: NSVisualEffectView {
+//         override func hitTest(_ point: NSPoint) -> NSView? {
+//             nil
+//         }
+//     }
+// }

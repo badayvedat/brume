@@ -99,7 +99,7 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 
 - [x] Couleurs et tokens de base (`Ink` : un blanc à différentes opacités)
 - [x] Barre d'onglets aux mesures de Monocode (40 de haut, onglets de 30)
-- [ ] Effet verre sur la sidebar
+- [x] Effet verre sur la barre latérale des réglages : essayé puis écarté, elle reste dans la DA du terminal (code gardé en commentaire dans `SettingsPage`)
 
 ## 9. Autocomplétion des commandes connues
 
