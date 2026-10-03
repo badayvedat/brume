@@ -182,10 +182,11 @@ final class TerminalWorkspace {
     }
 
     /// Les raccourcis agissent encore sur les terminaux cachés dessous, mais aucun ne reprend le
-    /// clavier avant le retour : la frappe irait dans un terminal qu'on ne voit pas.
+    /// clavier avant le retour : la frappe irait dans un terminal qu'on ne voit pas. Le focus va au
+    /// contenu SwiftUI, pas à la fenêtre : Tab mène alors au premier champ des réglages.
     func showSettings(_ section: SettingsSection? = nil) {
         settingsSection = section ?? settingsSection ?? .appearance
-        window?.makeFirstResponder(nil)
+        window?.makeFirstResponder(window?.contentView)
         updateSurfaces()
     }
 

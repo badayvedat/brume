@@ -22,10 +22,10 @@ struct TerminalScreen: View {
             guard workspace == nil else { return }
             TerminalWorkspace.prepareEngine(settings.settings)
             workspace = session.makeWorkspace()
-            // Pour vérifier une page des réglages sans piloter l'interface :
-            // `open Brume.app --args -BrumeSettings welcome`.
+            // `open Brume.app --args -BrumeSettings welcome` ouvre une page des réglages pour la vérifier
+            // sans piloter l'interface, une fois la fenêtre rattachée pour que le focus y aille comme avec ⌘,.
             if let name = UserDefaults.standard.string(forKey: "BrumeSettings"), let section = SettingsSection(rawValue: name) {
-                workspace?.showSettings(section)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [workspace] in workspace?.showSettings(section) }
             }
             for _ in 0 ..< session.takeWindowsToOpen() {
                 openWindow(id: BrumeApp.terminalWindowID)
@@ -63,7 +63,7 @@ private struct TerminalWindow: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeOut(duration: 0.18), value: workspace.settingsSection)
+        .animation(Ink.motion(.easeOut(duration: 0.18)), value: workspace.settingsSection)
         .ignoresSafeArea(.container, edges: .top)
         .modifier(TerminalWindowChrome(
             state: workspace.focused,
@@ -79,7 +79,7 @@ private struct TerminalWindow: View {
         .onAppear { workspace.focus(workspace.focusedID) }
         .tint(settings.appearance.accent.color)
         .environment(\.accent, settings.appearance.accent)
-        .animation(.easeInOut(duration: 0.3), value: settings.appearance.accent)
+        .animation(Ink.motion(.easeInOut(duration: 0.3)), value: settings.appearance.accent)
         .onChange(of: settings.appearance.translucency) { translucency.animate(to: $1) }
         .onChange(of: TerminalThemes.colors(for: settings.appearance)) { ThemeFade.run(to: $1) }
         .onChange(of: settings.font) { TerminalWorkspace.setFont($1) }

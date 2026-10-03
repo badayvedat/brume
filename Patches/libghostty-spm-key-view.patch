@@ -1,0 +1,15 @@
+--- a/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Lifecycle.swift
++++ b/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Lifecycle.swift
+@@ -36,6 +36,12 @@
+ 
+         override open var acceptsFirstResponder: Bool {
+             true
++        }
++
++        // Ajout Brume : un terminal caché (onglet en arrière, réglages par-dessus) sort de la boucle
++        // de Tab, sinon ce qu'on tape dans les réglages part dans son shell.
++        override open var canBecomeKeyView: Bool {
++            core.hostDeclaredDisplayVisible ?? true
+         }
+ 
+         override open func becomeFirstResponder() -> Bool {

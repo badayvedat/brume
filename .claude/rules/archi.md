@@ -11,11 +11,11 @@ Même idée que l'archi Nuxt : depuis un bouton de l'interface, on remonte vite 
 
 | Nuxt | Brume |
 |---|---|
-| `server/services/XxxService.ts` | `BrumeCore/Services/XxxService.swift` : logique pure, testée |
+| `server/services/XxxService.ts` | `BrumeCore/Services/` : logique pure, testée, nommée par ce qu'elle fait (`SettingsFile`, `WelcomeBuilder`), sans suffixe `Service` |
 | `shared/schemas/` (Zod) | `BrumeCore/Models/` : structs `Codable` |
 | `shared/constants/` | `BrumeCore/Constants/` |
 | store Pinia | `Brume/Stores/XxxStore.swift` : classe `@Observable`, une seule instance créée dans `BrumeApp`, passée par `.environment` |
-| `pages/` + `components/<domaine>/` | `Brume/Features/<Domaine>/XxxView.swift` |
+| `pages/` + `components/<domaine>/` | `Brume/Features/<Domaine>/` : une vue par fichier, nommée par ce qu'elle montre (`TabBar`, `WelcomeSettings`) |
 | composable `useXxx` | méthode du store, ou petit `@Observable` local à la feature |
 | `app.vue`, `layouts/` | `Brume/App/` : point d'entrée, scènes, commandes clavier |
 | composants communs | `Brume/DesignSystem/` |
@@ -35,6 +35,7 @@ Tests/BrumeCoreTests/   # Swift Testing
 - Un état propre à une fenêtre (zones, onglets, terminaux : `TerminalWorkspace`) n'est pas un store d'app : il vit dans sa feature, créé en `@State` par la vue de la fenêtre et passé aux sous-vues. Il délègue sa logique à `BrumeCore` (`WindowLayout`).
 - Seul `Brume/Features/Terminal/` importe `GhosttyTerminal` et `GhosttyTheme` : le reste de l'app ne connaît pas le moteur.
 - Tout texte d'interface passe par une clé `TextKey` (`BrumeCore/Constants/L10n.swift`), en français et en anglais : `L10n.language` est observé, l'interface change de langue en direct.
+- Animations : `Ink.feedback`, `Ink.open`, `Ink.slide` ou `Ink.motion(...)`, jamais une `Animation` nue : elles s'effacent avec « Réduire les animations » de macOS.
 - Couleurs d'interface : `Ink` (un blanc à différentes opacités, comme Monocode), pas `.primary`, `.secondary` ni `Color.accentColor`. La couleur choisie dans les réglages passe par `@Environment(\.accent)`.
 - Un dossier, et un target SwiftPM, se créent avec leur premier fichier.
 - Une vue qui dépasse ~200 lignes se découpe en sous-vues dans le même dossier de feature.

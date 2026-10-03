@@ -8,27 +8,30 @@ public struct WelcomeLogo: Hashable, Sendable {
     public let height: Int
 }
 
-/// Une version de la page, à une taille de visuel (aucun visuel si nil) et de texte.
+/// Une version de la page : une taille de visuel (aucun visuel si nil), de texte, et des informations.
 public struct WelcomeVariant: Hashable, Sendable {
     public let visualSize: WelcomeSize?
     public let textSize: WelcomeSize
+    public let info: WelcomeInfo
 }
 
 /// Traduit les réglages de l'écran de démarrage en visuel et en config fastfetch, aux couleurs de Brume :
 /// l'accent pour le visuel, le texte et les clés, des gris neutres pour le reste.
 public enum WelcomeBuilder {
     /// La page à la taille choisie, puis de plus en plus petite, et enfin sans visuel : le shell
-    /// prend la première qui tient dans le terminal.
+    /// prend la première qui tient dans le terminal. À chaque taille, les catégories cèdent d'abord
+    /// la place à l'essentiel : dans une fenêtre de 25 lignes, elles ne tiennent pas sous un mot.
     public static func variants(for welcome: Welcome) -> [WelcomeVariant] {
         var visual: WelcomeSize? = welcome.showsVisual ? welcome.size : nil
         var text = welcome.showsText ? welcome.size : .small
-        var variants = [WelcomeVariant(visualSize: visual, textSize: text)]
+        var steps = [(visual, text)]
         while visual != nil || text != .small {
             visual = visual?.smaller
             text = text.smaller ?? .small
-            variants.append(WelcomeVariant(visualSize: visual, textSize: text))
+            steps.append((visual, text))
         }
-        return variants
+        let infos: [WelcomeInfo] = welcome.info == .categories ? [.categories, .essential] : [welcome.info]
+        return steps.flatMap { step in infos.map { WelcomeVariant(visualSize: step.0, textSize: step.1, info: $0) } }
     }
 
     /// Le visuel dessiné par Brume, ou nil quand fastfetch s'en charge (Apple).
@@ -81,7 +84,7 @@ public enum WelcomeBuilder {
         }
 
         let labels = Labels(language: language)
-        let info: (modules: [Any], width: Int) = switch welcome.info {
+        let info: (modules: [Any], width: Int) = switch variant.info {
         case .none: ([], 0)
         case .essential: essential(labels, accentCode: accentCode)
         case .categories: (categories(labels), boxWidth)
@@ -102,7 +105,7 @@ public enum WelcomeBuilder {
                 }
             }
             modules += indented(lines.map { ["type": "custom", "format": $0] }, by: offset(textWidth))
-            if welcome.info != .none {
+            if variant.info != .none {
                 modules.append("break")
                 modules += indented(info.modules, by: offset(info.width))
             }

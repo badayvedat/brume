@@ -19,7 +19,7 @@ struct Switch: View {
                 .overlay(alignment: isOn ? .trailing : .leading) {
                     Circle().fill(.white).frame(width: 16, height: 16).padding(2)
                 }
-                .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.15), value: isOn)
+                .animation(Ink.motion(.timingCurve(0.4, 0, 0.2, 1, duration: 0.15)), value: isOn)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

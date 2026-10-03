@@ -59,7 +59,7 @@ struct TabBar: View {
                                 newTabButton
                             }
                         }
-                        .animation(.easeInOut(duration: 0.15), value: tabs)
+                        .animation(Ink.motion(.easeInOut(duration: 0.15)), value: tabs)
                         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(TerminalScreen.space)).minX } action: {
                             stripOriginX = $0
                         }

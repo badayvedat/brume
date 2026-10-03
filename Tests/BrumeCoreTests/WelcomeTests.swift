@@ -52,12 +52,9 @@ struct WelcomeTests {
         welcome.text = "hello"
         welcome.size = .large
         let variants = WelcomeBuilder.variants(for: welcome)
-        #expect(variants == [
-            WelcomeVariant(visualSize: .large, textSize: .large),
-            WelcomeVariant(visualSize: .medium, textSize: .medium),
-            WelcomeVariant(visualSize: .small, textSize: .small),
-            WelcomeVariant(visualSize: nil, textSize: .small),
-        ])
+        #expect(variants.map(\.visualSize) == [.large, .large, .medium, .medium, .small, .small, nil, nil])
+        #expect(variants.map(\.textSize) == [.large, .large, .medium, .medium, .small, .small, .small, .small])
+        #expect(variants.map(\.info) == Array(repeating: [WelcomeInfo.categories, .essential], count: 4).flatMap { $0 })
     }
 
     @Test func visualAloneKeepsTheSmallestText() {
@@ -66,7 +63,7 @@ struct WelcomeTests {
         welcome.text = "hello"
         welcome.size = .large
         let variants = WelcomeBuilder.variants(for: welcome)
-        #expect(variants.first == WelcomeVariant(visualSize: .large, textSize: .small))
+        #expect(variants.first == WelcomeVariant(visualSize: .large, textSize: .small, info: .categories))
         #expect(variants.allSatisfy { $0.textSize == .small })
     }
 
@@ -76,7 +73,7 @@ struct WelcomeTests {
         welcome.text = "hello"
         welcome.size = .large
         let variants = WelcomeBuilder.variants(for: welcome)
-        #expect(variants.first == WelcomeVariant(visualSize: nil, textSize: .large))
+        #expect(variants.first == WelcomeVariant(visualSize: nil, textSize: .large, info: .categories))
         #expect(variants.allSatisfy { $0.visualSize == nil })
     }
 
@@ -116,7 +113,7 @@ struct WelcomeTests {
         welcome.text = "welcome"
         welcome.size = .large
         welcome.info = .essential
-        let variant = WelcomeVariant(visualSize: nil, textSize: .large)
+        let variant = WelcomeVariant(visualSize: nil, textSize: .large, info: .essential)
         welcome.alignment = .left
         let left = WelcomeBuilder.config(for: welcome, variant: variant, accent: .brume, language: .french, logoPath: "")
         welcome.alignment = .center

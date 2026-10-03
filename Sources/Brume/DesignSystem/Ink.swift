@@ -1,3 +1,4 @@
+import AppKit
 import BrumeCore
 import SwiftUI
 
@@ -25,10 +26,15 @@ enum Ink {
     static let rowRule = white(0.05)
 
     /// La courbe des retours visuels de Monocode (survol, choix), et celle des ouvertures.
-    static let feedback = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.12)
-    static let open = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.17)
+    static var feedback: Animation? { motion(.timingCurve(0.22, 1, 0.36, 1, duration: 0.12)) }
+    static var open: Animation? { motion(.timingCurve(0.16, 1, 0.3, 1, duration: 0.17)) }
     /// Un choix qui passe d'un endroit à l'autre (pastille d'un sélecteur), et un contenu qui change.
-    static let slide = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.22)
+    static var slide: Animation? { motion(.timingCurve(0.22, 1, 0.36, 1, duration: 0.22)) }
+
+    /// Avec « Réduire les animations » (Accessibilité de macOS), tout change d'un coup.
+    static func motion(_ animation: Animation) -> Animation? {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? nil : animation
+    }
 }
 
 extension Color {

@@ -62,7 +62,7 @@ struct TerminalSplitView: View {
                     DropHighlight(frame: drop.highlight)
                 }
             }
-            .animation(.easeOut(duration: 0.12), value: workspace.drop)
+            .animation(Ink.motion(.easeOut(duration: 0.12)), value: workspace.drop)
             .onChange(of: bounds, initial: true) { workspace.bounds = bounds }
             .onChange(of: barHeight, initial: true) { workspace.barHeight = barHeight }
         }
@@ -111,7 +111,7 @@ private struct SplitHandle: View {
         .contentShape(Rectangle())
         .pointerStyle(isVertical ? .columnResize : .rowResize)
         .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.12)) { isActive = hovering }
+            withAnimation(Ink.motion(.easeOut(duration: 0.12))) { isActive = hovering }
         }
         .offset(x: isVertical ? line.minX - grip / 2 : line.minX, y: isVertical ? line.minY : line.minY - grip / 2)
         .gesture(
