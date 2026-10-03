@@ -17,4 +17,18 @@ struct TabTitleTests {
     @Test func emptyFieldGoesBackToTheAutomaticTitle() {
         #expect(TabTitle.renamed(input: "  ", displayed: "serveur", current: "serveur") == nil)
     }
+
+    @Test func homeFolderIsWrittenWithATilde() {
+        #expect(TabTitle.folder("/Users/jeremy", home: "/Users/jeremy") == "~")
+        #expect(TabTitle.folder("/Users/jeremy/code", home: "/Users/jeremy") == "~/code")
+        #expect(TabTitle.folder("/Users/jeremy2/code", home: "/Users/jeremy") == "/Users/jeremy2/code")
+    }
+
+    @Test func shortTitleKeepsTheLastFolder() {
+        #expect(TabTitle.short("~/Documents/code/brume") == "brume")
+        #expect(TabTitle.short("/tmp") == "tmp")
+        #expect(TabTitle.short("~") == "~")
+        #expect(TabTitle.short("/") == "/")
+        #expect(TabTitle.short("npm run dev") == "npm run dev")
+    }
 }

@@ -27,15 +27,23 @@ struct SplitCommands: Commands {
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
             Button(L10n.text(.equalizeSplits)) { workspace?.equalizeSplits() }
                 .keyboardShortcut("=", modifiers: [.command, .control])
+            // ⇧⌘↩ comme Ghostty.
+            Toggle(L10n.text(.zoomSplit), isOn: Binding(
+                get: { workspace?.zoomedPane != nil },
+                set: { _ in workspace?.toggleZoom() }
+            ))
+            .keyboardShortcut(.return, modifiers: [.command, .shift])
+            .disabled(workspace?.isSplit != true)
             Divider()
-            // Vers la zone voisine, ou une zone neuve de ce côté s'il n'y en a pas.
-            Button(L10n.text(.moveTabLeft)) { workspace?.moveFocusedTab(toward: .left) }
+            // Gauche et haut avancent l'onglet, droite et bas le reculent : les flèches suivent la
+            // barre d'onglets, en haut comme sur le côté.
+            Button(L10n.text(.moveTabLeft)) { workspace?.moveSelectedTab(by: -1) }
                 .keyboardShortcut(.leftArrow, modifiers: [.command, .control])
-            Button(L10n.text(.moveTabRight)) { workspace?.moveFocusedTab(toward: .right) }
+            Button(L10n.text(.moveTabRight)) { workspace?.moveSelectedTab(by: 1) }
                 .keyboardShortcut(.rightArrow, modifiers: [.command, .control])
-            Button(L10n.text(.moveTabUp)) { workspace?.moveFocusedTab(toward: .up) }
+            Button(L10n.text(.moveTabUp)) { workspace?.moveSelectedTab(by: -1) }
                 .keyboardShortcut(.upArrow, modifiers: [.command, .control])
-            Button(L10n.text(.moveTabDown)) { workspace?.moveFocusedTab(toward: .down) }
+            Button(L10n.text(.moveTabDown)) { workspace?.moveSelectedTab(by: 1) }
                 .keyboardShortcut(.downArrow, modifiers: [.command, .control])
             Divider()
         }

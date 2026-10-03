@@ -5,8 +5,9 @@ cd "$(dirname "$0")"
 # Compile Brume, assemble Brume.app, signe, installe dans /Applications et relance.
 #
 # Usage :
-#   bash build-app.sh            # release
-#   bash build-app.sh --debug    # build rapide
+#   bash build-app.sh               # release
+#   bash build-app.sh --debug       # build rapide
+#   bash build-app.sh --no-install  # .build/app/Brume.app seulement, le Brume ouvert reste
 
 APP_NAME="Brume"
 BUNDLE_ID="com.jeremy.brume"
@@ -16,9 +17,13 @@ BUILD_DIR=".build/app"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
 CONFIG="release"
-if [ "${1:-}" = "--debug" ]; then
-    CONFIG="debug"
-fi
+INSTALL=1
+for arg in "$@"; do
+    case "$arg" in
+        --debug) CONFIG="debug" ;;
+        --no-install) INSTALL=0 ;;
+    esac
+done
 
 bash setup.sh
 
@@ -138,6 +143,11 @@ else
 fi
 codesign --force -s "$IDENTITY" "$APP_BUNDLE/Contents/MacOS/fastfetch"
 codesign --force --deep -s "$IDENTITY" "$APP_BUNDLE"
+
+if [ "$INSTALL" = 0 ]; then
+    echo "Done: $APP_BUNDLE"
+    exit 0
+fi
 
 INSTALLED="/Applications/$APP_NAME.app"
 pkill -x "$APP_NAME" 2>/dev/null || true

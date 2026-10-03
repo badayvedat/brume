@@ -13,6 +13,9 @@ struct GeneralSettings: View {
                 }
             }
             SettingsGroup(title: L10n.text(.interface)) {
+                SettingsRow(title: L10n.text(.verticalTabs), hint: L10n.text(.verticalTabsHint)) {
+                    Switch(label: L10n.text(.verticalTabs), isOn: $settings.verticalTabs.isOn)
+                }
                 SettingsRow(title: L10n.text(.language), hint: L10n.text(.languageHint), isLast: true) {
                     Segmented(label: L10n.text(.language), options: Language.allCases.map { ($0, $0.name) }, selection: $settings.language)
                 }

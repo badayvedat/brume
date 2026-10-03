@@ -10,7 +10,7 @@ struct SessionFileTests {
     }
 
     @Test func savedSessionIsReadBack() throws {
-        let session = Session(windows: [SavedWindow(layout: WindowLayout(area: UUID(), tab: UUID()), tabs: [:], frame: nil)])
+        let session = Session(windows: [SavedWindow(layout: WindowLayout(tab: UUID(), pane: UUID()), tabs: [:], panes: [:], frame: nil)])
         try file.save(session)
         #expect(file.load() == session)
         try FileManager.default.removeItem(at: file.url.deletingLastPathComponent())

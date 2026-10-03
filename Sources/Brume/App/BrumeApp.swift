@@ -37,6 +37,7 @@ struct BrumeApp: App {
             SearchCommands()
             FontSizeCommands()
             SettingsCommands()
+            VerticalTabsCommands(settings: settings)
         }
     }
 }

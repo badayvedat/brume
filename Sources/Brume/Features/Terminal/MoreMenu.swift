@@ -4,13 +4,14 @@ import GhosttyTerminal
 import SwiftUI
 
 /// Les « ... » de la barre : ouvrir le dossier du terminal affiché ailleurs, copier son chemin,
-/// réinitialiser les onglets, ouvrir les réglages.
+/// passer aux onglets verticaux, réinitialiser les onglets, ouvrir les réglages.
 struct MoreMenu: View {
     @ObservedObject var state: TerminalViewState
     let workspace: TerminalWorkspace
 
     @State private var isHovered = false
     @State private var anchor = MenuAnchor()
+    @Environment(SettingsStore.self) private var settings
 
     private var folder: URL? {
         state.workingDirectory.map { URL(fileURLWithPath: $0, isDirectory: true) }
@@ -52,6 +53,9 @@ struct MoreMenu: View {
             entries.append(.item(L10n.text(.noFolderYet), enabled: false) {})
         }
         entries.append(.separator)
+        entries.append(.item(L10n.text(.verticalTabs), shortcut: VerticalTabsCommands.shortcut, checked: settings.verticalTabs.isOn) {
+            settings.verticalTabs.isOn.toggle()
+        })
         entries.append(.item(L10n.text(.resetTabs), run: workspace.reset))
         entries.append(.item("\(L10n.text(.settings))…", shortcut: "⌘,") { workspace.showSettings() })
         PopupMenu.show(entries, below: view)

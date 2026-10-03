@@ -1,0 +1,70 @@
+diff --git a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+--- a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
++++ b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+@@ -28,6 +28,7 @@
+         case searchSelected
+         case background
+         case commandFinished
++        case progress
+     }
+ 
+     typealias Apply = @MainActor (TerminalViewState) -> Void
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+--- a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+@@ -19,6 +19,7 @@
+     TerminalSurfaceScrollbarDelegate,
+     TerminalSurfaceSearchDelegate,
+     TerminalSurfaceCommandFinishedDelegate,
++    TerminalSurfaceProgressReportDelegate,
+     TerminalSurfaceLifecycleDelegate,
+     TerminalSurfaceTextSelectionRequestDelegate,
+     TerminalSurfaceClipboardConfirmationDelegate,
+@@ -178,6 +179,16 @@
+         publishSoon(.commandFinished) {
+             $0.lastCommandExitCode = exitCode
+             $0.lastCommandDurationNanos = durationNanos
++        }
++        // A program that exits without removing its report leaves none behind.
++        terminalDidReportProgress(state: .remove, percent: nil)
++    }
++
++    public func terminalDidReportProgress(state: TerminalProgressState, percent: Int?) {
++        let progress = state == .remove ? nil : TerminalProgress(state: state, percent: percent)
++        publishSoon(.progress) {
++            guard $0.progress != progress else { return }
++            $0.progress = progress
+         }
+     }
+ 
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState.swift b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+--- a/Sources/GhosttyTerminal/State/TerminalViewState.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+@@ -36,6 +36,10 @@
+     @Published public internal(set) var searchTotal: Int?
+     @Published public internal(set) var searchSelected: Int?
+ 
++    /// The running program's OSC 9;4 progress report, nil once it removes it
++    /// or its command finishes. Brume.
++    @Published public internal(set) var progress: TerminalProgress?
++
+     /// The effective config's `background`, or the color a program set with
+     /// OSC 11 while the surface lives.
+     @Published public internal(set) var backgroundColor: TerminalColor
+diff --git a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+--- a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
++++ b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+@@ -134,6 +134,13 @@
+     func terminalDidReportProgress(state: TerminalProgressState, percent: Int?)
+ }
+ 
++/// The latest progress report, as `TerminalViewState` publishes it. Brume.
++public struct TerminalProgress: Equatable, Sendable {
++    public let state: TerminalProgressState
++    /// 0 to 100, nil when the emitter didn't provide one.
++    public let percent: Int?
++}
++
+ public enum TerminalColorChangeKind: Hashable, Sendable {
+     case foreground
+     case background

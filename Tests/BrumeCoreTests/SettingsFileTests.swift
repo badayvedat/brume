@@ -17,6 +17,7 @@ struct SettingsFileTests {
         settings.font = TerminalFont(family: "Menlo", size: 15)
         settings.language = .english
         settings.restoresSession = false
+        settings.verticalTabs = VerticalTabs(isOn: true, width: 260)
         try file.save(settings)
         #expect(file.load() == settings)
         try FileManager.default.removeItem(at: file.url.deletingLastPathComponent())
@@ -32,6 +33,8 @@ struct SettingsFileTests {
         #expect(TerminalFont(family: nil, size: 200).size == TerminalFont.sizeRange.upperBound)
         let settings = AppSettings.decoded(from: Data(#"{"font": {"size": 200}}"#.utf8))
         #expect(settings?.font.size == TerminalFont.sizeRange.upperBound)
+        let tabs = AppSettings.decoded(from: Data(#"{"verticalTabs": {"isOn": true, "width": 9000}}"#.utf8))
+        #expect(tabs?.verticalTabs == VerticalTabs(isOn: true, width: VerticalTabs.widthRange.upperBound))
     }
 
     @Test func oldGlassNumbersBecomeTheClosestStep() {

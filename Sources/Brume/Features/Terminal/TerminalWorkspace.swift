@@ -1,4 +1,5 @@
 import BrumeCore
+import Combine
 import Foundation
 import GhosttyTerminal
 import SwiftUI
@@ -59,26 +60,42 @@ enum FontSizeChange {
     case increase, decrease, reset
 }
 
-
-/// Une fenêtre comme Muxy : des zones, chacune avec sa barre d'onglets, un terminal par onglet.
+/// Une fenêtre comme Ghostty : des onglets, chacun divisé en splits, un terminal par split.
 @MainActor @Observable
 final class TerminalWorkspace {
-    private(set) var layout: WindowLayout<UUID, UUID>
+    private(set) var layout: WindowLayout<UUID, UUID> {
+        // Un autre split prend le clavier, ou l'onglet change : fin de l'agrandissement.
+        didSet {
+            if let zoomedPane, layout.focusedPane != zoomedPane || !isSplit { self.zoomedPane = nil }
+        }
+    }
+    /// Les terminaux, par split.
     private(set) var states: [UUID: TerminalViewState] = [:]
     private(set) var searches: [UUID: TerminalSearch] = [:]
-    /// Le nom choisi d'un onglet ; sans, il affiche le titre de son terminal.
+    /// Le titre et la progression que chaque terminal annonce, relevés ici : un onglet ou un
+    /// groupe qui les affiche se met à jour sans observer chacun de ses terminaux.
+    private(set) var terminalTitles: [UUID: String] = [:]
+    private(set) var paneProgress: [UUID: TerminalProgress] = [:]
+    /// Le nom choisi d'un onglet ; sans, il affiche le titre de ses terminaux.
     private(set) var customTitles: [UUID: String] = [:]
     private(set) var colors: [UUID: TabColor] = [:]
+    private(set) var icons: [UUID: TabIcon] = [:]
+    /// Les onglets divisés repliés dans la barre latérale.
+    private(set) var collapsed: Set<UUID> = []
     private(set) var renamingID: UUID?
+    /// Les splits cachés où une commande ou une progression a fini, où ça a sonné ou notifié
+    /// (Claude Code qui attend une réponse) depuis qu'on les a quittés.
+    private(set) var activity: Set<UUID> = []
+    /// Le split agrandi à tout l'onglet le temps de lire, comme `toggle_split_zoom` de Ghostty.
+    private(set) var zoomedPane: UUID?
     private(set) var drop: WindowLayout<UUID, UUID>.Drop?
     /// La page de réglages affichée à la place des terminaux, qui restent ouverts dessous.
     private(set) var settingsSection: SettingsSection?
-    /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalSplitView` pour
-    /// calculer les dépôts : les vues prennent la hauteur du `WindowTitlebar`, observé, pas celle-ci.
+    /// La place des splits, posée par `TerminalSplitView` pour calculer les dépôts.
     @ObservationIgnored var bounds: CGRect = .zero
-    @ObservationIgnored var barHeight: CGFloat = 40
     @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
+    @ObservationIgnored private var watchers: [UUID: [AnyCancellable]] = [:]
     /// La place de la fenêtre restaurée, posée quand elle s'ouvre.
     @ObservationIgnored private var savedFrame: CGRect?
 
@@ -119,38 +136,46 @@ final class TerminalWorkspace {
     /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.
     init(restoring saved: SavedWindow? = nil) {
         guard let saved, saved.layout.isConsistent else {
-            let id = UUID()
-            layout = WindowLayout(area: UUID(), tab: id)
-            states[id] = makeState(id, inheriting: lastFocused, as: .window)
+            let pane = UUID()
+            layout = WindowLayout(tab: UUID(), pane: pane)
+            states[pane] = makeState(pane, inheriting: lastFocused, as: .window)
             openWorkspaces.append(WeakWorkspace(value: self))
             return
         }
         layout = saved.layout
         savedFrame = saved.frame
-        for id in saved.layout.tabs {
-            let tab = saved.tabs[id]
-            let state = makeState(id, inheriting: nil, as: .window)
-            state.configuration.workingDirectory = tab?.workingDirectory
-            state.isSurfaceVisible = saved.layout.isShown(id)
-            states[id] = state
-            customTitles[id] = tab?.customTitle
-            colors[id] = tab?.color
+        let shown = Set(saved.layout.panes(of: saved.layout.selectedTab))
+        for pane in saved.layout.panes {
+            let state = makeState(pane, inheriting: nil, as: .window)
+            state.configuration.workingDirectory = saved.panes[pane]?.workingDirectory
+            state.isSurfaceVisible = shown.contains(pane)
+            states[pane] = state
+        }
+        for tab in saved.layout.tabs {
+            let info = saved.tabs[tab]
+            customTitles[tab] = info?.customTitle
+            colors[tab] = info?.color
+            icons[tab] = info?.icon
+            if info?.isCollapsed == true { collapsed.insert(tab) }
         }
         openWorkspaces.append(WeakWorkspace(value: self))
     }
 
     /// Ce que la fenêtre retrouvera au prochain lancement.
     var snapshot: SavedWindow {
-        let tabs = Dictionary(uniqueKeysWithValues: layout.tabs.map { id -> (UUID, SavedTab) in
-            // Le dossier de départ tant que le shell n'a pas encore annoncé le sien.
-            let folder = states[id].flatMap { $0.workingDirectory ?? $0.configuration.workingDirectory }
-            return (id, SavedTab(workingDirectory: folder, customTitle: customTitles[id], color: colors[id]))
+        let tabs = Dictionary(uniqueKeysWithValues: layout.tabs.map { tab in
+            (tab, SavedTab(customTitle: customTitles[tab], color: colors[tab], icon: icons[tab], isCollapsed: collapsed.contains(tab)))
         })
-        return SavedWindow(layout: layout, tabs: tabs, frame: window?.frame)
+        let panes = Dictionary(uniqueKeysWithValues: layout.panes.map { pane in
+            // Le dossier de départ tant que le shell n'a pas encore annoncé le sien.
+            (pane, SavedPane(workingDirectory: states[pane].flatMap { $0.workingDirectory ?? $0.configuration.workingDirectory }))
+        })
+        return SavedWindow(layout: layout, tabs: tabs, panes: panes, frame: window?.frame)
     }
 
+    /// Le split qui a le clavier, dans l'onglet affiché.
     var focusedID: UUID {
-        layout.focusedTab
+        layout.focusedPane
     }
 
     var focused: TerminalViewState {
@@ -161,8 +186,9 @@ final class TerminalWorkspace {
         searches[focusedID]
     }
 
+    /// L'onglet affiché est divisé.
     var isSplit: Bool {
-        layout.tree.panes.count > 1
+        layout.isSplit(layout.selectedTab)
     }
 
     func attach(to window: NSWindow) {
@@ -203,15 +229,14 @@ final class TerminalWorkspace {
 
     // MARK: Onglets
 
-    func newTab(in area: UUID? = nil) {
-        if let area { apply(layout.focusing(area)) }
-        let id = UUID()
-        states[id] = makeState(id, inheriting: focused, as: .window)
-        apply(layout.addingTab(id))
+    func newTab() {
+        let pane = UUID()
+        states[pane] = makeState(pane, inheriting: focused, as: .window)
+        apply(layout.addingTab(UUID(), pane: pane))
     }
 
-    func select(_ id: UUID) {
-        apply(layout.selecting(id))
+    func select(_ tab: UUID) {
+        apply(layout.selecting(tab))
     }
 
     func select(number: Int) {
@@ -226,93 +251,150 @@ final class TerminalWorkspace {
         apply(layout.selecting(offset: -1))
     }
 
-    func move(_ id: UUID, to index: Int) {
-        layout = layout.moving(id, to: index)
+    func move(_ tab: UUID, to index: Int) {
+        layout = layout.moving(tab, to: index)
     }
 
-    /// La croix d'un onglet : confirme si une commande y tourne.
-    func close(_ id: UUID) {
-        guard let state = states[id] else { return }
-        guard Self.isRunning(state) else { return remove(id) }
+    func moveSelectedTab(by offset: Int) {
+        layout = layout.moving(layout.selectedTab, by: offset)
+    }
+
+    /// La croix d'un onglet : confirme si une commande tourne dans un de ses splits.
+    func close(_ tab: UUID) {
+        guard layout.panes(of: tab).contains(where: hasRunningCommand) else { return removeTab(tab) }
         // Sa feuille parle de cet onglet : on l'affiche avant de demander.
-        select(id)
-        CloseConfirmation.tab.ask(in: window) { [weak self] in self?.remove(id) }
+        select(tab)
+        CloseConfirmation.tab.ask(in: window) { [weak self] in self?.removeTab(tab) }
     }
 
-    func closeOthers(of id: UUID) {
-        close(layout.tabs(besides: id))
+    func closeOthers(of tab: UUID) {
+        close(layout.tabs(besides: tab))
     }
 
-    func closeRight(of id: UUID) {
-        close(layout.tabs(rightOf: id))
+    func closeAfter(_ tab: UUID) {
+        close(layout.tabs(after: tab))
     }
 
     /// Retour à un seul onglet : le terminal actif reste, avec son shell ; les autres onglets et
-    /// zones se ferment, couleurs, noms et taille du texte reviennent à la normale.
+    /// splits se ferment, couleurs, icônes, noms et taille du texte reviennent à la normale.
     func reset() {
         let kept = focusedID
-        let others = layout.tabs.filter { $0 != kept }
+        let others = layout.panes.filter { $0 != kept }
         let reset = { [weak self] in
             guard let self else { return }
-            for id in others {
-                states[id] = nil
-                searches[id] = nil
-            }
+            others.forEach(forget)
             customTitles = [:]
             colors = [:]
-            apply(WindowLayout(area: layout.focusedArea, tab: kept))
+            icons = [:]
+            collapsed = []
+            apply(WindowLayout(tab: layout.selectedTab, pane: kept))
             states[kept]?.surface?.performBindingAction("reset_font_size")
             focus(kept)
         }
-        guard others.contains(where: { states[$0].map(Self.isRunning) ?? false }) else { return reset() }
+        guard others.contains(where: hasRunningCommand) else { return reset() }
         CloseConfirmation.tabs.ask(in: window, then: reset)
     }
 
-    func color(of id: UUID) -> TabColor? {
-        colors[id]
+    func color(of tab: UUID) -> TabColor? {
+        colors[tab]
     }
 
-    func setColor(_ color: TabColor?, of id: UUID) {
-        colors[id] = color
+    func setColor(_ color: TabColor?, of tab: UUID) {
+        colors[tab] = color
     }
 
-    func title(of id: UUID) -> String? {
-        customTitles[id]
+    /// Sans icône choisie, celle du terminal.
+    func icon(of tab: UUID) -> TabIcon {
+        icons[tab] ?? .terminal
     }
 
-    func startRenaming(_ id: UUID? = nil) {
+    /// Celle choisie, sinon un split pour un onglet divisé : on le reconnaît en haut comme sur le côté.
+    func symbol(of tab: UUID) -> String {
+        icons[tab]?.symbol ?? (layout.isSplit(tab) ? "square.split.2x1" : TabIcon.terminal.symbol)
+    }
+
+    func setIcon(_ icon: TabIcon, of tab: UUID) {
+        icons[tab] = icon == .terminal ? nil : icon
+    }
+
+    func title(of tab: UUID) -> String? {
+        customTitles[tab]
+    }
+
+    /// Le nom choisi, sinon ce qu'annonce son terminal (son dossier, ou la commande en cours). Un
+    /// onglet divisé joint ceux de ses splits, chacun réduit à son dernier dossier.
+    func displayedTitle(of tab: UUID) -> String {
+        if let custom = customTitles[tab] { return custom }
+        let panes = layout.panes(of: tab)
+        return panes.count == 1 ? paneTitle(panes[0]) : panes.map { TabTitle.short(paneTitle($0)) }.joined(separator: " + ")
+    }
+
+    func paneTitle(_ pane: UUID) -> String {
+        let title = terminalTitles[pane] ?? ""
+        return title.isEmpty ? L10n.text(.terminal) : title
+    }
+
+    /// Celle d'un de ses splits : l'onglet travaille tant que l'un d'eux travaille.
+    func progress(of tab: UUID) -> TerminalProgress? {
+        layout.panes(of: tab).lazy.compactMap { self.paneProgress[$0] }.first
+    }
+
+    func hasActivity(_ tab: UUID) -> Bool {
+        layout.panes(of: tab).contains(where: activity.contains)
+    }
+
+    func startRenaming(_ tab: UUID? = nil) {
         guard settingsSection == nil else { return }
-        let id = id ?? focusedID
-        select(id)
-        renamingID = id
+        let tab = tab ?? layout.selectedTab
+        select(tab)
+        renamingID = tab
     }
 
     /// Nil : renommage annulé. Le champ qui disparaît rappelle cette fonction en perdant le focus :
     /// seul le premier appel compte.
-    func finishRenaming(_ id: UUID, input: String?, displayed: String) {
-        guard renamingID == id else { return }
+    func finishRenaming(_ tab: UUID, input: String?, displayed: String) {
+        guard renamingID == tab else { return }
         renamingID = nil
         if let input {
-            customTitles[id] = TabTitle.renamed(input: input, displayed: displayed, current: customTitles[id])
+            customTitles[tab] = TabTitle.renamed(input: input, displayed: displayed, current: customTitles[tab])
         }
         focus(focusedID)
     }
 
-    func resetTitle(_ id: UUID) {
-        customTitles[id] = nil
+    func resetTitle(_ tab: UUID) {
+        customTitles[tab] = nil
     }
 
-    // MARK: Zones
+    func toggleCollapsed(_ tab: UUID) {
+        collapsed.formSymmetricDifference([tab])
+    }
 
-    func split(_ axis: SplitAxis, from area: UUID? = nil) {
-        if let area { apply(layout.focusing(area)) }
-        let id = UUID()
-        states[id] = makeState(id, inheriting: focused, as: .split)
-        apply(layout.splitting(toward: axis == .horizontal ? .right : .down, area: UUID(), tab: id))
+    /// Chaque split de l'onglet part dans son propre onglet.
+    func separate(_ tab: UUID) {
+        apply(layout.separating(tab, into: layout.panes(of: tab).dropFirst().map { _ in UUID() }))
+        collapsed.remove(tab)
+    }
+
+    func detach(_ pane: UUID) {
+        apply(layout.detaching(pane, into: UUID()))
+        focus(pane)
+    }
+
+    // MARK: Splits
+
+    func split(_ axis: SplitAxis) {
+        let pane = UUID()
+        states[pane] = makeState(pane, inheriting: focused, as: .split)
+        apply(layout.splitting(toward: axis == .horizontal ? .right : .down, pane: pane))
     }
 
     func setRatio(_ ratio: CGFloat, at path: [Int]) {
         layout = layout.settingRatio(ratio, at: path)
+    }
+
+    func toggleZoom() {
+        zoomedPane = zoomedPane == nil && isSplit ? focusedID : nil
+        updateSurfaces()
     }
 
     func equalizeSplits() {
@@ -328,40 +410,37 @@ final class TerminalWorkspace {
     }
 
     func focusNext() {
-        layout.tree.pane(after: layout.focusedArea).map(focusArea)
+        apply(layout.focusingPane(offset: 1))
     }
 
     func focusPrevious() {
-        layout.tree.pane(before: layout.focusedArea).map(focusArea)
+        apply(layout.focusingPane(offset: -1))
     }
 
     func focus(toward direction: SplitDirection) {
-        layout.tree.neighbor(of: layout.focusedArea, toward: direction).map(focusArea)
+        apply(layout.focusingPane(toward: direction))
     }
 
-    func moveFocusedTab(toward direction: SplitDirection) {
-        let id = focusedID
-        apply(layout.movingFocusedTab(toward: direction, newArea: UUID()))
-        focus(id)
-    }
-
-    private func focusArea(_ area: UUID) {
-        apply(layout.focusing(area))
-        focus(focusedID)
+    /// La croix d'un split dans la barre latérale : confirme si une commande y tourne.
+    func closePane(_ pane: UUID) {
+        guard states[pane] != nil else { return }
+        guard hasRunningCommand(pane) else { return remove(pane) }
+        focus(pane)
+        CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.remove(pane) }
     }
 
     // MARK: Terminal actif
 
-    func focus(_ id: UUID) {
-        apply(layout.selecting(id))
-        lastFocused = states[id]
-        if settingsSection == nil { states[id]?.requestFocus() }
+    func focus(_ pane: UUID) {
+        apply(layout.focusing(pane))
+        lastFocused = states[pane]
+        if settingsSection == nil { states[pane]?.requestFocus() }
     }
 
     /// Un clic donne déjà le focus au terminal : on ne fait que suivre.
-    func didFocus(_ id: UUID) {
-        layout = layout.selecting(id)
-        lastFocused = states[id]
+    func didFocus(_ pane: UUID) {
+        layout = layout.focusing(pane)
+        lastFocused = states[pane]
     }
 
     /// Passe par le moteur, qui signale une commande en cours à `onClose`.
@@ -395,83 +474,135 @@ final class TerminalWorkspace {
         focused.surface?.performBindingAction("search_selection")
     }
 
-    func endSearch(in id: UUID) {
-        guard let search = searches.removeValue(forKey: id) else { return }
+    func endSearch(in pane: UUID) {
+        guard let search = searches.removeValue(forKey: pane) else { return }
         search.end()
-        focus(id)
+        focus(pane)
     }
 
     // MARK: Glisser un onglet
 
     /// Hors de sa barre. Nil : plus de glisser en cours, ou rien à proposer ici.
-    func hoverDrop(dragging id: UUID, at point: CGPoint?) {
-        let new = point.flatMap { layout.drop(of: id, at: $0, in: bounds, barHeight: barHeight) }
+    func hoverDrop(dragging tab: UUID, at point: CGPoint?) {
+        if point != nil { unzoom() }
+        let new = point.flatMap { layout.drop(of: tab, at: $0, in: bounds) }
         if new != drop { drop = new }
     }
 
+    /// L'onglet lâché sur les splits de l'onglet affiché les rejoint : son nom, sa couleur et
+    /// son icône partent avec lui.
     func performDrop() {
         guard let drop else { return }
         self.drop = nil
-        apply(layout.dropping(drop, newArea: UUID()))
-        focus(drop.tab)
+        forgetTab(drop.tab)
+        apply(layout.dropping(drop))
+        focus(layout.focusedPane)
     }
 
     // MARK: Interne
 
-    private func close(_ ids: [UUID]) {
-        guard !ids.isEmpty else { return }
-        guard ids.contains(where: { states[$0].map(Self.isRunning) ?? false }) else { return ids.forEach(remove) }
-        CloseConfirmation.tabs.ask(in: window) { [weak self] in ids.forEach { self?.remove($0) } }
+    private func close(_ tabs: [UUID]) {
+        guard !tabs.isEmpty else { return }
+        guard tabs.flatMap(layout.panes(of:)).contains(where: hasRunningCommand) else { return tabs.forEach(removeTab) }
+        CloseConfirmation.tabs.ask(in: window) { [weak self] in tabs.forEach { self?.removeTab($0) } }
+    }
+
+    private func hasRunningCommand(_ pane: UUID) -> Bool {
+        states[pane].map(Self.isRunning) ?? false
     }
 
     private static func isRunning(_ state: TerminalViewState) -> Bool {
         state.surface?.needsConfirmQuit == true
     }
 
-    private func openSearch(in id: UUID, needle: String) {
-        guard let state = states[id] else { return }
-        if let search = searches[id] {
+    private func openSearch(in pane: UUID, needle: String) {
+        guard let state = states[pane] else { return }
+        if let search = searches[pane] {
             if !needle.isEmpty { search.needle = needle }
         } else {
-            searches[id] = TerminalSearch(state: state, needle: needle)
+            searches[pane] = TerminalSearch(state: state, needle: needle)
         }
-        searches[id]?.focusField()
+        searches[pane]?.focusField()
     }
 
-    private func remove(_ id: UUID) {
-        // `close()` et pas `performClose` : la confirmation a déjà eu lieu.
-        guard let remaining = layout.removing(id) else {
+    /// `close()` et pas `performClose` : la confirmation a déjà eu lieu.
+    private func remove(_ pane: UUID) {
+        guard let remaining = layout.removing(pane) else {
             window?.close()
             return
         }
-        states[id] = nil
-        searches[id] = nil
-        customTitles[id] = nil
-        colors[id] = nil
+        if let tab = layout.tab(of: pane), remaining.splits[tab] == nil { forgetTab(tab) }
+        forget(pane)
         apply(remaining)
     }
 
-    /// Seuls les onglets affichés dessinent ; les autres gardent leur shell. Le focus suit l'onglet actif.
+    private func removeTab(_ tab: UUID) {
+        let panes = layout.panes(of: tab)
+        guard let remaining = layout.removingTab(tab) else {
+            window?.close()
+            return
+        }
+        forgetTab(tab)
+        panes.forEach(forget)
+        apply(remaining)
+    }
+
+    private func forget(_ pane: UUID) {
+        states[pane] = nil
+        searches[pane] = nil
+        watchers[pane] = nil
+        terminalTitles[pane] = nil
+        paneProgress[pane] = nil
+        activity.remove(pane)
+    }
+
+    private func forgetTab(_ tab: UUID) {
+        customTitles[tab] = nil
+        colors[tab] = nil
+        icons[tab] = nil
+        collapsed.remove(tab)
+    }
+
+    /// Seul l'onglet affiché dessine ; les autres gardent leurs shells. Le focus suit le split actif.
     private func apply(_ new: WindowLayout<UUID, UUID>) {
-        let previous = layout.focusedTab
+        let previous = layout.focusedPane
         layout = new
         updateSurfaces()
-        if new.focusedTab != previous {
-            lastFocused = states[new.focusedTab]
-            if settingsSection == nil { states[new.focusedTab]?.requestFocus() }
+        if new.focusedPane != previous {
+            lastFocused = states[new.focusedPane]
+            if settingsSection == nil { states[new.focusedPane]?.requestFocus() }
         }
     }
 
-    /// Seuls les terminaux affichés se dessinent : ni les onglets cachés, ni rien sous les réglages.
+    /// Les splits de l'onglet affiché, ou seulement celui agrandi.
+    private var shownPanes: Set<UUID> {
+        if let zoomedPane { return [zoomedPane] }
+        return Set(layout.panes(of: layout.selectedTab))
+    }
+
+    /// Seuls les terminaux affichés se dessinent : ni les autres onglets, ni rien sous les réglages.
     private func updateSurfaces() {
-        let shown = settingsSection == nil ? Set(layout.areas.values.map(\.selected)) : []
-        for (id, state) in states {
-            state.isSurfaceVisible = shown.contains(id)
+        let shown = shownPanes
+        if !activity.isDisjoint(with: shown) { activity.subtract(shown) }
+        let drawn = settingsSection == nil ? shown : []
+        for (pane, state) in states {
+            state.isSurfaceVisible = drawn.contains(pane)
         }
+    }
+
+    private func unzoom() {
+        guard zoomedPane != nil else { return }
+        zoomedPane = nil
+        updateSurfaces()
+    }
+
+    private func noteActivity(in pane: UUID) {
+        guard !shownPanes.contains(pane) else { return }
+        activity.insert(pane)
     }
 
     private func makeState(
-        _ id: UUID,
+        _ pane: UUID,
         inheriting parent: TerminalViewState?,
         as context: TerminalSurfaceContext
     ) -> TerminalViewState {
@@ -484,11 +615,23 @@ final class TerminalWorkspace {
         // Cmd+W passe par le moteur, qui signale une commande en cours.
         state.onClose = { [weak self] processAlive in
             guard let self else { return }
-            guard processAlive else { return remove(id) }
-            CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.remove(id) }
+            guard processAlive else { return remove(pane) }
+            CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.remove(pane) }
         }
-        state.onStartSearch = { [weak self] in self?.openSearch(in: id, needle: $0) }
-        state.onEndSearch = { [weak self] in self?.endSearch(in: id) }
+        watchers[pane] = [
+            state.$title.removeDuplicates().sink { [weak self] in self?.terminalTitles[pane] = $0 },
+            state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
+            Publishers.Merge4(
+                state.$lastCommandExitCode.dropFirst().map { _ in },
+                state.$bellCount.dropFirst().map { _ in },
+                state.$lastDesktopNotificationAt.dropFirst().map { _ in },
+                // Une progression qui s'arrête : Claude Code a fini son tour.
+                state.$progress.map { $0 != nil }.removeDuplicates().dropFirst().filter { !$0 }.map { _ in }
+            )
+            .sink { [weak self] in self?.noteActivity(in: pane) },
+        ]
+        state.onStartSearch = { [weak self] in self?.openSearch(in: pane, needle: $0) }
+        state.onEndSearch = { [weak self] in self?.endSearch(in: pane) }
         return state
     }
 }

@@ -50,6 +50,11 @@ struct PopupMenuView: View {
                 Image(nsImage: icon).resizable().frame(width: 16, height: 16)
                     .opacity(action.isEnabled ? 1 : 0.4)
             }
+            if let symbol = action.symbol {
+                SystemSymbol.image(symbol, size: 12)
+                    .foregroundStyle(isActive ? Ink.text : Ink.muted)
+                    .frame(width: 16)
+            }
             if let swatch = action.swatch {
                 Circle().fill(swatch).frame(width: 12, height: 12).frame(width: 16)
             }

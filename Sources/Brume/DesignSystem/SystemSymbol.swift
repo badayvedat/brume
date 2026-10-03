@@ -1,4 +1,5 @@
 import AppKit
+import BrumeCore
 import SwiftUI
 
 /// Symboles système chargés au lancement, avant le moteur : demandés plus tard,
@@ -17,10 +18,12 @@ enum SystemSymbol {
         Variant(name: "xmark"),
         Variant(name: "xmark", size: 9, weight: .bold),
         Variant(name: "plus", size: 13, weight: .medium),
-        Variant(name: "apple.terminal", size: 12),
+        Variant(name: "plus", size: 12),
         Variant(name: "square.split.2x1", size: 13, weight: .medium),
         Variant(name: "square.split.1x2", size: 13, weight: .medium),
+        Variant(name: "square.split.2x1", size: 12),
         Variant(name: "macwindow.badge.plus", size: 13, weight: .medium),
+        Variant(name: "arrow.down.right.and.arrow.up.left", size: 13, weight: .medium),
         Variant(name: "ellipsis", size: 13, weight: .medium),
         Variant(name: "checkmark", size: 11, weight: .semibold),
         Variant(name: "chevron.down", size: 10, weight: .semibold),
@@ -38,7 +41,7 @@ enum SystemSymbol {
         Variant(name: "shift"),
         Variant(name: "option"),
         Variant(name: "control"),
-    ]
+    ] + TabIcon.allCases.map { Variant(name: $0.symbol, size: 12) }
 
     private static let images: [Variant: NSImage] = Dictionary(uniqueKeysWithValues: variants.compactMap { variant in
         var image = NSImage(systemSymbolName: variant.name, accessibilityDescription: nil)

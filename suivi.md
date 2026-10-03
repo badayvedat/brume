@@ -8,6 +8,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - Sans Xcode : `swift build` + script qui fabrique le .app, comme Orby. GhosttyKit téléchargé précompilé.
 - Repo neuf sur le compte GitHub perso, sans historique. Muxy (MIT) sert de référence : pièces utiles par étape dans [docs/reprise-muxy.md](docs/reprise-muxy.md).
 - Terminal proche de Ghostty, pas de fonctions en trop. Barre du haut à la Muxy : onglets maison et boutons. Au choix, les onglets listés dans une barre latérale à gauche (onglets verticaux).
+- Un onglet contient ses splits, comme Ghostty, Arc et Dia (chapitre 7) : remplace les zones façon Muxy du chapitre 4, où chaque split avait ses onglets.
 - DA inspirée de Monocode (MIT) : flou et teinte, sans image de fond.
 
 ## 1. Mise en place
@@ -92,15 +93,14 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 
 Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés dans une barre latérale à gauche plutôt qu'en haut. Pas une vue « agents » : rien pour surveiller des processus.
 
-- [ ] Barre latérale des onglets à gauche, au choix avec la barre du haut
-- [ ] Chaque onglet a un nom, une couleur et une icône (projet, serveur, machine…)
-- [ ] Au relancement, on retrouve ses onglets tels quels (session déjà sauvegardée) : projets, VPS…
-- [ ] Raccourci clavier pour basculer entre les onglets en haut et la barre latérale, aussi dans le menu « … » avec son raccourci affiché
-- [ ] Dans la barre latérale, les mêmes actions qu'en haut : créer, renommer, réordonner, fermer, couleur et icône
-- Idées à trancher le moment venu (vues chez Muxy) :
-  - Pastille sur l'onglet quand une commande finit ou attend une réponse, dans un onglet caché
-  - Barre de progression dans l'onglet (séquence OSC 9;4 envoyée par Claude Code, certains installeurs)
-  - Agrandir la zone active à toute la fenêtre le temps de lire, puis revenir (`toggle_split_zoom` de Ghostty)
+- [x] Barre latérale des onglets à gauche, au choix avec la barre du haut, en-tête de l'onglet affiché à droite, largeur réglable au bord (160 à 360)
+- [x] Un onglet divisé (⌘D) : en haut un seul onglet à l'icône split, sur le côté un groupe qu'on renomme et qu'on déplie sur ses splits (miniature de la fenêtre pour chacun) ; « Séparer les splits », « Déplacer dans un nouvel onglet », glisser un onglet sur un terminal pour l'y joindre
+- [x] Chaque onglet a un nom, une couleur et une icône (12 au choix : projet, serveur, machine, cloud, base de données, IA, production…)
+- [x] Au relancement, on retrouve ses onglets tels quels, groupes repliés compris ; l'ancienne session (zones) est convertie
+- [x] Raccourci clavier pour basculer entre les onglets en haut et la barre latérale (⌃⌘S, celui de macOS pour la barre latérale), aussi dans le menu « … » et dans Réglages › Général, en fondu
+- [x] Dans la barre latérale, les mêmes actions qu'en haut : créer, renommer, réordonner, fermer, couleur et icône ; ouverture et fermeture en accordéon, onglet actif sans clignotement
+- [x] Pastille sur l'onglet : elle respire quand Claude Code travaille, anneau s'il donne un pourcentage, pleine quand une commande finit, sonne ou notifie dans un onglet caché (OSC 9;4 par le patch `tab-progress`)
+- [x] Agrandir le split actif à tout l'onglet (⇧⌘↩ comme Ghostty), bouton à l'accent pour revenir
 
 ## 8. DA Monocode
 

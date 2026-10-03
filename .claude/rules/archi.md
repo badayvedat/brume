@@ -32,7 +32,7 @@ Tests/BrumeCoreTests/   # Swift Testing
 
 - Toute logique testable (presets, thèmes, réglages, complétion, parsing) vit dans `BrumeCore`, avec ses tests. `Brume` ne fait que l'UI et le câblage système (AppKit, moteur Ghostty, fichiers).
 - Une vue passe par le store (`@Environment(XxxStore.self)`), le store appelle le service. Une vue n'appelle pas un service directement.
-- Un état propre à une fenêtre (zones, onglets, terminaux : `TerminalWorkspace`) n'est pas un store d'app : il vit dans sa feature, créé en `@State` par la vue de la fenêtre et passé aux sous-vues. Il délègue sa logique à `BrumeCore` (`WindowLayout`).
+- Un état propre à une fenêtre (onglets, splits, terminaux : `TerminalWorkspace`) n'est pas un store d'app : il vit dans sa feature, créé en `@State` par la vue de la fenêtre et passé aux sous-vues. Il délègue sa logique à `BrumeCore` (`WindowLayout`).
 - Seul `Brume/Features/Terminal/` importe `GhosttyTerminal` et `GhosttyTheme` : le reste de l'app ne connaît pas le moteur.
 - Tout texte d'interface passe par une clé `TextKey` (`BrumeCore/Constants/L10n.swift`), en français et en anglais : `L10n.language` est observé, l'interface change de langue en direct.
 - Animations : `Ink.feedback`, `Ink.open`, `Ink.slide` ou `Ink.motion(...)`, jamais une `Animation` nue : elles s'effacent avec « Réduire les animations » de macOS.

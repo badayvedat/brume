@@ -1,197 +1,67 @@
 import BrumeCore
-import GhosttyTerminal
 import SwiftUI
 
+/// Un onglet de la barre du haut. Divisé, il porte l'icône d'un split et le titre de ses terminaux.
 struct TabCell: View {
-    /// Le terminal de l'onglet, dont il affiche le titre.
-    @ObservedObject var state: TerminalViewState
-    let id: UUID
+    let tab: UUID
     let workspace: TerminalWorkspace
     let isDragging: Bool
     /// Le chiffre de son raccourci, montré tant que Cmd est tenu.
     let number: Int?
 
     @State private var isHovered = false
-    @State private var draft = ""
-    @Environment(\.accent) private var accent
-    @FocusState private var isFieldFocused: Bool
-
-    /// Affiché dans sa zone.
-    private var isSelected: Bool {
-        workspace.layout.isShown(id)
-    }
-
-    /// Celui qui reçoit le clavier : avec des splits, le seul en plein dans sa barre.
-    private var isFocused: Bool {
-        workspace.focusedID == id
-    }
-
-    private var isRenaming: Bool {
-        workspace.renamingID == id
-    }
 
     var body: some View {
+        let isSelected = workspace.layout.selectedTab == tab
+        let title = workspace.displayedTitle(of: tab)
         HStack(spacing: 4) {
-            // Comme Muxy : l'icône terminal, et à sa place le numéro tant que Cmd est tenu.
+            TabIconView(symbol: workspace.symbol(of: tab), number: number, isLit: isSelected || isHovered)
+                .padding(.trailing, 4)
             Group {
-                if let number {
-                    Text("\(number)")
-                        .font(.system(size: 10, weight: .bold).monospacedDigit())
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(accent.color, in: .rect(cornerRadius: 4))
-                } else {
-                    SystemSymbol.image("apple.terminal", size: 12)
-                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
-                }
-            }
-            .frame(width: 16, height: 16)
-            .padding(.trailing, 4)
-            .accessibilityHidden(true)
-            Group {
-                if isRenaming {
-                    renameField
+                if workspace.renamingID == tab {
+                    TabRenameField(title: title) { workspace.finishRenaming(tab, input: $0, displayed: title) }
                 } else {
                     Text(title)
-                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
+                        .animation(nil) { $0.foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted) }
                         .lineLimit(1)
                         .truncationMode(.head)
                 }
             }
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
-            CloseButton(action: close)
-                .opacity(isHovered ? 1 : 0)
+            TabStatus(isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab)) {
+                workspace.close(tab)
+            }
         }
         .padding(.leading, 8)
         .padding(.trailing, 4)
         .frame(height: 30)
-        .background(background, in: .rect(cornerRadius: 6))
-        .animation(Ink.feedback, value: isHovered)
-        .animation(Ink.feedback, value: isFocused)
-        .overlay {
-            if isRenaming {
-                RoundedRectangle(cornerRadius: 6).strokeBorder(accent.color, lineWidth: 1)
-            }
-        }
-        .contentShape(.rect(cornerRadius: 6))
-        .onTapGesture { workspace.focus(id) }
-        // En plus du clic simple : le double-clic ne retarde pas la sélection.
-        .simultaneousGesture(TapGesture(count: 2).onEnded(startRenaming))
-        .onRightClick { PopupMenu.show(menu, at: $0) }
-        .accessibilityAction(.default) { workspace.focus(id) }
-        .accessibilityAction(named: L10n.text(.renameTab), startRenaming)
-        // Le menu du clic droit est une fenêtre à part, hors de portée de VoiceOver.
-        .accessibilityAction(named: L10n.text(.resetTabName)) { workspace.resetTitle(id) }
-        .accessibilityAction(named: L10n.text(.closeOtherTabs)) { workspace.closeOthers(of: id) }
-        .accessibilityAction(named: L10n.text(.closeTabsToTheRight)) { workspace.closeRight(of: id) }
-        .accessibilityActions {
-            ForEach(TabColor.allCases, id: \.self) { color in
-                Button("\(L10n.text(.tabColor)) : \(color.name)") { workspace.setColor(color, of: id) }
-            }
-            Button(L10n.text(.noColor)) { workspace.setColor(nil, of: id) }
-        }
-        // Pendant un glisser, les onglets passent sous la souris en changeant de place :
-        // sans ça, leur croix clignote au passage.
-        .onHover { hovering in
-            if !isDragging { isHovered = hovering }
-        }
-        .onChange(of: isDragging) { _, dragging in
-            if dragging { isHovered = false }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction(named: L10n.text(.closeTab), close)
-    }
-
-    private var menu: [MenuEntry] {
-        // Sans raccourcis affichés : ceux du menu agissent sur l'onglet actif, pas sur celui cliqué.
-        var entries: [MenuEntry] = [.item(L10n.text(.renameTab), run: startRenaming)]
-        if workspace.title(of: id) != nil {
-            entries.append(.item(L10n.text(.resetTabName)) { workspace.resetTitle(id) })
-        }
-        let current = workspace.color(of: id)
-        let colors: [MenuEntry] = TabColor.allCases.map { color in
-            .item(color.name, swatch: color.color, checked: current == color) { workspace.setColor(color, of: id) }
-        }
-        entries.append(.submenu(L10n.text(.tabColor), colors + [.separator, .item(L10n.text(.noColor), checked: current == nil) {
-            workspace.setColor(nil, of: id)
-        }]))
-        entries.append(.separator)
-        entries.append(.item(L10n.text(.closeTab), run: close))
-        entries.append(.item(L10n.text(.closeOtherTabs), enabled: !workspace.layout.tabs(besides: id).isEmpty) {
-            workspace.closeOthers(of: id)
-        })
-        entries.append(.item(L10n.text(.closeTabsToTheRight), enabled: !workspace.layout.tabs(rightOf: id).isEmpty) {
-            workspace.closeRight(of: id)
-        })
-        return entries
-    }
-
-    private var title: String {
-        workspace.title(of: id) ?? (state.title.isEmpty ? L10n.text(.terminal) : state.title)
-    }
-
-    private var renameField: some View {
-        TextField(L10n.text(.renameTab), text: $draft)
-            .textFieldStyle(.plain)
-            .labelsHidden()
-            .focused($isFieldFocused)
-            .onSubmit { finishRenaming(draft) }
-            .onExitCommand { finishRenaming(nil) }
-            // Cliquer ailleurs valide, comme dans le Finder.
-            .onChange(of: isFieldFocused) { _, focused in
-                if !focused { finishRenaming(draft) }
-            }
-            .onAppear {
-                draft = title
-                // Le champ vient d'entrer dans la fenêtre : le focus ne prend qu'un tour plus tard.
-                DispatchQueue.main.async { isFieldFocused = true }
-            }
-    }
-
-    private func startRenaming() {
-        workspace.startRenaming(id)
-    }
-
-    /// Nil : annulé.
-    private func finishRenaming(_ input: String?) {
-        workspace.finishRenaming(id, input: input, displayed: title)
-    }
-
-    private func close() {
-        workspace.close(id)
-    }
-
-    /// Une couleur choisie teinte tout l'onglet, plus fort quand il est affiché. Avec des splits,
-    /// l'onglet affiché d'une zone sans le clavier reste à mi-teinte : seul celui qui l'a est plein.
-    private var background: Color {
-        let isFull = isFocused || (isSelected && isHovered)
-        let isHalf = isSelected || isHovered
-        if let color = workspace.color(of: id)?.color {
-            return color.opacity(isFull ? 0.28 : isHalf ? 0.18 : 0.12)
-        }
-        return isFull ? Ink.selection : isHalf ? Ink.hover : .clear
+        .tabBehavior(tab, in: workspace, highlight: isSelected ? .full : .none, isHovered: $isHovered, isDragging: isDragging, isVertical: false)
     }
 }
 
-private struct CloseButton: View {
-    let action: () -> Void
+/// L'icône de l'onglet, et à sa place le numéro de son raccourci tant que Cmd est tenu, comme Muxy.
+struct TabIconView: View {
+    let symbol: String
+    let number: Int?
+    let isLit: Bool
 
-    @State private var isHovered = false
+    @Environment(\.accent) private var accent
 
     var body: some View {
-        Button(action: action) {
-            SystemSymbol.image("xmark", size: 9, weight: .bold)
-                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
-                .frame(width: 20, height: 20)
-                .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 4))
+        Group {
+            if let number {
+                Text("\(number)")
+                    .font(.system(size: 10, weight: .bold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(accent.color, in: .rect(cornerRadius: 4))
+            } else {
+                SystemSymbol.image(symbol, size: 12)
+                    .animation(nil) { $0.foregroundStyle(isLit ? Ink.text : Ink.muted) }
+            }
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.text(.closeTab))
-        .tooltip(L10n.text(.closeTab))
-        .onHover { isHovered = $0 }
-        .animation(Ink.feedback, value: isHovered)
+        .frame(width: 16, height: 16)
+        .accessibilityHidden(true)
     }
 }

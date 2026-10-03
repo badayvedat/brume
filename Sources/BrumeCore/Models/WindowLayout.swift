@@ -1,230 +1,283 @@
 import CoreGraphics
 
-/// Une fenêtre comme Muxy : découpée en zones, chacune avec sa barre d'onglets.
-/// Un onglet est un terminal ; diviser crée une zone, pas un volet dans l'onglet.
-public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>: Hashable, Sendable {
-    /// Un onglet glissé hors de sa barre, et où il ira si on le lâche.
+/// Une fenêtre comme Ghostty, Arc ou Dia : des onglets, chacun divisé en splits, un terminal par
+/// split. Un onglet divisé s'affiche en groupe dans la barre latérale.
+public struct WindowLayout<Tab: Hashable & Sendable, Pane: Hashable & Sendable>: Hashable, Sendable {
+    /// Un onglet glissé sur les splits de l'onglet affiché, et où il ira si on le lâche.
     public struct Drop: Hashable, Sendable {
-        public enum Target: Hashable, Sendable {
-            /// Sur la barre ou le centre d'une autre zone : il rejoint ses onglets.
-            case area(Area)
-            /// Près d'un bord : une zone neuve s'ouvre de ce côté.
-            case split(Area, SplitDirection)
-        }
-
         public let tab: Tab
-        public let target: Target
+        public let target: Pane
+        public let direction: SplitDirection
         /// Ce que prendra l'onglet, à montrer pendant le glisser.
         public let highlight: CGRect
     }
 
-    public private(set) var tree: SplitTree<Area>
-    public private(set) var areas: [Area: TabList<Tab>]
-    public private(set) var focusedArea: Area
+    public private(set) var tabList: TabList<Tab>
+    public private(set) var splits: [Tab: Splits<Pane>]
 
-    public init(area: Area, tab: Tab) {
-        tree = .pane(area)
-        areas = [area: TabList(tab)]
-        focusedArea = area
+    public init(tab: Tab, pane: Pane) {
+        tabList = TabList(tab)
+        splits = [tab: Splits(pane)]
     }
 
-    public var focusedTab: Tab {
-        areas[focusedArea]!.selected
+    public var tabs: [Tab] {
+        tabList.tabs
     }
 
-    /// Une disposition relue d'un fichier peut être abîmée : sans zone active, ou dont l'arbre et
-    /// les barres ne parlent pas des mêmes zones. Restaurée telle quelle, elle planterait Brume.
-    public var isConsistent: Bool {
-        let panes = tree.panes
-        let all = tabs
-        return areas[focusedArea] != nil && Set(panes) == Set(areas.keys) && panes.count == areas.count
-            && Set(all).count == all.count
+    public var selectedTab: Tab {
+        tabList.selected
     }
 
-    /// La zone de chaque onglet, d'un seul passage : à prendre pour afficher tous les onglets.
-    public var areaOfTab: [Tab: Area] {
-        areas.reduce(into: [:]) { result, entry in
-            for tab in entry.value.tabs { result[tab] = entry.key }
+    public var selectedSplits: Splits<Pane> {
+        splits[selectedTab]!
+    }
+
+    public var focusedPane: Pane {
+        selectedSplits.focused
+    }
+
+    /// Tous les terminaux, onglet par onglet.
+    public var panes: [Pane] {
+        tabs.flatMap(panes(of:))
+    }
+
+    public func panes(of tab: Tab) -> [Pane] {
+        splits[tab]?.tree.panes ?? []
+    }
+
+    public func isSplit(_ tab: Tab) -> Bool {
+        panes(of: tab).count > 1
+    }
+
+    /// L'onglet de chaque terminal, d'un seul passage : à prendre pour les afficher tous.
+    public var tabOfPane: [Pane: Tab] {
+        splits.reduce(into: [:]) { result, entry in
+            for pane in entry.value.tree.panes { result[pane] = entry.key }
         }
     }
 
-    /// Le chiffre du raccourci de chaque onglet : Cmd+1 à Cmd+8 dans l'ordre de lecture, Cmd+9 le dernier.
+    public func tab(of pane: Pane) -> Tab? {
+        splits.first { $0.value.tree.panes.contains(pane) }?.key
+    }
+
+    /// Une disposition relue d'un fichier peut être abîmée : un onglet sans splits, un terminal
+    /// dans deux onglets. Restaurée telle quelle, elle planterait Brume.
+    public var isConsistent: Bool {
+        let all = panes
+        return splits[selectedTab] != nil && Set(tabs) == Set(splits.keys) && tabs.count == splits.count && Set(all).count == all.count
+            && splits.values.allSatisfy { $0.tree.panes.contains($0.focused) }
+    }
+
+    /// Le chiffre du raccourci de chaque onglet : Cmd+1 à Cmd+8 dans l'ordre, Cmd+9 le dernier.
     public var shortcutNumbers: [Tab: Int] {
-        let all = tabs
         var numbers: [Tab: Int] = [:]
-        for (index, tab) in all.prefix(8).enumerated() { numbers[tab] = index + 1 }
-        if all.count > 8, let last = all.last { numbers[last] = 9 }
+        for (index, tab) in tabs.prefix(8).enumerated() { numbers[tab] = index + 1 }
+        if tabs.count > 8, let last = tabs.last { numbers[last] = 9 }
         return numbers
     }
 
-    /// Dans l'ordre de lecture : zone par zone, puis dans l'ordre de chaque barre.
-    public var tabs: [Tab] {
-        tree.panes.flatMap { areas[$0]?.tabs ?? [] }
-    }
-
-    public func area(of tab: Tab) -> Area? {
-        areas.first { $0.value.tabs.contains(tab) }?.key
-    }
-
-    public func isShown(_ tab: Tab) -> Bool {
-        area(of: tab).map { areas[$0]?.selected == tab } ?? false
-    }
-
-    /// Dans la zone qui a le focus, juste après l'onglet affiché.
-    public func addingTab(_ tab: Tab) -> WindowLayout {
+    /// Juste après l'onglet affiché, comme Ghostty, et l'affiche.
+    public func addingTab(_ tab: Tab, pane: Pane) -> WindowLayout {
         var layout = self
-        layout.areas[focusedArea] = areas[focusedArea]?.inserting(tab)
-        return layout
-    }
-
-    /// Une zone neuve à côté de celle qui a le focus, avec un onglet, et le focus.
-    public func splitting(toward direction: SplitDirection, area: Area, tab: Tab) -> WindowLayout {
-        var layout = self
-        layout.tree = tree.inserting(.pane(area), beside: focusedArea, toward: direction)
-        layout.areas[area] = TabList(tab)
-        layout.focusedArea = area
+        layout.tabList = tabList.inserting(tab)
+        layout.splits[tab] = Splits(pane)
         return layout
     }
 
     public func selecting(_ tab: Tab) -> WindowLayout {
-        guard let area = area(of: tab) else { return self }
         var layout = self
-        layout.areas[area] = areas[area]?.selecting(tab)
-        layout.focusedArea = area
+        layout.tabList = tabList.selecting(tab)
         return layout
     }
 
-    /// Cmd+1 à Cmd+8 dans l'ordre de lecture de toute la fenêtre, Cmd+9 le dernier.
+    /// Cmd+1 à Cmd+8, Cmd+9 le dernier.
     public func selecting(number: Int) -> WindowLayout {
-        let all = tabs
-        let index = number == 9 ? all.count - 1 : number - 1
-        guard all.indices.contains(index) else { return self }
-        return selecting(all[index])
+        let index = number == 9 ? tabs.count - 1 : number - 1
+        guard tabs.indices.contains(index) else { return self }
+        return selecting(tabs[index])
     }
 
-    /// Onglet précédent ou suivant dans la zone qui a le focus.
+    /// Fait le tour : après le dernier vient le premier.
     public func selecting(offset: Int) -> WindowLayout {
         var layout = self
-        layout.areas[focusedArea] = areas[focusedArea]?.selecting(offset: offset)
+        layout.tabList = tabList.selecting(offset: offset)
         return layout
     }
 
-    public func focusing(_ area: Area) -> WindowLayout {
-        guard areas[area] != nil else { return self }
+    /// Affiche son onglet et lui donne le clavier.
+    public func focusing(_ pane: Pane) -> WindowLayout {
+        guard let tab = tab(of: pane), let tabSplits = splits[tab] else { return self }
+        var layout = selecting(tab)
+        layout.splits[tab] = tabSplits.focusing(pane)
+        return layout
+    }
+
+    /// Le split suivant ou précédent de l'onglet affiché, en faisant le tour.
+    public func focusingPane(offset: Int) -> WindowLayout {
+        let tree = selectedSplits.tree
+        guard let pane = offset > 0 ? tree.pane(after: focusedPane) : tree.pane(before: focusedPane) else { return self }
+        return focusing(pane)
+    }
+
+    public func focusingPane(toward direction: SplitDirection) -> WindowLayout {
+        guard let pane = selectedSplits.tree.neighbor(of: focusedPane, toward: direction) else { return self }
+        return focusing(pane)
+    }
+
+    /// Un split neuf à côté de celui qui a le clavier, dans l'onglet affiché, et le clavier.
+    public func splitting(toward direction: SplitDirection, pane: Pane) -> WindowLayout {
         var layout = self
-        layout.focusedArea = area
+        layout.splits[selectedTab] = selectedSplits.inserting(.pane(pane), beside: focusedPane, toward: direction, focusing: pane)
         return layout
     }
 
-    /// Une zone vidée disparaît, sa voisine prend la place. Nil quand plus rien ne reste.
-    public func removing(_ tab: Tab) -> WindowLayout? {
-        guard let area = area(of: tab), let list = areas[area] else { return self }
+    /// Un onglet vidé disparaît. Nil quand plus rien ne reste.
+    public func removing(_ pane: Pane) -> WindowLayout? {
+        guard let tab = tab(of: pane), let tabSplits = splits[tab] else { return self }
+        guard let remaining = tabSplits.removing(pane) else { return removingTab(tab) }
         var layout = self
-        if let remaining = list.removing(tab) {
-            layout.areas[area] = remaining
-            return layout
-        }
-        let order = tree.panes
-        guard let tree = tree.removing(area) else { return nil }
-        layout.tree = tree
-        layout.areas[area] = nil
-        if focusedArea == area, let index = order.firstIndex(of: area) {
-            layout.focusedArea = tree.panes[max(index - 1, 0)]
-        }
+        layout.splits[tab] = remaining
         return layout
     }
 
-    /// Réordonner dans sa barre.
+    /// Fermer l'onglet affiché montre son voisin. Nil quand c'était le dernier.
+    public func removingTab(_ tab: Tab) -> WindowLayout? {
+        guard splits[tab] != nil else { return self }
+        guard let list = tabList.removing(tab) else { return nil }
+        var layout = self
+        layout.tabList = list
+        layout.splits[tab] = nil
+        return layout
+    }
+
     public func moving(_ tab: Tab, to index: Int) -> WindowLayout {
-        guard let area = area(of: tab) else { return self }
         var layout = self
-        layout.areas[area] = areas[area]?.moving(tab, to: index)
+        layout.tabList = tabList.moving(tab, to: index)
         return layout
     }
 
-    /// Lâché sur la barre d'une autre zone : il la rejoint, en dernier.
-    public func moving(_ tab: Tab, into target: Area) -> WindowLayout {
-        guard area(of: tab) != target, areas[target] != nil, let layout = removing(tab),
-              let list = layout.areas[target] else { return self }
-        var moved = layout
-        moved.areas[target] = list.appending(tab)
-        moved.focusedArea = target
-        return moved
+    /// D'une place, au clavier.
+    public func moving(_ tab: Tab, by offset: Int) -> WindowLayout {
+        guard let index = tabs.firstIndex(of: tab) else { return self }
+        return moving(tab, to: index + offset)
     }
 
-    /// Lâché sur le bord d'une zone : il y ouvre une zone neuve, de ce côté.
-    public func moving(_ tab: Tab, beside target: Area, toward direction: SplitDirection, area: Area) -> WindowLayout {
-        guard canMove(tab, beside: target), let layout = removing(tab) else { return self }
-        var moved = layout
-        moved.tree = layout.tree.inserting(.pane(area), beside: target, toward: direction)
-        moved.areas[area] = TabList(tab)
-        moved.focusedArea = area
-        return moved
+    /// Le split part dans son propre onglet, juste après le sien, affiché.
+    public func detaching(_ pane: Pane, into newTab: Tab) -> WindowLayout {
+        guard let tab = tab(of: pane), let remaining = splits[tab]?.removing(pane) else { return self }
+        var layout = self
+        layout.splits[tab] = remaining
+        layout.tabList = tabList.selecting(tab).inserting(newTab)
+        layout.splits[newTab] = Splits(pane)
+        return layout
     }
 
-    /// Seul dans sa zone, un onglet ne peut pas se poser à côté de lui-même.
-    public func canMove(_ tab: Tab, beside target: Area) -> Bool {
-        guard let source = area(of: tab), areas[target] != nil else { return false }
-        return source != target || (areas[source]?.tabs.count ?? 0) > 1
-    }
-
-    /// Au clavier : l'onglet actif rejoint la zone voisine de ce côté, ou y ouvre une zone neuve
-    /// (`newArea`) s'il n'y en a pas.
-    public func movingFocusedTab(toward direction: SplitDirection, newArea: Area) -> WindowLayout {
-        let tab = focusedTab
-        if let neighbor = tree.neighbor(of: focusedArea, toward: direction) {
-            return moving(tab, into: neighbor)
+    /// Chaque split devient un onglet, à la suite : le premier garde l'onglet, `newTabs` donne
+    /// les autres.
+    public func separating(_ tab: Tab, into newTabs: [Tab]) -> WindowLayout {
+        let panes = panes(of: tab)
+        guard panes.count > 1, newTabs.count >= panes.count - 1 else { return self }
+        var layout = self
+        var list = tabList.selecting(tab)
+        layout.splits[tab] = Splits(panes[0])
+        for (pane, newTab) in zip(panes.dropFirst(), newTabs) {
+            list = list.inserting(newTab)
+            layout.splits[newTab] = Splits(pane)
         }
-        return moving(tab, beside: focusedArea, toward: direction, area: newArea)
+        layout.tabList = list.selecting(tab)
+        return layout
     }
 
-    /// Où irait `tab` lâché en `point`, la fenêtre occupant `bounds`, chaque zone coiffée de sa barre.
-    /// Nil : rien à proposer à cet endroit.
-    public func drop(of tab: Tab, at point: CGPoint, in bounds: CGRect, barHeight: CGFloat) -> Drop? {
-        guard let (area, frame) = tree.frames(in: bounds).first(where: { $0.value.contains(point) }) else { return nil }
-        let content = frame.divided(atDistance: barHeight, from: .minYEdge).remainder
-        let direction = SplitDirection.nearestEdge(to: point, in: content)
-        let isOwnArea = self.area(of: tab) == area
-        // Ailleurs, le centre et la barre servent à rejoindre la zone. Dans la sienne, où il est
-        // déjà, toute la surface propose un split : le repère ne disparaît jamais en route.
-        let nearEdge = content.contains(point) && direction.half(of: direction.half(of: content)).contains(point)
-        if isOwnArea || nearEdge, canMove(tab, beside: area) {
-            return Drop(tab: tab, target: .split(area, direction), highlight: direction.half(of: content))
-        }
-        return isOwnArea ? nil : Drop(tab: tab, target: .area(area), highlight: content)
+    /// Où irait `tab` lâché en `point`, les splits de l'onglet affiché occupant `bounds` : de
+    /// ce côté du split survolé. Nil : rien à proposer, comme l'onglet affiché sur lui-même.
+    public func drop(of tab: Tab, at point: CGPoint, in bounds: CGRect) -> Drop? {
+        guard tab != selectedTab, splits[tab] != nil,
+              let (pane, frame) = selectedSplits.tree.frames(in: bounds).first(where: { $0.value.contains(point) }) else { return nil }
+        let direction = SplitDirection.nearestEdge(to: point, in: frame)
+        return Drop(tab: tab, target: pane, direction: direction, highlight: direction.half(of: frame))
     }
 
-    /// `newArea` sert si le dépôt ouvre une zone.
-    public func dropping(_ drop: Drop, newArea: Area) -> WindowLayout {
-        switch drop.target {
-        case let .area(area): moving(drop.tab, into: area)
-        case let .split(area, direction): moving(drop.tab, beside: area, toward: direction, area: newArea)
-        }
+    /// L'onglet lâché rejoint l'onglet affiché : ses splits se posent à côté du split visé.
+    public func dropping(_ drop: Drop) -> WindowLayout {
+        guard drop.tab != selectedTab, let moved = splits[drop.tab], var layout = removingTab(drop.tab),
+              let target = layout.splits[selectedTab] else { return self }
+        layout.splits[selectedTab] = target.inserting(moved.tree, beside: drop.target, toward: drop.direction, focusing: moved.focused)
+        return layout
     }
 
-    /// Les autres onglets de sa zone, pour « Fermer les autres onglets ».
+    /// Les autres onglets, pour « Fermer les autres onglets ».
     public func tabs(besides tab: Tab) -> [Tab] {
-        guard let area = area(of: tab) else { return [] }
-        return areas[area]?.tabs.filter { $0 != tab } ?? []
+        tabs.filter { $0 != tab }
     }
 
-    /// Ceux qui le suivent dans sa barre, pour « Fermer les onglets à droite ».
-    public func tabs(rightOf tab: Tab) -> [Tab] {
-        guard let area = area(of: tab), let tabs = areas[area]?.tabs, let index = tabs.firstIndex(of: tab) else { return [] }
+    /// Ceux qui le suivent, pour « Fermer les onglets à droite » (ou en dessous).
+    public func tabs(after tab: Tab) -> [Tab] {
+        guard let index = tabs.firstIndex(of: tab) else { return [] }
         return Array(tabs[(index + 1)...])
     }
 
     public func settingRatio(_ ratio: CGFloat, at path: [Int]) -> WindowLayout {
         var layout = self
-        layout.tree = tree.settingRatio(ratio, at: path)
+        layout.splits[selectedTab] = selectedSplits.settingRatio(ratio, at: path)
         return layout
     }
 
     public func equalized() -> WindowLayout {
         var layout = self
-        layout.tree = tree.equalized()
+        layout.splits[selectedTab] = selectedSplits.equalized()
         return layout
     }
 }
 
-extension WindowLayout: Codable where Area: Codable, Tab: Codable {}
+extension WindowLayout: Codable where Tab: Codable, Pane: Codable {}
+
+/// Les splits d'un onglet, et celui qui a le clavier.
+public struct Splits<Pane: Hashable & Sendable>: Hashable, Sendable {
+    public private(set) var tree: SplitTree<Pane>
+    public private(set) var focused: Pane
+
+    public init(_ pane: Pane) {
+        tree = .pane(pane)
+        focused = pane
+    }
+
+    func focusing(_ pane: Pane) -> Splits {
+        guard tree.panes.contains(pane) else { return self }
+        var splits = self
+        splits.focused = pane
+        return splits
+    }
+
+    func inserting(_ subtree: SplitTree<Pane>, beside target: Pane, toward direction: SplitDirection, focusing pane: Pane) -> Splits {
+        var splits = self
+        splits.tree = tree.inserting(subtree, beside: target, toward: direction)
+        splits.focused = pane
+        return splits
+    }
+
+    /// Le voisin prend la place, et le clavier s'il l'avait. Nil quand c'était le dernier.
+    func removing(_ pane: Pane) -> Splits? {
+        let order = tree.panes
+        guard let remaining = tree.removing(pane) else { return nil }
+        var splits = self
+        splits.tree = remaining
+        if focused == pane, let index = order.firstIndex(of: pane) {
+            splits.focused = remaining.panes[max(index - 1, 0)]
+        }
+        return splits
+    }
+
+    func settingRatio(_ ratio: CGFloat, at path: [Int]) -> Splits {
+        var splits = self
+        splits.tree = tree.settingRatio(ratio, at: path)
+        return splits
+    }
+
+    func equalized() -> Splits {
+        var splits = self
+        splits.tree = tree.equalized()
+        return splits
+    }
+}
+
+extension Splits: Codable where Pane: Codable {}

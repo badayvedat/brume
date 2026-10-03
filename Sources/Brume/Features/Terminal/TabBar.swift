@@ -1,123 +1,93 @@
 import BrumeCore
 import SwiftUI
 
-/// La barre d'onglets d'une zone : onglets arrondis, + et boutons de split, aux mesures de Monocode.
-/// Celles du haut de la fenêtre tiennent lieu de barre de titre.
+/// La barre d'onglets du haut, aux mesures de Monocode : onglets arrondis, + et boutons de split.
+/// Elle tient lieu de barre de titre.
 struct TabBar: View {
     let workspace: TerminalWorkspace
-    let area: UUID
-    /// La zone dans l'espace de `TerminalScreen` : la barre en occupe le haut.
-    let frame: CGRect
+    let width: CGFloat
     let height: CGFloat
-    /// La place des boutons rouge, jaune, vert pour la barre du coin haut gauche.
+    /// La place des boutons rouge, jaune, vert.
     let leadingInset: CGFloat
-    let showsNewWindow: Bool
-    /// Vide quand Cmd n'est pas tenu.
-    let numbers: [UUID: Int]
+    let showsNumbers: Bool
 
     @State private var isDragging = false
     /// Le début de la rangée d'onglets dans l'espace de `TerminalScreen`, défilement compris.
     @State private var stripOriginX: CGFloat = 0
-    @Environment(\.openWindow) private var openWindow
 
     private let spacing: CGFloat = 2
     private let tabWidth: ClosedRange<CGFloat> = 112 ... 224
 
     private var tabs: [UUID] {
-        workspace.layout.areas[area]?.tabs ?? []
-    }
-
-    private var isAtTop: Bool {
-        frame.minY == 0
+        workspace.layout.tabs
     }
 
     var body: some View {
+        let numbers = showsNumbers ? workspace.layout.shortcutNumbers : [:]
         HStack(spacing: 0) {
             GeometryReader { geometry in
                 let width = cellWidth(available: geometry.size.width)
-                // Trop d'onglets pour la zone : la rangée défile, et le + reste fixé à droite.
+                // Trop d'onglets pour la barre : la rangée défile, et le + reste fixé à droite.
                 let overflows = CGFloat(tabs.count) * (width + spacing) + BarButton.size > geometry.size.width
                 HStack(spacing: spacing) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: spacing) {
-                            ForEach(tabs, id: \.self) { id in
-                                if let state = workspace.states[id] {
-                                    TabCell(
-                                        state: state,
-                                        id: id,
-                                        workspace: workspace,
-                                        isDragging: isDragging,
-                                        number: numbers[id]
-                                    )
+                            ForEach(tabs, id: \.self) { tab in
+                                TabCell(tab: tab, workspace: workspace, isDragging: isDragging, number: numbers[tab])
                                     .frame(width: width)
-                                    .opacity(workspace.drop?.tab == id ? 0.5 : 1)
+                                    .opacity(workspace.drop?.tab == tab ? 0.5 : 1)
                                     // Pendant le renommage, glisser dans le champ sélectionne du texte.
-                                    .gesture(drag(id, step: width + spacing), including: workspace.renamingID == id ? .subviews : .all)
-                                }
+                                    .gesture(drag(tab, step: width + spacing), including: workspace.renamingID == tab ? .subviews : .all)
+                                    .transition(.collapse(.horizontal))
                             }
                             if !overflows {
                                 newTabButton
                             }
                         }
-                        .animation(Ink.motion(.easeInOut(duration: 0.15)), value: tabs)
+                        // Un onglet s'ouvre en accordéon, ses voisins et le + glissent avec lui.
+                        .animation(Ink.slide, value: tabs)
                         .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(TerminalScreen.space)).minX } action: {
                             stripOriginX = $0
                         }
                         .frame(maxHeight: .infinity)
                         .frame(minWidth: geometry.size.width, alignment: .leading)
-                        .background { if isAtTop { WindowDragArea() } }
+                        .background { WindowDragArea() }
                     }
                     if overflows {
                         newTabButton
                     }
                 }
             }
-            HStack(spacing: 2) {
-                BarButton(icon: "square.split.2x1", label: L10n.text(.splitRight), shortcut: "⌘D") {
-                    workspace.split(.horizontal, from: area)
-                }
-                BarButton(icon: "square.split.1x2", label: L10n.text(.splitDown), shortcut: "⇧⌘D") {
-                    workspace.split(.vertical, from: area)
-                }
-                if showsNewWindow {
-                    BarButton(icon: "macwindow.badge.plus", label: L10n.text(.newWindow), shortcut: "⌘N") {
-                        openWindow(id: BrumeApp.terminalWindowID)
-                    }
-                }
-                if let shown = workspace.layout.areas[area]?.selected, let state = workspace.states[shown] {
-                    MoreMenu(state: state, workspace: workspace)
-                }
-            }
-            .padding(.leading, 12)
+            BarButtons(workspace: workspace)
+                .padding(.leading, 12)
         }
         .padding(.leading, leadingInset)
         .padding(.trailing, 8)
-        .frame(width: frame.width, height: height)
-        .background { if isAtTop { WindowDragArea() } }
+        .frame(width: width, height: height)
+        .background { WindowDragArea() }
         .overlay(alignment: .bottom) { Ink.rule.frame(height: 1).allowsHitTesting(false) }
     }
 
     private var newTabButton: some View {
         BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T") {
-            workspace.newTab(in: area)
+            workspace.newTab()
         }
     }
 
-    /// Dans sa barre, comme Muxy : l'onglet tenu prend la place de celui que survole la souris
-    /// (toutes les cases ont la même largeur). Ailleurs, il rejoint une autre zone ou en ouvre une.
-    private func drag(_ id: UUID, step: CGFloat) -> some Gesture {
+    /// Dans la barre, comme Muxy : l'onglet tenu prend la place de celui que survole la souris
+    /// (toutes les cases ont la même largeur). Sur les terminaux, il rejoint l'onglet affiché.
+    private func drag(_ tab: UUID, step: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 4, coordinateSpace: .named(TerminalScreen.space))
             .onChanged { value in
                 isDragging = true
-                let bar = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: height)
-                guard bar.contains(value.location) else {
-                    return workspace.hoverDrop(dragging: id, at: value.location)
+                guard value.location.y < height else {
+                    return workspace.hoverDrop(dragging: tab, at: value.location)
                 }
-                workspace.hoverDrop(dragging: id, at: nil)
+                workspace.hoverDrop(dragging: tab, at: nil)
                 let slot = Int((value.location.x - stripOriginX) / step)
                 let target = min(max(slot, 0), tabs.count - 1)
-                if tabs.firstIndex(of: id) != target {
-                    workspace.move(id, to: target)
+                if tabs.firstIndex(of: tab) != target {
+                    workspace.move(tab, to: target)
                 }
             }
             .onEnded { _ in
@@ -134,20 +104,52 @@ struct TabBar: View {
     }
 }
 
+/// Les boutons à droite de la barre : diviser le split actif, nouvelle fenêtre, et le menu
+/// « ... » de son terminal.
+struct BarButtons: View {
+    let workspace: TerminalWorkspace
+
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        HStack(spacing: 2) {
+            // Seulement le temps de l'agrandissement : on voit où sont passés les autres splits.
+            if workspace.zoomedPane != nil {
+                BarButton(icon: "arrow.down.right.and.arrow.up.left", label: L10n.text(.zoomSplit), shortcut: "⇧⌘↩", isOn: true) {
+                    workspace.toggleZoom()
+                }
+            }
+            BarButton(icon: "square.split.2x1", label: L10n.text(.splitRight), shortcut: "⌘D") {
+                workspace.split(.horizontal)
+            }
+            BarButton(icon: "square.split.1x2", label: L10n.text(.splitDown), shortcut: "⇧⌘D") {
+                workspace.split(.vertical)
+            }
+            BarButton(icon: "macwindow.badge.plus", label: L10n.text(.newWindow), shortcut: "⌘N") {
+                openWindow(id: BrumeApp.terminalWindowID)
+            }
+            MoreMenu(state: workspace.focused, workspace: workspace)
+        }
+    }
+}
+
 struct BarButton: View {
     static let size: CGFloat = 26
 
     let icon: String
     let label: String
     let shortcut: String
+    /// Un mode en cours, que le bouton arrête : à la couleur d'accent.
+    var isOn = false
     let action: () -> Void
 
     @State private var isHovered = false
+    @Environment(\.accent) private var accent
 
     var body: some View {
         Button(action: action) {
             SystemSymbol.image(icon, size: 13, weight: .medium)
-                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
+                .foregroundStyle(isOn ? accent.color : isHovered ? Ink.text : Ink.muted)
                 .frame(width: Self.size, height: Self.size)
                 .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 6))
         }

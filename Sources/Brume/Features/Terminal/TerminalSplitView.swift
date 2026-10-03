@@ -2,60 +2,63 @@ import BrumeCore
 import GhosttyTerminal
 import SwiftUI
 
-/// Les zones de la fenêtre : la barre d'onglets en haut de chacune, son terminal affiché dessous.
+/// Les splits de l'onglet affiché, sous la barre d'onglets du haut, ou à droite de la barre
+/// latérale et sous l'en-tête.
 struct TerminalSplitView: View {
     let workspace: TerminalWorkspace
     let titlebar: WindowTitlebar
     let showsNumbers: Bool
+    /// Nil : les onglets en haut.
+    let sidebarWidth: CGFloat?
 
     var body: some View {
         GeometryReader { geometry in
-            let bounds = CGRect(origin: .zero, size: geometry.size)
-            let layout = workspace.layout
-            let areas = layout.tree.frames(in: bounds)
+            let window = CGRect(origin: .zero, size: geometry.size)
             let barHeight = titlebar.buttonsCenterY * 2
-            let areaOfTab = layout.areaOfTab
-            let numbers = showsNumbers ? layout.shortcutNumbers : [:]
-            // Les terminaux de toutes les zones au même niveau, rangés par identifiant : changer
+            // Le trait du bord de la barre latérale a sa propre colonne.
+            let bounds = window.divided(atDistance: sidebarWidth.map { $0 + 1 } ?? 0, from: .minXEdge).remainder
+                .divided(atDistance: barHeight, from: .minYEdge).remainder
+            let layout = workspace.layout
+            let tabOfPane = layout.tabOfPane
+            let zoomed = workspace.zoomedPane
+            // Chaque onglet garde la place de ses splits, affiché ou non : en changer ne
+            // redimensionne aucun terminal. Le split agrandi couvre les autres.
+            let frames = layout.tabs.reduce(into: [UUID: CGRect]()) { result, tab in
+                result.merge(layout.splits[tab]?.tree.frames(in: bounds) ?? [:]) { $1 }
+            }.merging(zoomed.map { [$0: bounds] } ?? [:]) { $1 }
+            // Les terminaux de tous les onglets au même niveau, rangés par identifiant : changer
             // d'onglet, diviser ou déplacer un onglet garde chaque vue. Une vue recréée tuerait
-            // le shell qu'elle porte. Les onglets cachés restent montés, transparents.
+            // le shell qu'elle porte. Ceux des autres onglets restent montés, transparents.
             ZStack(alignment: .topLeading) {
-                ForEach(layout.tabs, id: \.self) { id in
-                    if let state = workspace.states[id], let area = areaOfTab[id], let frame = areas[area] {
-                        let content = frame.divided(atDistance: barHeight, from: .minYEdge).remainder
-                        let isShown = layout.areas[area]?.selected == id
+                ForEach(layout.panes, id: \.self) { pane in
+                    if let state = workspace.states[pane], let frame = frames[pane] {
+                        let isShown = tabOfPane[pane] == layout.selectedTab && (zoomed == nil || zoomed == pane)
                         TerminalPane(
                             state: state,
-                            search: workspace.searches[id],
-                            dimmed: workspace.isSplit && id != workspace.focusedID,
-                            onFocus: { workspace.didFocus(id) },
-                            onLeaveSearch: { workspace.focus(id) },
-                            onCloseSearch: { workspace.endSearch(in: id) }
+                            search: workspace.searches[pane],
+                            dimmed: workspace.isSplit && zoomed == nil && pane != workspace.focusedID,
+                            onFocus: { workspace.didFocus(pane) },
+                            onLeaveSearch: { workspace.focus(pane) },
+                            onCloseSearch: { workspace.endSearch(in: pane) }
                         )
-                        .frame(width: content.width, height: content.height)
-                        .offset(x: content.minX, y: content.minY)
+                        .frame(width: frame.width, height: frame.height)
+                        .offset(x: frame.minX, y: frame.minY)
                         .opacity(isShown ? 1 : 0)
                         .allowsHitTesting(isShown)
                         .accessibilityHidden(!isShown)
                     }
                 }
-                ForEach(layout.tree.panes, id: \.self) { area in
-                    if let frame = areas[area] {
-                        let isTopLeft = frame.minX == 0 && frame.minY == 0
-                        TabBar(
-                            workspace: workspace,
-                            area: area,
-                            frame: frame,
-                            height: barHeight,
-                            leadingInset: isTopLeft && !titlebar.isFullScreen ? titlebar.buttonsWidth + 14 : 8,
-                            showsNewWindow: frame.minY == 0 && frame.maxX == bounds.maxX,
-                            numbers: numbers
-                        )
-                        .offset(x: frame.minX, y: frame.minY)
-                    }
+                if sidebarWidth == nil {
+                    TabBar(
+                        workspace: workspace,
+                        width: window.width,
+                        height: barHeight,
+                        leadingInset: titlebar.isFullScreen ? 8 : titlebar.buttonsWidth + 14,
+                        showsNumbers: showsNumbers
+                    )
                 }
                 // Identifiées par leur place dans l'arbre : stable pendant un glissé.
-                ForEach(layout.tree.dividers(in: bounds), id: \.path) { divider in
+                ForEach(zoomed == nil ? layout.selectedSplits.tree.dividers(in: bounds) : [], id: \.path) { divider in
                     SplitHandle(divider: divider) { workspace.setRatio($0, at: divider.path) }
                 }
                 if let drop = workspace.drop {
@@ -64,7 +67,6 @@ struct TerminalSplitView: View {
             }
             .animation(Ink.motion(.easeOut(duration: 0.12)), value: workspace.drop)
             .onChange(of: bounds, initial: true) { workspace.bounds = bounds }
-            .onChange(of: barHeight, initial: true) { workspace.barHeight = barHeight }
         }
     }
 }
@@ -87,7 +89,7 @@ private struct DropHighlight: View {
     }
 }
 
-/// Le trait entre deux zones. Il passe à la couleur d'accent au survol : on voit qu'il se glisse.
+/// Le trait entre deux splits. Il passe à la couleur d'accent au survol : on voit qu'il se glisse.
 private struct SplitHandle: View {
     let divider: SplitDivider
     let onDrag: (CGFloat) -> Void

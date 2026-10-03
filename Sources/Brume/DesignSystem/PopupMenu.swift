@@ -6,6 +6,8 @@ struct MenuAction {
     var title: String
     var shortcut: String?
     var icon: NSImage?
+    /// Un symbole préchargé par `SystemSymbol`, à 12 points, à la place de l'icône.
+    var symbol: String?
     /// Une pastille de couleur à la place de l'icône.
     var swatch: Color?
     var isChecked = false
@@ -20,11 +22,11 @@ enum MenuEntry {
     case separator
 
     static func item(
-        _ title: String, shortcut: String? = nil, icon: NSImage? = nil, swatch: Color? = nil, checked: Bool = false,
-        enabled: Bool = true, run: @escaping () -> Void
+        _ title: String, shortcut: String? = nil, icon: NSImage? = nil, symbol: String? = nil, swatch: Color? = nil,
+        checked: Bool = false, enabled: Bool = true, run: @escaping () -> Void
     ) -> MenuEntry {
         .action(MenuAction(
-            title: title, shortcut: shortcut, icon: icon, swatch: swatch, isChecked: checked,
+            title: title, shortcut: shortcut, icon: icon, symbol: symbol, swatch: swatch, isChecked: checked,
             isEnabled: enabled, run: run
         ))
     }

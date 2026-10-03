@@ -3,143 +3,121 @@ import CoreGraphics
 import Testing
 
 struct WindowLayoutTests {
-    // Zone A (onglets 1, 2) | zone B (onglet 3), le focus dans B.
-    var twoAreas: WindowLayout<String, Int> {
-        WindowLayout(area: "A", tab: 1).addingTab(2).splitting(toward: .right, area: "B", tab: 3)
+    // Onglets A (split 1 | 2, le clavier dans 2) et B (3), A affiché.
+    var twoTabs: WindowLayout<String, Int> {
+        WindowLayout(tab: "A", pane: 1).splitting(toward: .right, pane: 2).addingTab("B", pane: 3).selecting("A")
     }
 
-    @Test func splittingOpensAFocusedAreaWithOneTab() {
-        #expect(twoAreas.tree.panes == ["A", "B"])
-        #expect(twoAreas.focusedArea == "B")
-        #expect(twoAreas.focusedTab == 3)
+    @Test func splittingDividesTheSelectedTabAndFocusesTheNewPane() {
+        #expect(twoTabs.tabs == ["A", "B"])
+        #expect(twoTabs.panes(of: "A") == [1, 2])
+        #expect(twoTabs.focusedPane == 2)
+        #expect(twoTabs.isSplit("A"))
+        #expect(!twoTabs.isSplit("B"))
     }
 
-    @Test func newTabGoesToTheFocusedArea() {
-        let layout = twoAreas.addingTab(4)
-        #expect(layout.areas["B"]?.tabs == [3, 4])
-        #expect(layout.focusedTab == 4)
+    @Test func newTabGoesAfterTheSelectedOne() {
+        let layout = twoTabs.addingTab("C", pane: 4)
+        #expect(layout.tabs == ["A", "C", "B"])
+        #expect(layout.selectedTab == "C")
+        #expect(layout.focusedPane == 4)
     }
 
-    @Test func tabsAreInReadingOrder() {
-        #expect(twoAreas.tabs == [1, 2, 3])
-        #expect(twoAreas.shortcutNumbers[3] == 3)
+    @Test func panesAreListedTabByTab() {
+        #expect(twoTabs.panes == [1, 2, 3])
+        #expect(twoTabs.tabOfPane == [1: "A", 2: "A", 3: "B"])
     }
 
     @Test func numberNineIsAlwaysTheLastTab() {
-        let ten = (2 ... 10).reduce(WindowLayout(area: "A", tab: 1)) { $0.addingTab($1) }
+        let ten = (2 ... 10).reduce(WindowLayout(tab: 1, pane: 1)) { $0.addingTab($1, pane: $1) }
         #expect(ten.shortcutNumbers[9] == nil)
         #expect(ten.shortcutNumbers[10] == 9)
-        #expect(ten.selecting(number: 9).focusedTab == 10)
+        #expect(ten.selecting(number: 9).selectedTab == 10)
     }
 
-    @Test func numberSelectsAcrossAreas() {
-        let layout = twoAreas.selecting(number: 1)
-        #expect(layout.focusedArea == "A")
-        #expect(layout.focusedTab == 1)
+    @Test func focusingAPaneShowsItsTab() {
+        let layout = twoTabs.selecting("B").focusing(1)
+        #expect(layout.selectedTab == "A")
+        #expect(layout.focusedPane == 1)
     }
 
-    @Test func onlyTheSelectedTabOfEachAreaIsShown() {
-        #expect(twoAreas.isShown(2))
-        #expect(!twoAreas.isShown(1))
-        #expect(twoAreas.isShown(3))
+    @Test func paneFocusCyclesInsideTheSelectedTab() {
+        #expect(twoTabs.focusingPane(offset: 1).focusedPane == 1)
+        #expect(twoTabs.focusingPane(toward: .left).focusedPane == 1)
+        #expect(twoTabs.focusingPane(toward: .down).focusedPane == 2)
     }
 
-    @Test func removingTheLastTabOfAnAreaRemovesTheArea() {
-        let layout = twoAreas.removing(3)
-        #expect(layout?.tree == .pane("A"))
-        #expect(layout?.areas["B"] == nil)
-        #expect(layout?.focusedArea == "A")
+    @Test func closingAPaneGivesTheFocusToItsNeighbour() {
+        let layout = twoTabs.removing(2)
+        #expect(layout?.panes(of: "A") == [1])
+        #expect(layout?.focusedPane == 1)
     }
 
-    @Test func removingTheLastTabEmptiesTheWindow() {
-        #expect(WindowLayout(area: "A", tab: 1).removing(1) == nil)
+    @Test func closingTheLastPaneOfATabClosesTheTab() {
+        let layout = twoTabs.selecting("B").removing(3)
+        #expect(layout?.tabs == ["A"])
+        #expect(layout?.selectedTab == "A")
     }
 
-    @Test func movingIntoAnotherAreaJoinsItsBar() {
-        let layout = twoAreas.moving(1, into: "B")
-        #expect(layout.areas["A"]?.tabs == [2])
-        #expect(layout.areas["B"]?.tabs == [3, 1])
-        #expect(layout.focusedTab == 1)
+    @Test func closingTheLastPaneEmptiesTheWindow() {
+        #expect(WindowLayout(tab: "A", pane: 1).removing(1) == nil)
     }
 
-    @Test func movingTheOnlyTabIntoAnotherAreaClosesItsArea() {
-        let layout = twoAreas.moving(3, into: "A")
-        #expect(layout.tree == .pane("A"))
-        #expect(layout.areas["A"]?.tabs == [1, 2, 3])
+    @Test func movingByAnOffsetReordersTabs() {
+        #expect(twoTabs.moving("A", by: 1).tabs == ["B", "A"])
+        #expect(twoTabs.moving("A", by: -1).tabs == ["A", "B"])
     }
 
-    @Test func movingBesideOpensANewArea() {
-        let layout = twoAreas.moving(1, beside: "B", toward: .down, area: "C")
-        #expect(layout.tree.panes == ["A", "B", "C"])
-        #expect(layout.areas["C"]?.tabs == [1])
-        #expect(layout.focusedArea == "C")
+    @Test func detachingMovesAPaneToItsOwnTab() {
+        let layout = twoTabs.detaching(2, into: "C")
+        #expect(layout.tabs == ["A", "C", "B"])
+        #expect(layout.panes(of: "A") == [1])
+        #expect(layout.panes(of: "C") == [2])
+        #expect(layout.selectedTab == "C")
+        #expect(twoTabs.detaching(3, into: "C") == twoTabs)
     }
 
-    @Test func aLoneTabCannotMoveBesideItself() {
-        #expect(!twoAreas.canMove(3, beside: "B"))
-        #expect(twoAreas.moving(3, beside: "B", toward: .left, area: "C") == twoAreas)
-        #expect(twoAreas.canMove(1, beside: "A"))
+    @Test func separatingGivesEachPaneATab() {
+        let layout = twoTabs.separating("A", into: ["C"])
+        #expect(layout.tabs == ["A", "C", "B"])
+        #expect(layout.panes(of: "C") == [2])
+        #expect(layout.selectedTab == "A")
+        #expect(layout.isConsistent)
     }
 
-    // A à gauche, B à droite, chacune 100 de large avec une barre de 10.
-    let window = CGRect(x: 0, y: 0, width: 200, height: 110)
+    // L'onglet A affiché, ses splits 1 | 2 sur 200 de large.
+    let window = CGRect(x: 0, y: 0, width: 200, height: 100)
 
-    @Test func centreOfAnotherAreaJoinsIt() {
-        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 150, y: 60), in: window, barHeight: 10)
-        #expect(drop?.target == .area("B"))
-        #expect(drop?.highlight == CGRect(x: 100, y: 10, width: 100, height: 100))
+    @Test func droppingNearAnEdgeProposesThatSide() {
+        let drop = twoTabs.drop(of: "B", at: CGPoint(x: 195, y: 50), in: window)
+        #expect(drop?.target == 2)
+        #expect(drop?.direction == .right)
+        #expect(drop?.highlight == CGRect(x: 150, y: 0, width: 50, height: 100))
     }
 
-    @Test func edgeOfAnotherAreaSplitsIt() {
-        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 195, y: 60), in: window, barHeight: 10)
-        #expect(drop?.target == .split("B", .right))
-        #expect(drop?.highlight == CGRect(x: 150, y: 10, width: 50, height: 100))
+    @Test func theSelectedTabCannotDropOnItself() {
+        #expect(twoTabs.drop(of: "A", at: CGPoint(x: 50, y: 50), in: window) == nil)
     }
 
-    @Test func anywhereInItsOwnAreaSplitsIt() {
-        #expect(twoAreas.drop(of: 1, at: CGPoint(x: 55, y: 60), in: window, barHeight: 10)?.target == .split("A", .right))
+    @Test func aDroppedTabJoinsTheSelectedOne() {
+        let drop = twoTabs.drop(of: "B", at: CGPoint(x: 150, y: 95), in: window)!
+        let layout = twoTabs.dropping(drop)
+        #expect(layout.tabs == ["A"])
+        #expect(layout.panes(of: "A") == [1, 2, 3])
+        #expect(layout.focusedPane == 3)
+        #expect(layout.isConsistent)
     }
 
-    @Test func aLoneTabOverItsOwnAreaProposesNothing() {
-        #expect(twoAreas.drop(of: 3, at: CGPoint(x: 150, y: 60), in: window, barHeight: 10) == nil)
+    @Test func tabsBesidesAndAfter() {
+        let layout = twoTabs.addingTab("C", pane: 4)
+        #expect(layout.tabs(besides: "C") == ["A", "B"])
+        #expect(layout.tabs(after: "A") == ["C", "B"])
+        #expect(layout.tabs(after: "B").isEmpty)
     }
 
-    @Test func droppingOnAnEdgeOpensTheNewArea() {
-        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 150, y: 105), in: window, barHeight: 10)!
-        let layout = twoAreas.dropping(drop, newArea: "C")
-        #expect(layout.tree.panes == ["A", "B", "C"])
-        #expect(layout.areas["C"]?.tabs == [1])
-    }
-
-    @Test func movingTowardANeighbourJoinsIt() {
-        let layout = twoAreas.selecting(1).movingFocusedTab(toward: .right, newArea: "C")
-        #expect(layout.areas["B"]?.tabs == [3, 1])
-        #expect(layout.focusedTab == 1)
-    }
-
-    @Test func movingTowardNothingOpensAnArea() {
-        let layout = twoAreas.selecting(1).movingFocusedTab(toward: .down, newArea: "C")
-        #expect(layout.areas["C"]?.tabs == [1])
-        #expect(layout.tree.panes == ["A", "C", "B"])
-    }
-
-    @Test func aLoneTabWithNoNeighbourStays() {
-        #expect(twoAreas.movingFocusedTab(toward: .right, newArea: "C") == twoAreas)
-    }
-
-    @Test func tabsBesidesAndRightOfStayInTheArea() {
-        let layout = twoAreas.addingTab(4).selecting(1).addingTab(5)
-        #expect(layout.areas["A"]?.tabs == [1, 5, 2])
-        #expect(layout.tabs(besides: 5) == [1, 2])
-        #expect(layout.tabs(rightOf: 1) == [5, 2])
-        #expect(layout.tabs(rightOf: 2).isEmpty)
-    }
-
-    @Test func areaOfTabIndexesEveryTab() {
-        #expect(twoAreas.areaOfTab == [1: "A", 2: "A", 3: "B"])
-    }
-
-    @Test func aBuiltLayoutIsConsistent() {
-        #expect(twoAreas.moving(1, beside: "B", toward: .down, area: "C").isConsistent)
+    @Test func ratiosApplyToTheSelectedTab() {
+        let layout = twoTabs.settingRatio(0.3, at: [])
+        #expect(layout.selectedSplits.tree == .split(.horizontal, ratio: 0.3, .pane(1), .pane(2)))
+        #expect(layout.equalized().selectedSplits.tree == twoTabs.selectedSplits.tree)
     }
 }
