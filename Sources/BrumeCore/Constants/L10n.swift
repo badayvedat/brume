@@ -161,7 +161,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Celle des menus et de toute l'interface."
         case .startup: "Démarrage"
         case .restoreTabs: "Rouvrir les onglets"
-        case .restoreTabsHint: "Retrouver au lancement les fenêtres et les onglets laissés en quittant."
+        case .restoreTabsHint: "Au lancement, reprendre la disposition des fenêtres et des onglets telle que vous l'avez laissée en quittant l'app."
         }
     }
 
@@ -275,7 +275,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Used by menus and the whole interface."
         case .startup: "Startup"
         case .restoreTabs: "Reopen Tabs"
-        case .restoreTabsHint: "Bring back at launch the windows and tabs left when quitting."
+        case .restoreTabsHint: "At launch, restore the layout of windows and tabs as you left it when quitting the app."
         }
     }
 }
