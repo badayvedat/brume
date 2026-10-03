@@ -31,4 +31,5 @@ bash build-app.sh            # release
 - Pas de `NSAlert.runModal()` : sur macOS 27, l'alerte modale plante en dessinant un symbole système. Toujours en feuille (`beginSheetModal`), comme `CloseConfirmation`.
 - Brume est toujours sombre (`AppDelegate`), le thème du moteur aussi : ne jamais régler l'apparence d'une fenêtre d'après la couleur du terminal, ça boucle et la fenêtre clignote.
 - Menus : `PopupMenu` (`DesignSystem/`), pas `Menu`, `.contextMenu` ni `NSMenu` : chargés après le moteur, leurs glyphes ⌘ sortent vides, et leur surlignage prend l'accent du Mac.
+- Survol : `.onHover` de SwiftUI, pas de `NSTrackingArea` dans une vue représentée. SwiftUI la repose en redessinant et l'entrée de la souris se perd, et elle ignore `allowsHitTesting(false)` (infobulles des terminaux cachés sous les réglages).
 - Jamais `windowBackgroundDragBehavior(.enabled)` : déplacer la fenêtre par le fond casse la sélection de texte du terminal.

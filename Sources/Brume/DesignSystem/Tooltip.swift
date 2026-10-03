@@ -5,94 +5,97 @@ extension View {
     /// Infobulle maison sous la vue, avec le raccourci à droite. Dans sa propre petite fenêtre :
     /// une vue SwiftUI serait coupée par la barre qui défile et passerait sous le terminal.
     func tooltip(_ text: String, shortcut: String? = nil) -> some View {
-        background(TooltipAnchor(text: text, shortcut: shortcut))
+        modifier(TooltipModifier(text: text, shortcut: shortcut))
     }
 }
 
-private struct TooltipAnchor: NSViewRepresentable {
+/// Le survol vient de SwiftUI et pas d'une zone de suivi AppKit : un bouton qui se redessine au
+/// survol faisait perdre l'entrée de la souris, et une vue cachée sous les réglages (sans
+/// `allowsHitTesting`) n'en reçoit pas.
+private struct TooltipModifier: ViewModifier {
     let text: String
     let shortcut: String?
 
+    @State private var tip = Tooltip()
+
+    func body(content: Content) -> some View {
+        content
+            .background(TooltipAnchor(tip: tip))
+            .onHover { hovering in
+                if hovering { tip.schedule(text: text, shortcut: shortcut) } else { tip.hide() }
+            }
+            .onDisappear { tip.hide() }
+    }
+}
+
+/// La vue AppKit sous laquelle l'infobulle se place.
+private struct TooltipAnchor: NSViewRepresentable {
+    let tip: Tooltip
+
     func makeNSView(context: Context) -> AnchorView {
-        AnchorView()
+        let view = AnchorView()
+        tip.anchor = view
+        return view
     }
 
-    func updateNSView(_ view: AnchorView, context: Context) {
-        view.text = text
-        view.shortcut = shortcut
-    }
+    func updateNSView(_ view: AnchorView, context: Context) {}
 
-    /// Le survol se suit par une zone de suivi : elle marche sous le bouton, qui garde les clics.
     final class AnchorView: NSView {
-        var text = ""
-        var shortcut: String?
-        private var panel: NSPanel?
-        private var pending: DispatchWorkItem?
-        private var clickMonitor: Any?
-
-        override func updateTrackingAreas() {
-            super.updateTrackingAreas()
-            trackingAreas.forEach(removeTrackingArea)
-            addTrackingArea(NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self))
-        }
-
         override func hitTest(_ point: NSPoint) -> NSView? {
             nil
         }
+    }
+}
 
-        override func mouseEntered(with event: NSEvent) {
-            pending?.cancel()
-            let work = DispatchWorkItem { [weak self] in self?.show() }
-            pending = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
-            // Un clic sur le bouton ne passe pas par cette vue : on le guette dès l'entrée, sinon un
-            // clic rapide laisserait le délai courir et l'infobulle s'ouvrir sur le menu du bouton.
-            clickMonitor = clickMonitor ?? NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-                self?.hide()
-                return event
-            }
-        }
+@MainActor
+private final class Tooltip {
+    weak var anchor: NSView?
+    private var panel: NSPanel?
+    private var pending: DispatchWorkItem?
+    private var clickMonitor: Any?
 
-        override func mouseExited(with event: NSEvent) {
-            hide()
+    func schedule(text: String, shortcut: String?) {
+        pending?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.show(text: text, shortcut: shortcut) }
+        pending = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+        // Un clic laisserait le délai courir, et l'infobulle s'ouvrirait sur le menu du bouton.
+        clickMonitor = clickMonitor ?? NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
+            self?.hide()
+            return event
         }
+    }
 
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if window == nil { hide() }
+    func hide() {
+        pending?.cancel()
+        pending = nil
+        if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
+        clickMonitor = nil
+        if let panel {
+            panel.parent?.removeChildWindow(panel)
+            panel.orderOut(nil)
         }
+        panel = nil
+    }
 
-        private func show() {
-            guard let window, panel == nil else { return }
-            let host = NSHostingView(rootView: TooltipLabel(text: text, shortcut: shortcut))
-            host.frame.size = host.fittingSize
-            let panel = NSPanel(contentRect: host.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
-            panel.contentView = host
-            panel.backgroundColor = .clear
-            panel.isOpaque = false
-            panel.hasShadow = true
-            panel.ignoresMouseEvents = true
-            let anchor = window.convertToScreen(convert(bounds, to: nil))
-            var origin = CGPoint(x: anchor.midX - host.frame.width / 2, y: anchor.minY - host.frame.height - 6)
-            if let screen = window.screen?.visibleFrame {
-                origin.x = min(max(origin.x, screen.minX + 4), screen.maxX - host.frame.width - 4)
-            }
-            panel.setFrameOrigin(origin)
-            window.addChildWindow(panel, ordered: .above)
-            self.panel = panel
+    private func show(text: String, shortcut: String?) {
+        guard let anchor, let window = anchor.window, panel == nil else { return }
+        let host = NSHostingView(rootView: TooltipLabel(text: text, shortcut: shortcut))
+        host.frame.size = host.fittingSize
+        let panel = NSPanel(contentRect: host.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+        panel.contentView = host
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.ignoresMouseEvents = true
+        let frame = window.convertToScreen(anchor.convert(anchor.bounds, to: nil))
+        var origin = CGPoint(x: frame.midX - host.frame.width / 2, y: frame.minY - host.frame.height - 6)
+        if let screen = window.screen?.visibleFrame {
+            origin.x = min(max(origin.x, screen.minX + 4), screen.maxX - host.frame.width - 4)
         }
-
-        private func hide() {
-            pending?.cancel()
-            pending = nil
-            if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
-            clickMonitor = nil
-            if let panel {
-                panel.parent?.removeChildWindow(panel)
-                panel.orderOut(nil)
-            }
-            panel = nil
-        }
+        panel.setFrameOrigin(origin)
+        window.addChildWindow(panel, ordered: .above)
+        self.panel = panel
     }
 }
 
