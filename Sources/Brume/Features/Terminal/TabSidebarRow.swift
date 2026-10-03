@@ -27,7 +27,7 @@ struct TabSidebarRow: View {
                     TabRenameField(title: title) { workspace.finishRenaming(.tab(tab), input: $0, displayed: $1) }
                 } else {
                     Text(title)
-                        .animation(nil) { $0.foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted) }
+                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
                         .lineLimit(1)
                 }
             }
@@ -35,7 +35,9 @@ struct TabSidebarRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             TabStatus(
                 isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),
-                onClose: isGroup ? nil : { workspace.close(tab) }
+                // Ni sur un groupe, où elle fermerait tous ses terminaux, ni sur le seul onglet, qui
+                // se ferme avec la fenêtre par le bouton rouge.
+                onClose: isGroup || layout.tabs.count == 1 ? nil : { workspace.close(tab) }
             )
             if isGroup {
                 FoldButton(isExpanded: isExpanded) { workspace.toggleCollapsed(tab) }

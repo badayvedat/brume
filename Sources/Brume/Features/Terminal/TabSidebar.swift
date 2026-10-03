@@ -42,14 +42,14 @@ struct TabSidebar: View {
                                             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TerminalScreen.space)) } action: {
                                                 paneFrames[pane] = $0
                                             }
-                                            .transition(.collapse(.vertical))
+                                            .transition(.accordion(.vertical))
                                     }
                                 }
                             }
                             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TerminalScreen.space)) } action: {
                                 frames[tab] = $0
                             }
-                            .transition(.collapse(.vertical))
+                            .transition(.accordion(.vertical))
                         }
                         NewTabRow { workspace.newTab(atEnd: true) }
                     }

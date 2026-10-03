@@ -29,7 +29,7 @@ struct TabSidebarPane: View {
                     TabRenameField(title: title) { workspace.finishRenaming(.pane(pane), input: $0, displayed: $1) }
                 } else {
                     Text(title)
-                        .animation(nil) { $0.foregroundStyle(isFocused || isHovered ? Ink.text : Ink.muted) }
+                        .foregroundStyle(isFocused || isHovered ? Ink.text : Ink.muted)
                         .lineLimit(1)
                 }
             }

@@ -99,7 +99,7 @@ Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés da
 - [x] Chaque onglet a un nom, une couleur et une icône (12 au choix : projet, serveur, machine, cloud, base de données, IA, production…)
 - [x] Au relancement, on retrouve ses onglets tels quels, groupes repliés compris ; l'ancienne session (zones) est convertie
 - [x] Raccourci clavier pour basculer entre les onglets en haut et la barre latérale (⌃⌘S, celui de macOS pour la barre latérale), aussi dans le menu « … » et dans Réglages › Général, en fondu
-- [x] Dans la barre latérale, les mêmes actions qu'en haut : créer, renommer, réordonner, fermer, couleur et icône ; ouverture et fermeture en accordéon, onglet actif sans clignotement
+- [x] Dans la barre latérale, les mêmes actions qu'en haut : créer, renommer, réordonner, fermer, couleur et icône ; ouverture en accordéon, fermeture nette où les voisins glissent, pas de croix sur le seul onglet (il se ferme avec la fenêtre)
 - [x] Pastille sur l'onglet : elle respire quand Claude Code travaille, anneau s'il donne un pourcentage, pleine quand une commande finit, sonne ou notifie dans un onglet caché (OSC 9;4 par le patch `tab-progress`)
 - [x] Agrandir le split actif à tout l'onglet (⇧⌘↩ comme Ghostty), bouton à l'accent pour revenir
 

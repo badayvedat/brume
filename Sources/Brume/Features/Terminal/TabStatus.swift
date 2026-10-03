@@ -11,7 +11,7 @@ struct TabStatus: View {
     let hasActivity: Bool
     /// Ce que ferme la croix, dit à VoiceOver et dans l'infobulle.
     var closeLabel = L10n.text(.closeTab)
-    /// Nil : pas de croix, comme sur l'en-tête d'un groupe où elle fermerait tous ses splits.
+    /// Nil : pas de croix.
     let onClose: (() -> Void)?
 
     var body: some View {

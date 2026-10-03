@@ -45,7 +45,7 @@ struct TabBar: View {
                                     .opacity(workspace.drop?.dragged == .tab(tab) ? 0.5 : 1)
                                     // Pendant le renommage, glisser dans le champ sélectionne du texte.
                                     .gesture(drag(tab, step: width + spacing), including: workspace.renaming == .tab(tab) ? .subviews : .all)
-                                    .transition(.collapse(.horizontal))
+                                    .transition(.accordion(.horizontal))
                                 }
                                 if !overflows {
                                     newTabButton

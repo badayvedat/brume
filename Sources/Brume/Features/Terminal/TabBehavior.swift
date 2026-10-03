@@ -29,10 +29,11 @@ private struct TabBehavior: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .animation(Ink.feedback) { $0.background(hoverFill, in: .rect(cornerRadius: 6)) }
-            // L'onglet actif change d'un coup, comme dans un navigateur : en fondu, on en verrait
-            // un instant deux, ou aucun, à chaque ouverture ou fermeture.
-            .animation(nil) { $0.background(selectionFill, in: .rect(cornerRadius: 6)) }
+            .background(hoverFill, in: .rect(cornerRadius: 6))
+            // Le surlignage suit l'animation de la liste : une animation propre à la rangée
+            // prendrait le pas sur son glissement, et l'onglet voisin d'un onglet fermé
+            // disparaîtrait avant de reparaître à sa nouvelle place.
+            .background(selectionFill, in: .rect(cornerRadius: 6))
             .overlay {
                 if workspace.renaming == item {
                     RoundedRectangle(cornerRadius: 6).strokeBorder(accent.color, lineWidth: 1)
@@ -46,7 +47,8 @@ private struct TabBehavior: ViewModifier {
             // Pendant un glisser, les onglets passent sous la souris en changeant de place :
             // sans ça, leur croix clignote au passage.
             .onHover { hovering in
-                if !isDragging { isHovered = hovering }
+                guard !isDragging else { return }
+                withAnimation(Ink.feedback) { isHovered = hovering }
             }
             .onChange(of: isDragging) { _, dragging in
                 if dragging { isHovered = false }

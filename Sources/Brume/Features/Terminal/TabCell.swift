@@ -23,13 +23,17 @@ struct TabCell: View {
                     TabRenameField(title: title) { workspace.finishRenaming(.tab(tab), input: $0, displayed: $1) }
                 } else {
                     Text(title)
-                        .animation(nil) { $0.foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted) }
+                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
                         .lineLimit(1)
                 }
             }
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
-            TabStatus(isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab), onClose: onClose)
+            // Seul, l'onglet se ferme avec la fenêtre, par le bouton rouge : sa croix fermerait Brume.
+            TabStatus(
+                isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),
+                onClose: workspace.layout.tabs.count > 1 ? onClose : nil
+            )
         }
         .padding(.leading, 8)
         .padding(.trailing, 4)
@@ -56,7 +60,7 @@ struct TabIconView: View {
                     .background(accent.color, in: .rect(cornerRadius: 4))
             } else {
                 SystemSymbol.image(symbol, size: 12)
-                    .animation(nil) { $0.foregroundStyle(isLit ? Ink.text : Ink.muted) }
+                    .foregroundStyle(isLit ? Ink.text : Ink.muted)
             }
         }
         .frame(width: 16, height: 16)
