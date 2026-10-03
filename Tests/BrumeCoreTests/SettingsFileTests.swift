@@ -30,9 +30,16 @@ struct SettingsFileTests {
 
     @Test func valuesStayInRangeEvenFromAFileEditedByHand() {
         #expect(TerminalFont(family: nil, size: 200).size == TerminalFont.sizeRange.upperBound)
-        let settings = AppSettings.decoded(from: Data(#"{"font": {"size": 200}, "appearance": {"glassOpacity": 0, "glassBlur": -5}}"#.utf8))
+        let settings = AppSettings.decoded(from: Data(#"{"font": {"size": 200}}"#.utf8))
         #expect(settings?.font.size == TerminalFont.sizeRange.upperBound)
-        #expect(settings?.appearance.glassOpacity == Appearance.glassOpacityRange.lowerBound)
-        #expect(settings?.appearance.glassBlur == 0)
+    }
+
+    @Test func oldGlassNumbersBecomeTheClosestStep() {
+        let settings = AppSettings.decoded(from: Data(#"{"appearance": {"glassOpacity": 0.62, "glassBlur": 100}}"#.utf8))
+        #expect(settings?.appearance.glassOpacity == .low)
+        #expect(settings?.appearance.glassBlur == .high)
+        let steps = AppSettings.decoded(from: Data(#"{"appearance": {"glassOpacity": "high", "glassBlur": "low"}}"#.utf8))
+        #expect(steps?.appearance.glassOpacity == .high)
+        #expect(steps?.appearance.glassBlur == .low)
     }
 }

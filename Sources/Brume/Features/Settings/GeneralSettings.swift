@@ -14,7 +14,7 @@ struct GeneralSettings: View {
             }
             SettingsGroup(title: L10n.text(.interface)) {
                 SettingsRow(title: L10n.text(.language), hint: L10n.text(.languageHint), isLast: true) {
-                    Segmented(options: Language.allCases.map { ($0, $0.name) }, selection: $settings.language)
+                    Segmented(label: L10n.text(.language), options: Language.allCases.map { ($0, $0.name) }, selection: $settings.language)
                 }
             }
         }

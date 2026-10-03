@@ -47,7 +47,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 - [x] Onglets gérés dans la fenêtre à la place des onglets natifs de macOS : une seule liste, que la barre du haut et la vue agents affichent
 - [ ] Choisir ce qu'on reprend d'autre de Muxy (disposition, précédent / suivant...)
-- [x] Barre d'onglets maison dans la barre de titre : onglets arrondis, soulignés de la couleur d'accent, croix, à la place des onglets natifs
+- [x] Barre d'onglets maison dans la barre de titre : onglets arrondis, croix, à la place des onglets natifs
 - [x] Bouton nouvel onglet dans la barre (en plus de Cmd+T)
 - [x] Bouton nouvelle fenêtre dans la barre (en plus de Cmd+N)
 - [x] Réordonner les onglets en les glissant
@@ -70,9 +70,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choisie change. Brume reste toujours sombre.
 
 - [x] Page de réglages dans la fenêtre du terminal (Cmd+virgule, menu « ... »), barre latérale Général / Apparence, Échap ou Cmd+W pour revenir, fondu
-- [x] Rouvrir ou non les onglets au lancement (Général)
-- [x] Verre en interrupteur, avec opacité et flou (0 à 100) réglables quand il est allumé, bascule en fondu
-- [x] Couleur en 10 pastilles (Brume par défaut, noir, bleu...) : le fond en prend la teinte (faible, moyenne, forte), les onglets, le curseur et la sélection la couleur pleine, en fondu
+- [x] Restaurer ou non la session au démarrage (Général)
+- [x] Effet verre en interrupteur, avec opacité et flou en trois crans (faible, moyen, fort) quand il est allumé, bascule en fondu
+- [x] Couleur en 10 pastilles (Brume par défaut, noir, bleu...) : le fond en prend la teinte (faible, moyenne, forte), le curseur, la sélection et les éléments actifs la couleur pleine, en fondu
 - [x] Police en liste (JetBrains Mono, Menlo, Monaco et 9 polices libres embarquées), taille de départ en − / +
 - [x] Langue de l'interface (français / anglais), en direct
 - [x] Menus maison façon Monocode (« ... » et clic droit sur un onglet), raccourcis affichés en entier

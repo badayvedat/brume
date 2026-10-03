@@ -40,7 +40,7 @@ public enum TextKey: CaseIterable, Sendable {
     case settings, back, general, generalHint, appearance, appearanceHint
     case window, windowHint, glass, glassHint, opacity, opacityHint, blur, blurHint
     case colors, colorsHint, color, colorHint, colorDefault, colorBlack, colorPink, colorTeal, commandColors, commandColorsHint
-    case tint, tintHint, strengthLow, strengthMedium, strengthHigh, showPreview, hidePreview, previewMessage, previewLink
+    case tint, tintHint, strengthLow, strengthMedium, strengthHigh, blurMedium, blurHigh, showPreview, hidePreview, previewMessage, previewLink
     case text, font, fontHint, fontSize, fontSizeHint, smaller, larger, interface, language, languageHint
     case startup, restoreTabs, restoreTabsHint
 
@@ -125,11 +125,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .window: "Fenêtre"
         case .windowHint: "Transparence et flou de l'arrière-plan."
         case .glass: "Effet verre"
-        case .glassHint: "Affiche le bureau flouté derrière les terminaux. Désactivé, le fond est opaque."
+        case .glassHint: "Affiche le bureau flouté derrière la fenêtre. Désactivé, le fond est opaque."
         case .opacity: "Opacité"
         case .opacityHint: "Opacité de la couleur de fond au-dessus du bureau."
         case .blur: "Flou"
-        case .blurHint: "Intensité du flou appliqué au bureau. Une valeur élevée sollicite davantage la carte graphique."
+        case .blurHint: "Intensité du flou appliqué au bureau. Un flou fort sollicite davantage la carte graphique."
         case .colors: "Couleurs"
         case .colorsHint: "Couleurs de l'interface et des terminaux."
         case .color: "Couleur d'accent"
@@ -143,6 +143,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .strengthLow: "Faible"
         case .strengthMedium: "Moyenne"
         case .strengthHigh: "Forte"
+        case .blurMedium: "Moyen"
+        case .blurHigh: "Fort"
         case .showPreview: "Afficher l'aperçu"
         case .hidePreview: "Masquer l'aperçu"
         case .previewMessage: "premier jet"
@@ -239,11 +241,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .window: "Window"
         case .windowHint: "Background transparency and blur."
         case .glass: "Glass Effect"
-        case .glassHint: "Shows the blurred desktop behind the terminals. When off, the background is opaque."
+        case .glassHint: "Shows the blurred desktop behind the window. When off, the background is opaque."
         case .opacity: "Opacity"
         case .opacityHint: "Opacity of the background color over the desktop."
         case .blur: "Blur"
-        case .blurHint: "Strength of the desktop blur. Higher values use more graphics resources."
+        case .blurHint: "Strength of the desktop blur. A strong blur uses more graphics resources."
         case .colors: "Colors"
         case .colorsHint: "Interface and terminal colors."
         case .color: "Accent Color"
@@ -257,6 +259,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .strengthLow: "Low"
         case .strengthMedium: "Medium"
         case .strengthHigh: "High"
+        case .blurMedium: "Medium"
+        case .blurHigh: "High"
         case .showPreview: "Show Preview"
         case .hidePreview: "Hide Preview"
         case .previewMessage: "first draft"

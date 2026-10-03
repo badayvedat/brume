@@ -4,9 +4,9 @@ import Testing
 struct TranslucencyTests {
     @Test func glassFollowsItsSettingsAndOpaqueIgnoresThem() {
         var appearance = Appearance()
-        appearance.glassOpacity = 0.6
-        appearance.glassBlur = 20
-        #expect(appearance.translucency == Translucency(opacity: 0.6, blur: 20))
+        appearance.glassOpacity = .low
+        appearance.glassBlur = .high
+        #expect(appearance.translucency == Translucency(opacity: Strength.low.veilOpacity, blur: Strength.high.blurRadius))
         appearance.isGlass = false
         #expect(appearance.translucency == .opaque)
         #expect(!appearance.translucency.isTranslucent)

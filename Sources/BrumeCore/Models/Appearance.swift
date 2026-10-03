@@ -4,14 +4,11 @@ import Foundation
 /// coloration des commandes.
 public struct Appearance: Codable, Hashable, Sendable {
     public var isGlass = true
-    public var glassOpacity = 0.8
-    public var glassBlur = 40
+    public var glassOpacity = Strength.medium
+    public var glassBlur = Strength.medium
     public var accent = Accent.brume
     public var tint = Strength.medium
     public var commandColors = CommandColors.brume
-
-    public static let glassOpacityRange = 0.15 ... 1.0
-    public static let glassBlurRange = 0 ... 100
 
     public init() {}
 
@@ -27,13 +24,17 @@ public struct Appearance: Codable, Hashable, Sendable {
         read(.accent, &accent)
         read(.tint, &tint)
         read(.commandColors, &commandColors)
-        // Un fichier retouché à la main ne doit pas rendre la fenêtre invisible.
-        glassOpacity = min(max(glassOpacity, Self.glassOpacityRange.lowerBound), Self.glassOpacityRange.upperBound)
-        glassBlur = min(max(glassBlur, Self.glassBlurRange.lowerBound), Self.glassBlurRange.upperBound)
+        // Avant les crans, l'opacité et le flou étaient des nombres : on garde le cran le plus proche.
+        if let old = try? container.decode(Double.self, forKey: .glassOpacity) {
+            glassOpacity = .closest(to: old) { $0.veilOpacity }
+        }
+        if let old = try? container.decode(Double.self, forKey: .glassBlur) {
+            glassBlur = .closest(to: old) { Double($0.blurRadius) }
+        }
     }
 
     public var translucency: Translucency {
-        isGlass ? Translucency(opacity: glassOpacity, blur: glassBlur) : .opaque
+        isGlass ? Translucency(opacity: glassOpacity.veilOpacity, blur: glassBlur.blurRadius) : .opaque
     }
 
     /// Les couleurs du terminal sauf la palette : un fond sombre à la teinte de l'accent, et une
@@ -65,6 +66,28 @@ public enum Strength: String, CaseIterable, Codable, Sendable {
         case .medium: 0.3
         case .high: 0.5
         }
+    }
+
+    /// En verre, la part de la couleur du fond posée sur le bureau.
+    public var veilOpacity: Double {
+        switch self {
+        case .low: 0.6
+        case .medium: 0.8
+        case .high: 0.9
+        }
+    }
+
+    /// Le rayon du flou du bureau, en points.
+    public var blurRadius: Int {
+        switch self {
+        case .low: 16
+        case .medium: 32
+        case .high: 64
+        }
+    }
+
+    static func closest(to value: Double, by measure: (Strength) -> Double) -> Strength {
+        allCases.min { abs(measure($0) - value) < abs(measure($1) - value) }!
     }
 }
 

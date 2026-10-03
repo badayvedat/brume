@@ -30,6 +30,7 @@ struct Switch: View {
 
 /// Quelques choix côte à côte, celui retenu sur un fond blanc à 10 %.
 struct Segmented<Value: Hashable>: View {
+    let label: String
     let options: [(value: Value, label: String)]
     @Binding var selection: Value
 
@@ -42,6 +43,8 @@ struct Segmented<Value: Hashable>: View {
         .padding(2)
         .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(Ink.border) }
         .fixedSize()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(label)
     }
 }
 
@@ -142,49 +145,5 @@ struct SecondaryButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == SecondaryButtonStyle {
     static var secondary: SecondaryButtonStyle {
         SecondaryButtonStyle()
-    }
-}
-
-/// Le curseur de Monocode : une piste fine en blanc à 15 %, une pastille blanche, la valeur à droite.
-struct ValueSlider: View {
-    let label: String
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    var step: Double = 1
-    let display: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            GeometryReader { geometry in
-                let fraction = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Ink.white(0.15)).frame(height: 4)
-                    Circle()
-                        .fill(Ink.text)
-                        .frame(width: 12, height: 12)
-                        .offset(x: (geometry.size.width - 12) * fraction)
-                }
-                .frame(maxHeight: .infinity)
-                .contentShape(.rect)
-                .gesture(DragGesture(minimumDistance: 0).onChanged { drag in
-                    let ratio = min(max((drag.location.x - 6) / (geometry.size.width - 12), 0), 1)
-                    let raw = range.lowerBound + ratio * (range.upperBound - range.lowerBound)
-                    value = (raw / step).rounded() * step
-                })
-            }
-            .frame(height: 20)
-            Text(display)
-                .font(.system(size: 12).monospacedDigit())
-                .foregroundStyle(Ink.text)
-                .frame(width: 40, alignment: .trailing)
-        }
-        .frame(width: 224)
-        .accessibilityElement()
-        .accessibilityLabel(label)
-        .accessibilityValue(display)
-        .accessibilityAdjustableAction { direction in
-            let delta = direction == .increment ? step : -step
-            value = min(max(value + delta, range.lowerBound), range.upperBound)
-        }
     }
 }

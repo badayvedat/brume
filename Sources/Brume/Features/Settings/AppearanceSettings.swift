@@ -15,17 +15,13 @@ struct AppearanceSettings: View {
                 }
                 if settings.appearance.isGlass {
                     SettingsRow(title: L10n.text(.opacity), hint: L10n.text(.opacityHint)) {
-                        ValueSlider(
-                            label: L10n.text(.opacity), value: $settings.appearance.glassOpacity,
-                            range: Appearance.glassOpacityRange, step: 0.01,
-                            display: settings.appearance.glassOpacity.formatted(.percent.precision(.fractionLength(0)).locale(L10n.language.locale))
-                        )
+                        Segmented(label: L10n.text(.opacity), options: strengths(), selection: $settings.appearance.glassOpacity)
                     }
                     SettingsRow(title: L10n.text(.blur), hint: L10n.text(.blurHint), isLast: true) {
-                        ValueSlider(
-                            label: L10n.text(.blur), value: blur,
-                            range: Double(Appearance.glassBlurRange.lowerBound) ... Double(Appearance.glassBlurRange.upperBound),
-                            display: "\(settings.appearance.glassBlur)"
+                        Segmented(
+                            label: L10n.text(.blur),
+                            options: strengths(medium: .blurMedium, high: .blurHigh),
+                            selection: $settings.appearance.glassBlur
                         )
                     }
                 }
@@ -35,12 +31,9 @@ struct AppearanceSettings: View {
                     AccentPicker(accent: $settings.appearance.accent)
                 }
                 SettingsRow(title: L10n.text(.tint), hint: L10n.text(.tintHint), isLast: true) {
-                    Segmented(
-                        options: [(Strength.low, L10n.text(.strengthLow)), (.medium, L10n.text(.strengthMedium)), (.high, L10n.text(.strengthHigh))],
-                        selection: $settings.appearance.tint
-                    )
-                    .disabled(settings.appearance.accent.isNeutral)
-                    .opacity(settings.appearance.accent.isNeutral ? 0.4 : 1)
+                    Segmented(label: L10n.text(.tint), options: strengths(), selection: $settings.appearance.tint)
+                        .disabled(settings.appearance.accent.isNeutral)
+                        .opacity(settings.appearance.accent.isNeutral ? 0.4 : 1)
                 }
             }
             SettingsGroup(title: L10n.text(.text)) {
@@ -94,11 +87,8 @@ struct AppearanceSettings: View {
         .animation(Ink.feedback, value: settings.appearance.isGlass)
     }
 
-    private var blur: Binding<Double> {
-        Binding {
-            Double(settings.appearance.glassBlur)
-        } set: {
-            settings.appearance.glassBlur = Int($0)
-        }
+    /// Accordés au réglage : « moyenne » pour l'opacité, « moyen » pour le flou.
+    private func strengths(medium: TextKey = .strengthMedium, high: TextKey = .strengthHigh) -> [(value: Strength, label: String)] {
+        [(.low, L10n.text(.strengthLow)), (.medium, L10n.text(medium)), (.high, L10n.text(high))]
     }
 }
