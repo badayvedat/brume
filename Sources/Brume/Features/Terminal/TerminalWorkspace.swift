@@ -173,6 +173,27 @@ final class TerminalWorkspace {
         close(layout.tabs(rightOf: id))
     }
 
+    /// Retour à un seul onglet : le terminal actif reste, avec son shell ; les autres onglets et
+    /// zones se ferment, couleurs, noms et taille du texte reviennent à la normale.
+    func reset() {
+        let kept = focusedID
+        let others = layout.tabs.filter { $0 != kept }
+        let reset = { [weak self] in
+            guard let self else { return }
+            for id in others {
+                states[id] = nil
+                searches[id] = nil
+            }
+            customTitles = [:]
+            colors = [:]
+            apply(WindowLayout(area: layout.focusedArea, tab: kept))
+            states[kept]?.surface?.performBindingAction("reset_font_size")
+            focus(kept)
+        }
+        guard others.contains(where: { states[$0].map(Self.isRunning) ?? false }) else { return reset() }
+        CloseConfirmation.tabs.ask(in: window, then: reset)
+    }
+
     func color(of id: UUID) -> TabColor? {
         colors[id]
     }

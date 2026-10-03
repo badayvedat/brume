@@ -63,6 +63,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Menu « ... » : ouvrir le dossier du terminal dans le Finder ou un éditeur détecté (icône de l'app), copier le chemin. Les réglages y entreront avec le chapitre 5
 - [x] Clic droit sur un onglet : fermer les autres, fermer ceux de droite, couleur (6 au choix)
 - [x] Restaurer au relancement les fenêtres, zones, onglets, dossiers, noms et couleurs
+- [x] « Réinitialiser les onglets » dans le menu ... : la fenêtre revient à un seul onglet (le terminal actif), sans couleurs, noms ni zoom
 
 ## 5. Réglages en interface
 

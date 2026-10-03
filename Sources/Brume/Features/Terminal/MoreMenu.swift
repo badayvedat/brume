@@ -3,9 +3,11 @@ import BrumeCore
 import GhosttyTerminal
 import SwiftUI
 
-/// Les « ... » de la barre : ouvrir le dossier du terminal affiché ailleurs, copier son chemin.
+/// Les « ... » de la barre : ouvrir le dossier du terminal affiché ailleurs, copier son chemin,
+/// réinitialiser les onglets de la fenêtre.
 struct MoreMenu: View {
     @ObservedObject var state: TerminalViewState
+    let workspace: TerminalWorkspace
 
     @State private var isHovered = false
 
@@ -30,6 +32,8 @@ struct MoreMenu: View {
             } else {
                 Text(L10n.text(.noFolderYet))
             }
+            Divider()
+            Button(L10n.text(.resetTabs), action: workspace.reset)
         } label: {
             // Pas de symbole vertical dans macOS : l'horizontal, tourné.
             SystemSymbol.image("ellipsis", size: 13, weight: .medium)

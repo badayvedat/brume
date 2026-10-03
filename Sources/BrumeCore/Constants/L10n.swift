@@ -20,7 +20,7 @@ public enum TextKey: CaseIterable, Sendable {
     case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
-    case tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
+    case resetTabs, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
 
     public func text(in language: Language) -> String {
         switch language {
@@ -85,6 +85,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .closeTabsMessage: "Une commande tourne encore dans un de ces onglets. Les fermer l'arrêtera."
         case .closeOtherTabs: "Fermer les autres onglets"
         case .closeTabsToTheRight: "Fermer les onglets à droite"
+        case .resetTabs: "Réinitialiser les onglets"
         case .tabColor: "Couleur"
         case .noColor: "Sans couleur"
         case .colorRed: "Rouge"
@@ -152,6 +153,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .closeTabsMessage: "A terminal still has a running process. If you close these tabs the process will be killed."
         case .closeOtherTabs: "Close Other Tabs"
         case .closeTabsToTheRight: "Close Tabs to the Right"
+        case .resetTabs: "Reset Tabs"
         case .tabColor: "Color"
         case .noColor: "No Color"
         case .colorRed: "Red"

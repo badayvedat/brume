@@ -85,7 +85,7 @@ struct TabBar: View {
                     }
                 }
                 if let shown = workspace.layout.areas[area]?.selected, let state = workspace.states[shown] {
-                    MoreMenu(state: state)
+                    MoreMenu(state: state, workspace: workspace)
                 }
             }
             .padding(.leading, 12)
