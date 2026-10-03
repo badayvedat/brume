@@ -5,7 +5,7 @@ import AppKit
 import SwiftUI
 
 /// Fond de la barre du haut : glisser déplace la fenêtre, double-cliquer suit le réglage
-/// macOS (agrandir ou réduire). La fenêtre n'est pas déplaçable par ailleurs : voir `WindowTitlebar`.
+/// macOS (agrandir ou réduire).
 struct WindowDragArea: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         DragView()

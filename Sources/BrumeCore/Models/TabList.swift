@@ -38,6 +38,14 @@ public struct TabList<Tab: Hashable & Sendable>: Hashable, Sendable {
         return selecting(tabs[((index + offset) % count + count) % count])
     }
 
+    public func moving(_ tab: Tab, to destination: Int) -> TabList {
+        guard let index = tabs.firstIndex(of: tab) else { return self }
+        var list = self
+        list.tabs.remove(at: index)
+        list.tabs.insert(tab, at: min(max(destination, 0), list.tabs.count))
+        return list
+    }
+
     /// Fermer l'onglet affiché montre son voisin de droite, ou de gauche au bout.
     /// Nil quand c'était le dernier : la fenêtre doit se fermer.
     public func removing(_ tab: Tab) -> TabList? {

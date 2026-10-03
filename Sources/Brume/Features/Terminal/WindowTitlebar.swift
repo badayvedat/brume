@@ -16,12 +16,9 @@ final class WindowTitlebar {
         observers.forEach(NotificationCenter.default.removeObserver)
     }
 
-    /// Les onglets sont dans la zone de la barre de titre : déplaçable, la fenêtre partirait
-    /// avec l'onglet qu'on clique. Seul le fond de la barre la déplace (`WindowDragArea`).
     func attach(to window: NSWindow) {
         guard self.window !== window else { return }
         self.window = window
-        window.isMovable = false
         update()
         for name in [NSWindow.didEnterFullScreenNotification, NSWindow.didExitFullScreenNotification] {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in

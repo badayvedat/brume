@@ -30,6 +30,17 @@ struct TabListTests {
         #expect(threeTabs.selecting(number: 1).selecting(offset: -1).selected == "c")
     }
 
+    @Test func movingKeepsSelection() {
+        let list = threeTabs.moving("a", to: 2)
+        #expect(list.tabs == ["b", "c", "a"])
+        #expect(list.selected == "b")
+    }
+
+    @Test func movingClampsTheDestination() {
+        #expect(threeTabs.moving("c", to: -5).tabs == ["c", "a", "b"])
+        #expect(threeTabs.moving("a", to: 99).tabs == ["b", "c", "a"])
+    }
+
     @Test func removingSelectedShowsRightNeighbor() {
         let list = threeTabs.removing("b")
         #expect(list?.tabs == ["a", "c"])

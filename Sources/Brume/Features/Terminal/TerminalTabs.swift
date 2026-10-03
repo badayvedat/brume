@@ -61,6 +61,10 @@ final class TerminalTabs {
         show(list.selecting(offset: -1))
     }
 
+    func move(_ id: UUID, to index: Int) {
+        list = list.moving(id, to: index)
+    }
+
     /// La croix d'un onglet : confirme si une commande y tourne.
     func close(_ id: UUID) {
         guard let workspace = workspaces[id] else { return }

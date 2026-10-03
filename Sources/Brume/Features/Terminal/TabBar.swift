@@ -8,9 +8,11 @@ struct TabBar: View {
     let tabs: TerminalTabs
 
     @State private var titlebar = WindowTitlebar()
+    @State private var isDragging = false
 
     private let spacing: CGFloat = 4
     private let tabWidth: ClosedRange<CGFloat> = 110 ... 220
+    private let space = "tab-bar"
 
     var body: some View {
         GeometryReader { geometry in
@@ -21,13 +23,17 @@ struct TabBar: View {
                         TabCell(
                             state: workspace.focused,
                             isSelected: workspace === tabs.selected,
+                            isDragging: isDragging,
                             onSelect: { tabs.select(workspace.id) },
                             onClose: { tabs.close(workspace.id) }
                         )
                         .frame(width: width)
+                        .gesture(reorder(workspace.id, step: width + spacing))
                     }
                     BarButton(icon: "plus", label: "\(L10n.text(.newTab)) (⌘T)", action: tabs.newTab)
                 }
+                .animation(.easeInOut(duration: 0.15), value: tabs.tabs.map(\.id))
+                .coordinateSpace(.named(space))
                 .frame(maxHeight: .infinity)
                 .frame(minWidth: geometry.size.width, alignment: .leading)
                 .background(WindowDragArea())
@@ -38,6 +44,23 @@ struct TabBar: View {
         .frame(height: titlebar.buttonsCenterY * 2)
         .background(WindowDragArea())
         .background(WindowReader { titlebar.attach(to: $0) })
+    }
+
+    /// Comme Muxy : l'onglet tenu prend la place de celui que survole la souris.
+    /// Toutes les cases ont la même largeur : la place se lit dans la position.
+    private func reorder(_ id: UUID, step: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(space))
+            .onChanged { value in
+                if !isDragging {
+                    isDragging = true
+                    tabs.select(id)
+                }
+                let target = min(max(Int(value.location.x / step), 0), tabs.tabs.count - 1)
+                if tabs.tabs.firstIndex(where: { $0.id == id }) != target {
+                    tabs.move(id, to: target)
+                }
+            }
+            .onEnded { _ in isDragging = false }
     }
 
     /// Parts égales, sans dépasser `tabWidth` : au-delà, la barre défile.
@@ -51,6 +74,7 @@ struct TabBar: View {
 private struct TabCell: View {
     @ObservedObject var state: TerminalViewState
     let isSelected: Bool
+    let isDragging: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
 
@@ -83,7 +107,14 @@ private struct TabCell: View {
         .contentShape(.rect(cornerRadius: 8))
         .onTapGesture(perform: onSelect)
         .accessibilityAction(.default, onSelect)
-        .onHover { isHovered = $0 }
+        // Pendant un glisser, les onglets passent sous la souris en changeant de place :
+        // sans ça, leur croix clignote au passage.
+        .onHover { hovering in
+            if !isDragging { isHovered = hovering }
+        }
+        .onChange(of: isDragging) { _, dragging in
+            if dragging { isHovered = false }
+        }
         .help(title)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
