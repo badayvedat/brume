@@ -24,7 +24,7 @@ bash build-app.sh --debug --no-install   # fabrique le .app sans toucher au Brum
 
 ## Contraintes
 
-- Moteur : libghostty-spm, copié dans `Vendor/` (gitignoré) par `setup.sh` qui applique `Patches/`. Ne jamais éditer `Vendor/` à la main : tout changement passe par un patch. Ils s'appliquent par ordre alphabétique : un patch qui touche un fichier déjà patché se nomme après l'autre.
+- Moteur : libghostty-spm, copié dans `Vendor/` (gitignoré) par `setup.sh` qui applique `Patches/`. Ne jamais éditer `Vendor/` à la main : tout changement passe par un patch, sauf ce qu'une sous-classe de la vue terminal fournie par `makePlatformView` suffit à faire (`BrumeTerminalView`). Les patchs s'appliquent par ordre alphabétique : un patch qui touche un fichier déjà patché se nomme après l'autre.
 - Les `.bundle` de ressources SwiftPM vont dans `Contents/Resources` : codesign refuse tout contenu à la racine de l'app, et c'est ce que le patch fait lire au paquet.
 - L'intégration shell du paquet est une réécriture qui ignore `sudo` et `path` de Ghostty : activer une option dans la config ne suffit pas, vérifier `shell-integration/zsh/ghostty-integration`. `ssh-*` y est ajouté par `Patches/`.
 - Un raccourci de l'app se déclare dans le menu (`App/*Commands.swift`) : le patch `menu-keys` lui donne la priorité sur ceux du moteur, dont le paquet ne transmet pas les actions. Pas de `keybind = ...=unbind`.

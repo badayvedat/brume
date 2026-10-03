@@ -94,7 +94,8 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés dans une barre latérale à gauche plutôt qu'en haut. Pas une vue « agents » : rien pour surveiller des processus.
 
 - [x] Barre latérale des onglets à gauche, au choix avec la barre du haut, en-tête de l'onglet affiché à droite, largeur réglable au bord (160 à 360)
-- [x] Un onglet divisé (⌘D) : en haut un seul onglet à l'icône split, sur le côté un groupe qu'on renomme et qu'on déplie sur ses splits (miniature de la fenêtre pour chacun) ; « Séparer les splits », « Déplacer dans un nouvel onglet », glisser un onglet sur un terminal pour l'y joindre
+- [x] Un onglet divisé (⌘D) devient « Groupe 1 », « Groupe 2 »… : en haut un seul onglet à l'icône split, sur le côté un groupe repliable (chevron à droite) dont chaque terminal se renomme, se colore, se glisse (échange de place, ou dépôt sur un terminal avec la vraie place en aperçu) ; « Dissocier le groupe », « Sortir du groupe » ; le terminal d'origine garde le nom de l'onglet divisé
+- [x] Menus selon le contexte (onglet, groupe, terminal) et clic droit dans le terminal : copier, coller, diviser, agrandir, sortir du groupe, fermer
 - [x] Chaque onglet a un nom, une couleur et une icône (12 au choix : projet, serveur, machine, cloud, base de données, IA, production…)
 - [x] Au relancement, on retrouve ses onglets tels quels, groupes repliés compris ; l'ancienne session (zones) est convertie
 - [x] Raccourci clavier pour basculer entre les onglets en haut et la barre latérale (⌃⌘S, celui de macOS pour la barre latérale), aussi dans le menu « … » et dans Réglages › Général, en fondu

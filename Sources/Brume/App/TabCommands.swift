@@ -8,7 +8,7 @@ struct TabCommands: Commands {
         CommandGroup(after: .newItem) {
             Button(L10n.text(.newTab)) { workspace?.newTab() }
                 .keyboardShortcut("t")
-            Button(L10n.text(.renameTab)) { workspace?.startRenaming() }
+            Button(L10n.text(workspace?.isSplit == true ? .renameGroup : .renameTab)) { workspace?.startRenaming() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
         }
         CommandGroup(before: .windowArrangement) {

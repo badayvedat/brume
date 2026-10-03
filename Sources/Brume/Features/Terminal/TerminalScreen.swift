@@ -94,7 +94,7 @@ private struct TerminalWindow: View {
         .ignoresSafeArea(.container, edges: .top)
         .modifier(TerminalWindowChrome(
             state: workspace.focused,
-            customTitle: workspace.title(of: workspace.layout.selectedTab),
+            customTitle: workspace.label(of: .tab(workspace.layout.selectedTab))?.title,
             translucency: translucency.shown
         ))
         .focusedSceneValue(\.terminalWorkspace, workspace)

@@ -9,12 +9,15 @@ struct TabStatus: View {
     let isHovered: Bool
     let progress: TerminalProgress?
     let hasActivity: Bool
-    let onClose: () -> Void
+    /// Ce que ferme la croix, dit à VoiceOver et dans l'infobulle.
+    var closeLabel = L10n.text(.closeTab)
+    /// Nil : pas de croix, comme sur l'en-tête d'un groupe où elle fermerait tous ses splits.
+    let onClose: (() -> Void)?
 
     var body: some View {
         ZStack {
-            if isHovered {
-                CloseButton(action: onClose)
+            if isHovered, let onClose {
+                CloseButton(label: closeLabel, action: onClose)
             } else if let progress {
                 ProgressDot(progress: progress)
             } else if hasActivity {
@@ -22,9 +25,9 @@ struct TabStatus: View {
             }
         }
         .frame(width: 20, height: 20)
-        .animation(Ink.feedback, value: isHovered)
+        // Seule la pastille s'anime. La croix paraît d'un coup au survol, comme dans un
+        // navigateur : en fondu, elle se mêlait à la pastille et traînait sous un onglet qui glisse.
         .animation(Ink.feedback, value: hasActivity)
-        .animation(Ink.feedback, value: progress == nil)
     }
 }
 
@@ -77,6 +80,7 @@ private struct ProgressDot: View {
 }
 
 private struct CloseButton: View {
+    let label: String
     let action: () -> Void
 
     @State private var isHovered = false
@@ -89,8 +93,8 @@ private struct CloseButton: View {
                 .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 4))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(L10n.text(.closeTab))
-        .tooltip(L10n.text(.closeTab))
+        .accessibilityLabel(label)
+        .tooltip(label)
         .onHover { isHovered = $0 }
         .animation(Ink.feedback, value: isHovered)
     }

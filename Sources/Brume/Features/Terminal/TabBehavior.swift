@@ -8,17 +8,17 @@ enum TabHighlight {
 }
 
 extension View {
-    /// Ce qu'un onglet fait pareil en haut et dans la barre latérale : fond teinté, cadre du
-    /// renommage, clic, double-clic, clic droit, survol et accessibilité.
+    /// Ce qu'un onglet ou un split d'un groupe font pareil : fond teinté, cadre du renommage,
+    /// clic, double-clic, clic droit, survol et accessibilité.
     func tabBehavior(
-        _ tab: UUID, in workspace: TerminalWorkspace, highlight: TabHighlight, isHovered: Binding<Bool>, isDragging: Bool, isVertical: Bool
+        _ item: TabItem, in workspace: TerminalWorkspace, highlight: TabHighlight, isHovered: Binding<Bool>, isDragging: Bool, isVertical: Bool
     ) -> some View {
-        modifier(TabBehavior(id: tab, workspace: workspace, highlight: highlight, isHovered: isHovered, isDragging: isDragging, isVertical: isVertical))
+        modifier(TabBehavior(item: item, workspace: workspace, highlight: highlight, isHovered: isHovered, isDragging: isDragging, isVertical: isVertical))
     }
 }
 
 private struct TabBehavior: ViewModifier {
-    let id: UUID
+    let item: TabItem
     let workspace: TerminalWorkspace
     let highlight: TabHighlight
     @Binding var isHovered: Bool
@@ -34,15 +34,15 @@ private struct TabBehavior: ViewModifier {
             // un instant deux, ou aucun, à chaque ouverture ou fermeture.
             .animation(nil) { $0.background(selectionFill, in: .rect(cornerRadius: 6)) }
             .overlay {
-                if workspace.renamingID == id {
+                if workspace.renaming == item {
                     RoundedRectangle(cornerRadius: 6).strokeBorder(accent.color, lineWidth: 1)
                 }
             }
             .contentShape(.rect(cornerRadius: 6))
-            .onTapGesture { workspace.select(id) }
+            .onTapGesture(perform: show)
             // En plus du clic simple : le double-clic ne retarde pas la sélection.
-            .simultaneousGesture(TapGesture(count: 2).onEnded { workspace.startRenaming(id) })
-            .onRightClick { PopupMenu.show(menu, at: $0) }
+            .simultaneousGesture(TapGesture(count: 2).onEnded { workspace.startRenaming(item) })
+            .onRightClick(isEnabled: workspace.renaming != item) { PopupMenu.show(menu, at: $0) }
             // Pendant un glisser, les onglets passent sous la souris en changeant de place :
             // sans ça, leur croix clignote au passage.
             .onHover { hovering in
@@ -52,79 +52,134 @@ private struct TabBehavior: ViewModifier {
                 if dragging { isHovered = false }
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(workspace.displayedTitle(of: id))
+            .accessibilityLabel(workspace.displayedTitle(of: item))
             .accessibilityValue(accessibilityValue)
             .accessibilityAddTraits(highlight == .none ? .isButton : [.isButton, .isSelected])
-            .accessibilityAction(.default) { workspace.select(id) }
+            .accessibilityAction(.default, show)
             // Le menu du clic droit est une fenêtre à part, hors de portée de VoiceOver.
-            .accessibilityAction(named: L10n.text(.renameTab)) { workspace.startRenaming(id) }
-            .accessibilityAction(named: L10n.text(.resetTabName)) { workspace.resetTitle(id) }
-            .accessibilityAction(named: L10n.text(.closeOtherTabs)) { workspace.closeOthers(of: id) }
-            .accessibilityAction(named: L10n.text(isVertical ? .closeTabsBelow : .closeTabsToTheRight)) { workspace.closeAfter(id) }
             .accessibilityActions {
-                ForEach(TabColor.allCases, id: \.self) { color in
-                    Button("\(L10n.text(.tabColor)) : \(color.name)") { workspace.setColor(color, of: id) }
-                }
-                Button(L10n.text(.noColor)) { workspace.setColor(nil, of: id) }
-                ForEach(TabIcon.allCases, id: \.self) { icon in
-                    Button("\(L10n.text(.tabIcon)) : \(icon.name)") { workspace.setIcon(icon, of: id) }
-                }
-                if workspace.layout.isSplit(id) {
-                    Button(L10n.text(.separateSplits)) { workspace.separate(id) }
+                ForEach(Array(menuActions.enumerated()), id: \.offset) { _, action in
+                    Button(action.title, action: action.run)
                 }
             }
-            .accessibilityAction(named: L10n.text(.closeTab)) { workspace.close(id) }
+    }
+
+    private func show() {
+        switch item {
+        case let .tab(tab): workspace.select(tab)
+        case let .pane(pane): workspace.focus(pane)
+        }
     }
 
     private var accessibilityValue: String {
+        let progress = switch item {
+        case let .tab(tab): workspace.progress(of: tab)
+        case let .pane(pane): workspace.paneProgress[pane]
+        }
+        let hasActivity = switch item {
+        case let .tab(tab): workspace.hasActivity(tab)
+        case let .pane(pane): workspace.activity.contains(pane)
+        }
         var parts: [String] = []
-        if let progress = workspace.progress(of: id) {
+        if let progress {
             parts.append(progress.percent.map { (Double($0) / 100).formatted(.percent.locale(L10n.language.locale)) } ?? L10n.text(.inProgress))
         }
-        if workspace.hasActivity(id) { parts.append(L10n.text(.newActivity)) }
+        if hasActivity { parts.append(L10n.text(.newActivity)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// Un onglet seul, un groupe, ou un terminal d'un groupe : les mots du menu suivent.
+    private var isGroup: Bool {
+        if case let .tab(tab) = item { return workspace.layout.isSplit(tab) }
+        return false
     }
 
     /// Sans raccourcis affichés : ceux du menu agissent sur l'onglet actif, pas sur celui cliqué.
     private var menu: [MenuEntry] {
-        var entries: [MenuEntry] = [.item(L10n.text(.renameTab)) { workspace.startRenaming(id) }]
-        if workspace.title(of: id) != nil {
-            entries.append(.item(L10n.text(.resetTabName)) { workspace.resetTitle(id) })
+        let rename: TextKey = switch item {
+        case .tab: isGroup ? .renameGroup : .renameTab
+        case .pane: .renameTerminal
         }
-        let color = workspace.color(of: id)
+        var entries: [MenuEntry] = [.item(L10n.text(rename)) { workspace.startRenaming(item) }]
+        if workspace.label(of: item)?.title != nil {
+            entries.append(.item(L10n.text(.resetTabName)) { workspace.resetTitle(item) })
+        }
+        let color = workspace.label(of: item)?.color
         let colors: [MenuEntry] = TabColor.allCases.map { choice in
-            .item(choice.name, swatch: choice.color, checked: color == choice) { workspace.setColor(choice, of: id) }
+            .item(choice.name, swatch: choice.color, checked: color == choice) { workspace.setColor(choice, of: item) }
         }
         entries.append(.submenu(L10n.text(.tabColor), colors + [.separator, .item(L10n.text(.noColor), checked: color == nil) {
-            workspace.setColor(nil, of: id)
+            workspace.setColor(nil, of: item)
         }]))
         // Comme les couleurs : les choix, puis celle par défaut.
-        let icon = workspace.icon(of: id)
+        let icon = workspace.icon(of: item)
         let icons: [MenuEntry] = TabIcon.allCases.filter { $0 != .terminal }.map { choice in
-            .item(choice.name, symbol: choice.symbol, checked: icon == choice) { workspace.setIcon(choice, of: id) }
+            .item(choice.name, symbol: choice.symbol, checked: icon == choice) { workspace.setIcon(choice, of: item) }
         }
         entries.append(.submenu(L10n.text(.tabIcon), icons + [.separator, .item(
             TabIcon.terminal.name, symbol: TabIcon.terminal.symbol, checked: icon == .terminal
         ) {
-            workspace.setIcon(.terminal, of: id)
+            workspace.setIcon(.terminal, of: item)
         }]))
-        if workspace.layout.isSplit(id) {
-            entries.append(.item(L10n.text(.separateSplits)) { workspace.separate(id) })
+        return entries + [.separator] + structureEntries
+    }
+
+    /// Ce qui touche à la place de l'onglet, du groupe ou du terminal. Diviser se fait depuis un
+    /// terminal, pas depuis un groupe qui en a plusieurs.
+    private var structureEntries: [MenuEntry] {
+        switch item {
+        case let .tab(tab) where isGroup:
+            var entries: [MenuEntry] = []
+            if isVertical {
+                let isCollapsed = workspace.collapsed.contains(tab)
+                entries.append(.item(L10n.text(isCollapsed ? .expandGroup : .collapseGroup)) { workspace.toggleCollapsed(tab) })
+            }
+            entries.append(.item(L10n.text(.ungroup)) { workspace.separate(tab) })
+            return entries + closeEntries(tab, close: .closeGroup)
+        case let .tab(tab):
+            let pane = workspace.layout.splits[tab]?.focused
+            return [
+                .item(L10n.text(.splitRight)) { workspace.split(.horizontal, from: pane) },
+                .item(L10n.text(.splitDown)) { workspace.split(.vertical, from: pane) },
+            ] + closeEntries(tab, close: .closeTab)
+        case let .pane(pane):
+            return [
+                .item(L10n.text(.splitRight)) { workspace.split(.horizontal, from: pane) },
+                .item(L10n.text(.splitDown)) { workspace.split(.vertical, from: pane) },
+                .item(L10n.text(.zoomSplit), checked: workspace.zoomedPane == pane) { workspace.toggleZoom(pane) },
+                .item(L10n.text(.leaveGroup)) { workspace.detach(pane) },
+                .separator,
+                .item(L10n.text(.closeTerminal)) { workspace.closePane(pane) },
+            ]
         }
-        entries.append(.separator)
-        entries.append(.item(L10n.text(.closeTab)) { workspace.close(id) })
-        entries.append(.item(L10n.text(.closeOtherTabs), enabled: !workspace.layout.tabs(besides: id).isEmpty) {
-            workspace.closeOthers(of: id)
-        })
-        entries.append(.item(L10n.text(isVertical ? .closeTabsBelow : .closeTabsToTheRight), enabled: !workspace.layout.tabs(after: id).isEmpty) {
-            workspace.closeAfter(id)
-        })
-        return entries
+    }
+
+    private func closeEntries(_ tab: UUID, close: TextKey) -> [MenuEntry] {
+        [
+            .separator,
+            .item(L10n.text(close)) { workspace.close(tab) },
+            .item(L10n.text(.closeOtherTabs), enabled: !workspace.layout.tabs(besides: tab).isEmpty) { workspace.closeOthers(of: tab) },
+            .item(L10n.text(isVertical ? .closeTabsBelow : .closeTabsToTheRight), enabled: !workspace.layout.tabs(after: tab).isEmpty) {
+                workspace.closeAfter(tab)
+            },
+        ]
+    }
+
+    /// Le menu à plat, pour VoiceOver : les choix de couleur et d'icône y entrent un par un.
+    private var menuActions: [(title: String, run: () -> Void)] {
+        menu.flatMap { entry -> [(title: String, run: () -> Void)] in
+            guard case let .action(action) = entry, action.isEnabled else { return [] }
+            guard let submenu = action.submenu else { return [(action.title, action.run)] }
+            return submenu.compactMap { choice in
+                guard case let .action(choice) = choice else { return nil }
+                return ("\(action.title) : \(choice.title)", choice.run)
+            }
+        }
     }
 
     /// Une couleur choisie teinte tout l'onglet, plus fort quand il est affiché.
     private var selectionFill: Color {
-        if let color = workspace.color(of: id)?.color {
+        if let color = workspace.label(of: item)?.color?.color {
             return color.opacity(highlight == .full ? 0.28 : highlight == .half ? 0.18 : 0.12)
         }
         return highlight == .full ? Ink.selection : highlight == .half ? Ink.hover : .clear
@@ -133,6 +188,6 @@ private struct TabBehavior: ViewModifier {
     /// Posé sur `selectionFill`, il monte l'onglet survolé d'un cran.
     private var hoverFill: Color {
         guard isHovered, highlight != .full else { return .clear }
-        return workspace.color(of: id)?.color.opacity(highlight == .half ? 0.12 : 0.07) ?? Ink.hover
+        return workspace.label(of: item)?.color?.color.opacity(highlight == .half ? 0.12 : 0.07) ?? Ink.hover
     }
 }

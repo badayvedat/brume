@@ -3,9 +3,15 @@ import CoreGraphics
 /// Une fenêtre comme Ghostty, Arc ou Dia : des onglets, chacun divisé en splits, un terminal par
 /// split. Un onglet divisé s'affiche en groupe dans la barre latérale.
 public struct WindowLayout<Tab: Hashable & Sendable, Pane: Hashable & Sendable>: Hashable, Sendable {
-    /// Un onglet glissé sur les splits de l'onglet affiché, et où il ira si on le lâche.
+    /// Ce qu'on glisse : un onglet, ou un split d'un groupe.
+    public enum Dragged: Hashable, Sendable {
+        case tab(Tab)
+        case pane(Pane)
+    }
+
+    /// Glissé sur les splits de l'onglet affiché, et où il ira si on le lâche.
     public struct Drop: Hashable, Sendable {
-        public let tab: Tab
+        public let dragged: Dragged
         public let target: Pane
         public let direction: SplitDirection
         /// Ce que prendra l'onglet, à montrer pendant le glisser.
@@ -80,6 +86,14 @@ public struct WindowLayout<Tab: Hashable & Sendable, Pane: Hashable & Sendable>:
     public func addingTab(_ tab: Tab, pane: Pane) -> WindowLayout {
         var layout = self
         layout.tabList = tabList.inserting(tab)
+        layout.splits[tab] = Splits(pane)
+        return layout
+    }
+
+    /// En bout de liste, où se trouve le bouton + qui l'ouvre, et l'affiche.
+    public func appendingTab(_ tab: Tab, pane: Pane) -> WindowLayout {
+        var layout = self
+        layout.tabList = tabList.appending(tab)
         layout.splits[tab] = Splits(pane)
         return layout
     }
@@ -188,20 +202,52 @@ public struct WindowLayout<Tab: Hashable & Sendable, Pane: Hashable & Sendable>:
         return layout
     }
 
-    /// Où irait `tab` lâché en `point`, les splits de l'onglet affiché occupant `bounds` : de
-    /// ce côté du split survolé. Nil : rien à proposer, comme l'onglet affiché sur lui-même.
-    public func drop(of tab: Tab, at point: CGPoint, in bounds: CGRect) -> Drop? {
-        guard tab != selectedTab, splits[tab] != nil,
-              let (pane, frame) = selectedSplits.tree.frames(in: bounds).first(where: { $0.value.contains(point) }) else { return nil }
-        let direction = SplitDirection.nearestEdge(to: point, in: frame)
-        return Drop(tab: tab, target: pane, direction: direction, highlight: direction.half(of: frame))
+    /// Où irait ce qu'on glisse, lâché en `point`, les splits de l'onglet affiché occupant
+    /// `bounds` : de ce côté du split survolé. Nil : rien à proposer, comme l'onglet affiché ou un
+    /// split sur lui-même.
+    public func drop(of dragged: Dragged, at point: CGPoint, in bounds: CGRect) -> Drop? {
+        switch dragged {
+        case let .tab(tab):
+            guard tab != selectedTab, splits[tab] != nil else { return nil }
+            return drop(dragged, at: point, over: selectedSplits.tree, in: bounds)
+        case let .pane(moved):
+            // Le split quitte d'abord sa place, et ses voisins la reprennent : le repère montre où
+            // il arrivera vraiment. Lâché là d'où il vient, il ne change rien : pas de repère.
+            guard let remaining = removing(moved)?.splits[selectedTab],
+                  let drop = drop(dragged, at: point, over: remaining.tree, in: bounds),
+                  !(dropping(drop).splits[selectedTab]?.tree.hasSameShape(as: selectedSplits.tree) ?? false) else { return nil }
+            return drop
+        }
     }
 
-    /// L'onglet lâché rejoint l'onglet affiché : ses splits se posent à côté du split visé.
+    private func drop(_ dragged: Dragged, at point: CGPoint, over tree: SplitTree<Pane>, in bounds: CGRect) -> Drop? {
+        guard let (pane, frame) = tree.frames(in: bounds).first(where: { $0.value.contains(point) }) else { return nil }
+        let direction = SplitDirection.nearestEdge(to: point, in: frame)
+        return Drop(dragged: dragged, target: pane, direction: direction, highlight: direction.half(of: frame))
+    }
+
+    /// Lâché à côté du split visé, dans l'onglet affiché : un onglet y apporte tous ses splits,
+    /// un split quitte sa place pour celle-ci.
     public func dropping(_ drop: Drop) -> WindowLayout {
-        guard drop.tab != selectedTab, let moved = splits[drop.tab], var layout = removingTab(drop.tab),
-              let target = layout.splits[selectedTab] else { return self }
-        layout.splits[selectedTab] = target.inserting(moved.tree, beside: drop.target, toward: drop.direction, focusing: moved.focused)
+        switch drop.dragged {
+        case let .tab(tab):
+            guard tab != selectedTab, let moved = splits[tab], var layout = removingTab(tab),
+                  let target = layout.splits[selectedTab] else { return self }
+            layout.splits[selectedTab] = target.inserting(moved.tree, beside: drop.target, toward: drop.direction, focusing: moved.focused)
+            return layout
+        case let .pane(pane):
+            guard pane != drop.target, var layout = removing(pane), let target = layout.splits[layout.selectedTab],
+                  target.tree.panes.contains(drop.target) else { return self }
+            layout.splits[layout.selectedTab] = target.inserting(.pane(pane), beside: drop.target, toward: drop.direction, focusing: pane)
+            return layout
+        }
+    }
+
+    /// Deux splits d'un même onglet échangent leur place : réordonner un groupe.
+    public func swapping(_ a: Pane, _ b: Pane) -> WindowLayout {
+        guard a != b, let tab = tab(of: a), tab == self.tab(of: b), let tabSplits = splits[tab] else { return self }
+        var layout = self
+        layout.splits[tab] = tabSplits.swapping(a, b)
         return layout
     }
 
@@ -264,6 +310,12 @@ public struct Splits<Pane: Hashable & Sendable>: Hashable, Sendable {
         if focused == pane, let index = order.firstIndex(of: pane) {
             splits.focused = remaining.panes[max(index - 1, 0)]
         }
+        return splits
+    }
+
+    func swapping(_ a: Pane, _ b: Pane) -> Splits {
+        var splits = self
+        splits.tree = tree.swapping(a, b)
         return splits
     }
 

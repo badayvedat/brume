@@ -23,6 +23,12 @@ struct WindowLayoutTests {
         #expect(layout.focusedPane == 4)
     }
 
+    @Test func theNewTabButtonAppendsAtTheEnd() {
+        let layout = twoTabs.appendingTab("C", pane: 4)
+        #expect(layout.tabs == ["A", "B", "C"])
+        #expect(layout.focusedPane == 4)
+    }
+
     @Test func panesAreListedTabByTab() {
         #expect(twoTabs.panes == [1, 2, 3])
         #expect(twoTabs.tabOfPane == [1: "A", 2: "A", 3: "B"])
@@ -89,23 +95,57 @@ struct WindowLayoutTests {
     let window = CGRect(x: 0, y: 0, width: 200, height: 100)
 
     @Test func droppingNearAnEdgeProposesThatSide() {
-        let drop = twoTabs.drop(of: "B", at: CGPoint(x: 195, y: 50), in: window)
+        let drop = twoTabs.drop(of: .tab("B"), at: CGPoint(x: 195, y: 50), in: window)
         #expect(drop?.target == 2)
         #expect(drop?.direction == .right)
         #expect(drop?.highlight == CGRect(x: 150, y: 0, width: 50, height: 100))
     }
 
     @Test func theSelectedTabCannotDropOnItself() {
-        #expect(twoTabs.drop(of: "A", at: CGPoint(x: 50, y: 50), in: window) == nil)
+        #expect(twoTabs.drop(of: .tab("A"), at: CGPoint(x: 50, y: 50), in: window) == nil)
     }
 
     @Test func aDroppedTabJoinsTheSelectedOne() {
-        let drop = twoTabs.drop(of: "B", at: CGPoint(x: 150, y: 95), in: window)!
+        let drop = twoTabs.drop(of: .tab("B"), at: CGPoint(x: 150, y: 95), in: window)!
         let layout = twoTabs.dropping(drop)
         #expect(layout.tabs == ["A"])
         #expect(layout.panes(of: "A") == [1, 2, 3])
         #expect(layout.focusedPane == 3)
         #expect(layout.isConsistent)
+    }
+
+    @Test func aDroppedPaneMovesBesideTheTarget() {
+        // 2 lâché au bas de 1 : ils passent l'un sous l'autre.
+        let drop = twoTabs.drop(of: .pane(2), at: CGPoint(x: 50, y: 95), in: window)!
+        #expect(drop.target == 1)
+        #expect(drop.direction == .down)
+        let layout = twoTabs.dropping(drop)
+        #expect(layout.selectedSplits.tree == .split(.vertical, ratio: 0.5, .pane(1), .pane(2)))
+        #expect(layout.focusedPane == 2)
+    }
+
+    @Test func aPaneDroppedWhereItAlreadyIsProposesNothing() {
+        // 1 | 2 : sans 2, 1 prend toute la place ; posé à sa droite, 2 retrouve la sienne.
+        #expect(twoTabs.drop(of: .pane(2), at: CGPoint(x: 150, y: 50), in: window) == nil)
+    }
+
+    @Test func thePreviewShowsWhereThePaneWillReallyGo() {
+        // Sans 2, 1 prend toute la place : à sa gauche, 2 en prend la moitié, pas le quart.
+        let drop = twoTabs.drop(of: .pane(2), at: CGPoint(x: 70, y: 50), in: window)
+        #expect(drop?.direction == .left)
+        #expect(drop?.highlight == CGRect(x: 0, y: 0, width: 100, height: 100))
+    }
+
+    @Test func aPaneFromAnotherTabJoinsTheSelectedOne() {
+        let drop = twoTabs.drop(of: .pane(3), at: CGPoint(x: 195, y: 50), in: window)!
+        let layout = twoTabs.dropping(drop)
+        #expect(layout.tabs == ["A"])
+        #expect(layout.panes(of: "A") == [1, 2, 3])
+    }
+
+    @Test func swappingReordersAGroup() {
+        #expect(twoTabs.swapping(1, 2).panes(of: "A") == [2, 1])
+        #expect(twoTabs.swapping(1, 3) == twoTabs)
     }
 
     @Test func tabsBesidesAndAfter() {

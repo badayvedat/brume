@@ -1,42 +1,40 @@
 import BrumeCore
 import SwiftUI
 
-/// Un onglet de la barre du haut. Divisé, il porte l'icône d'un split et le titre de ses terminaux.
+/// Un onglet de la barre du haut. Divisé, il porte l'icône d'un split et le nom de son groupe.
 struct TabCell: View {
     let tab: UUID
     let workspace: TerminalWorkspace
     let isDragging: Bool
     /// Le chiffre de son raccourci, montré tant que Cmd est tenu.
     let number: Int?
+    let onClose: () -> Void
 
     @State private var isHovered = false
 
     var body: some View {
         let isSelected = workspace.layout.selectedTab == tab
-        let title = workspace.displayedTitle(of: tab)
+        let title = workspace.displayedTitle(of: .tab(tab))
         HStack(spacing: 4) {
             TabIconView(symbol: workspace.symbol(of: tab), number: number, isLit: isSelected || isHovered)
                 .padding(.trailing, 4)
             Group {
-                if workspace.renamingID == tab {
-                    TabRenameField(title: title) { workspace.finishRenaming(tab, input: $0, displayed: title) }
+                if workspace.renaming == .tab(tab) {
+                    TabRenameField(title: title) { workspace.finishRenaming(.tab(tab), input: $0, displayed: $1) }
                 } else {
                     Text(title)
                         .animation(nil) { $0.foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted) }
                         .lineLimit(1)
-                        .truncationMode(.head)
                 }
             }
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
-            TabStatus(isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab)) {
-                workspace.close(tab)
-            }
+            TabStatus(isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab), onClose: onClose)
         }
         .padding(.leading, 8)
         .padding(.trailing, 4)
         .frame(height: 30)
-        .tabBehavior(tab, in: workspace, highlight: isSelected ? .full : .none, isHovered: $isHovered, isDragging: isDragging, isVertical: false)
+        .tabBehavior(.tab(tab), in: workspace, highlight: isSelected ? .full : .none, isHovered: $isHovered, isDragging: isDragging, isVertical: false)
     }
 }
 

@@ -119,6 +119,26 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
             + second.dividers(in: secondRect, path: path + [1])
     }
 
+    /// La même disposition, aux proportions près.
+    public func hasSameShape(as other: SplitTree) -> Bool {
+        switch (self, other) {
+        case let (.pane(a), .pane(b)):
+            a == b
+        case let (.split(axis, _, first, second), .split(otherAxis, _, otherFirst, otherSecond)):
+            axis == otherAxis && first.hasSameShape(as: otherFirst) && second.hasSameShape(as: otherSecond)
+        default:
+            false
+        }
+    }
+
+    /// `a` prend la place de `b`, et l'inverse.
+    public func swapping(_ a: Pane, _ b: Pane) -> SplitTree {
+        switch self {
+        case let .pane(pane): .pane(pane == a ? b : pane == b ? a : pane)
+        case let .split(axis, ratio, first, second): .split(axis, ratio: ratio, first.swapping(a, b), second.swapping(a, b))
+        }
+    }
+
     public func settingRatio(_ newRatio: CGFloat, at path: [Int]) -> SplitTree {
         guard case let .split(axis, ratio, first, second) = self else { return self }
         guard let step = path.first else {

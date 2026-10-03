@@ -59,7 +59,7 @@ struct TerminalSplitView: View {
                 }
                 // Identifiées par leur place dans l'arbre : stable pendant un glissé.
                 ForEach(zoomed == nil ? layout.selectedSplits.tree.dividers(in: bounds) : [], id: \.path) { divider in
-                    SplitHandle(divider: divider) { workspace.setRatio($0, at: divider.path) }
+                    SplitHandle(divider: divider, onEqualize: workspace.equalizeSplits) { workspace.setRatio($0, at: divider.path) }
                 }
                 if let drop = workspace.drop {
                     DropHighlight(frame: drop.highlight)
@@ -92,6 +92,7 @@ private struct DropHighlight: View {
 /// Le trait entre deux splits. Il passe à la couleur d'accent au survol : on voit qu'il se glisse.
 private struct SplitHandle: View {
     let divider: SplitDivider
+    let onEqualize: () -> Void
     let onDrag: (CGFloat) -> Void
 
     @State private var isActive = false
@@ -120,6 +121,8 @@ private struct SplitHandle: View {
             DragGesture(minimumDistance: 0, coordinateSpace: .named(TerminalScreen.space))
                 .onChanged { onDrag(divider.ratio(at: $0.location)) }
         )
+        // Comme la séparation des éditeurs de VS Code : double-cliquée, les splits reprennent des parts égales.
+        .simultaneousGesture(TapGesture(count: 2).onEnded(onEqualize))
     }
 }
 

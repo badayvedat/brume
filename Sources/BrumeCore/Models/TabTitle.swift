@@ -11,8 +11,8 @@ public enum TabTitle {
         return trimmed.isEmpty ? nil : trimmed
     }
 
-    /// Le dernier dossier d'un titre en chemin, pour nommer un groupe de splits sans l'allonger.
-    /// Une commande en cours reste telle quelle.
+    /// Le dernier dossier d'un titre en chemin : coupé à droite, le chemin entier perdrait le plus
+    /// parlant. Une commande en cours reste telle quelle.
     public static func short(_ title: String) -> String {
         guard title.hasPrefix("/") || title.hasPrefix("~/"), let last = title.split(separator: "/").last else { return title }
         return String(last)

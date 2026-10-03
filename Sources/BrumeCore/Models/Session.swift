@@ -1,27 +1,37 @@
 import CoreGraphics
 import Foundation
 
-/// Ce qu'un onglet retrouve au relancement : son nom, sa couleur, son icône, son groupe replié.
+/// Ce qu'un onglet retrouve au relancement : son nom, sa couleur, son icône ; divisé, son numéro
+/// de groupe et s'il était replié.
 public struct SavedTab: Codable, Hashable, Sendable {
     public var customTitle: String?
     public var color: TabColor?
     public var icon: TabIcon?
     public var isCollapsed: Bool
+    public var groupNumber: Int?
 
-    public init(customTitle: String?, color: TabColor?, icon: TabIcon?, isCollapsed: Bool) {
-        self.customTitle = customTitle
-        self.color = color
-        self.icon = icon
+    public init(label: TabLabel?, isCollapsed: Bool, groupNumber: Int?) {
+        customTitle = label?.title
+        color = label?.color
+        icon = label?.icon
         self.isCollapsed = isCollapsed
+        self.groupNumber = groupNumber
+    }
+
+    public var label: TabLabel {
+        TabLabel(title: customTitle, color: color, icon: icon)
     }
 }
 
-/// Le dossier d'un terminal. Pas son historique : le shell repart à neuf, dans le même dossier.
+/// Le dossier d'un terminal, et son nom dans un groupe. Pas son historique : le shell repart à
+/// neuf, dans le même dossier.
 public struct SavedPane: Codable, Hashable, Sendable {
     public var workingDirectory: String?
+    public var label: TabLabel?
 
-    public init(workingDirectory: String?) {
+    public init(workingDirectory: String?, label: TabLabel?) {
         self.workingDirectory = workingDirectory
+        self.label = label
     }
 }
 
@@ -110,8 +120,8 @@ private struct SessionV1: Decodable {
             var panes: [UUID: SavedPane] = [:]
             for id in order {
                 let tab = window.tabs[id]
-                tabs[id] = SavedTab(customTitle: tab?.customTitle, color: tab?.color, icon: tab?.icon, isCollapsed: false)
-                panes[id] = SavedPane(workingDirectory: tab?.workingDirectory)
+                tabs[id] = SavedTab(label: TabLabel(title: tab?.customTitle, color: tab?.color, icon: tab?.icon), isCollapsed: false, groupNumber: nil)
+                panes[id] = SavedPane(workingDirectory: tab?.workingDirectory, label: nil)
             }
             return SavedWindow(layout: layout, tabs: tabs, panes: panes, frame: window.frame)
         })

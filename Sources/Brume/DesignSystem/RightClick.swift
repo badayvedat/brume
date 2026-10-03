@@ -4,8 +4,11 @@ import SwiftUI
 extension View {
     /// Le clic droit (ou Ctrl+clic), avec la place de la souris à l'écran : pour ouvrir un
     /// `PopupMenu` là où on a cliqué.
-    func onRightClick(_ action: @escaping (NSPoint) -> Void) -> some View {
-        overlay(RightClickCatcher(action: action))
+    /// Éteint, le clic droit revient à la vue dessous (Copier, Coller d'un champ).
+    func onRightClick(isEnabled: Bool = true, _ action: @escaping (NSPoint) -> Void) -> some View {
+        overlay {
+            if isEnabled { RightClickCatcher(action: action) }
+        }
     }
 }
 

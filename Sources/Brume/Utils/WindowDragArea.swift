@@ -7,18 +7,28 @@ import SwiftUI
 /// Fond de la barre du haut : glisser déplace la fenêtre, double-cliquer suit le réglage
 /// macOS (agrandir ou réduire).
 struct WindowDragArea: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
+    /// À la place du réglage macOS, pour une zone qui n'est pas une barre de titre.
+    var onDoubleClick: (() -> Void)?
+
+    func makeNSView(context: Context) -> DragView {
         DragView()
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ view: DragView, context: Context) {
+        view.onDoubleClick = onDoubleClick
+    }
 
-    private final class DragView: NSView {
+    final class DragView: NSView {
+        var onDoubleClick: (() -> Void)?
+
         override func isAccessibilityElement() -> Bool {
             false
         }
 
         override func mouseDown(with event: NSEvent) {
+            if event.clickCount == 2, let onDoubleClick {
+                return onDoubleClick()
+            }
             if event.clickCount == 2 {
                 if UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick") == "Minimize" {
                     window?.miniaturize(nil)

@@ -16,48 +16,60 @@ struct TabSidebar: View {
     @State private var isDragging = false
     /// La place de chaque onglet, groupe déplié compris, dans l'espace de `TerminalScreen`.
     @State private var frames: [UUID: CGRect] = [:]
-    /// Le dernier onglet survolé au glisser : un groupe plus haut que l'onglet tenu ne le renvoie
-    /// pas aussitôt d'où il vient.
+    @State private var paneFrames: [UUID: CGRect] = [:]
+    /// Le dernier onglet ou split survolé au glisser : un groupe plus haut que l'onglet tenu ne
+    /// le renvoie pas aussitôt d'où il vient.
     @State private var lastTarget: UUID?
 
     var body: some View {
         let layout = workspace.layout
         let numbers = showsNumbers ? layout.shortcutNumbers : [:]
         GeometryReader { geometry in
-            ScrollView(.vertical) {
-                VStack(spacing: 2) {
-                    ForEach(layout.tabs, id: \.self) { tab in
-                        VStack(spacing: 2) {
-                            TabSidebarRow(tab: tab, workspace: workspace, isDragging: isDragging, number: numbers[tab])
-                                .opacity(workspace.drop?.tab == tab ? 0.5 : 1)
-                                // Pendant le renommage, glisser dans le champ sélectionne du texte.
-                                .gesture(drag(tab), including: workspace.renamingID == tab ? .subviews : .all)
-                            if layout.isSplit(tab) && !workspace.collapsed.contains(tab) {
-                                ForEach(layout.panes(of: tab), id: \.self) { pane in
-                                    TabSidebarPane(pane: pane, tab: tab, workspace: workspace)
-                                        .transition(.collapse(.vertical))
+            ScrollViewReader { scroller in
+                ScrollView(.vertical) {
+                    VStack(spacing: 2) {
+                        ForEach(layout.tabs, id: \.self) { tab in
+                            VStack(spacing: 2) {
+                                TabSidebarRow(tab: tab, workspace: workspace, isDragging: isDragging, number: numbers[tab])
+                                    .opacity(workspace.drop?.dragged == .tab(tab) ? 0.5 : 1)
+                                    // Pendant le renommage, glisser dans le champ sélectionne du texte.
+                                    .gesture(drag(tab), including: workspace.renaming == .tab(tab) ? .subviews : .all)
+                                if layout.isSplit(tab) && !workspace.collapsed.contains(tab) {
+                                    ForEach(layout.panes(of: tab), id: \.self) { pane in
+                                        TabSidebarPane(pane: pane, tab: tab, workspace: workspace, isDragging: isDragging)
+                                            .opacity(workspace.drop?.dragged == .pane(pane) ? 0.5 : 1)
+                                            .gesture(drag(pane, in: tab), including: workspace.renaming == .pane(pane) ? .subviews : .all)
+                                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TerminalScreen.space)) } action: {
+                                                paneFrames[pane] = $0
+                                            }
+                                            .transition(.collapse(.vertical))
+                                    }
                                 }
                             }
+                            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TerminalScreen.space)) } action: {
+                                frames[tab] = $0
+                            }
+                            .transition(.collapse(.vertical))
                         }
-                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TerminalScreen.space)) } action: {
-                            frames[tab] = $0
-                        }
-                        .transition(.collapse(.vertical))
+                        NewTabRow { workspace.newTab(atEnd: true) }
                     }
-                    NewTabRow { workspace.newTab() }
+                    // Un onglet ou un split s'ouvre en accordéon, ses voisins et « Nouvel onglet »
+                    // glissent avec lui.
+                    .animation(Ink.slide, value: layout.panes)
+                    .animation(Ink.slide, value: layout.tabs)
+                    .animation(Ink.slide, value: workspace.collapsed)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 8)
+                    // Le vide sous la liste déplace la fenêtre ; double-cliqué, il ouvre un onglet,
+                    // comme sous les onglets de Safari.
+                    .frame(minHeight: geometry.size.height, alignment: .top)
+                    .background { WindowDragArea { workspace.newTab(atEnd: true) } }
                 }
-                // Un onglet ou un split s'ouvre en accordéon, ses voisins et « Nouvel onglet »
-                // glissent avec lui.
-                .animation(Ink.slide, value: layout.panes)
-                .animation(Ink.slide, value: layout.tabs)
-                .animation(Ink.slide, value: workspace.collapsed)
-                .padding(.horizontal, 8)
-                .padding(.bottom, 8)
-                // Le vide sous la liste déplace la fenêtre, comme le reste de la barre.
-                .frame(minHeight: geometry.size.height, alignment: .top)
-                .background { WindowDragArea() }
+                .scrollIndicators(.never)
+                .onChange(of: layout.selectedTab) { _, tab in
+                    withAnimation(Ink.slide) { scroller.scrollTo(tab) }
+                }
             }
-            .scrollIndicators(.never)
         }
         .padding(.top, topInset + 8)
         .frame(width: width)
@@ -77,15 +89,40 @@ struct TabSidebar: View {
             .onChanged { value in
                 isDragging = true
                 guard value.location.x < width else {
-                    return workspace.hoverDrop(dragging: tab, at: value.location)
+                    return workspace.hoverDrop(dragging: .tab(tab), at: value.location)
                 }
-                workspace.hoverDrop(dragging: tab, at: nil)
+                workspace.hoverDrop(dragging: .tab(tab), at: nil)
                 let tabs = workspace.layout.tabs
                 let hovered = tabs.first { frames[$0].map { ($0.minY ... $0.maxY).contains(value.location.y) } ?? false }
                 guard let target = hovered, target != tab else { return lastTarget = nil }
                 guard target != lastTarget, let index = tabs.firstIndex(of: target) else { return }
                 lastTarget = target
                 workspace.move(tab, to: index)
+            }
+            .onEnded { _ in
+                isDragging = false
+                lastTarget = nil
+                workspace.performDrop()
+            }
+    }
+
+    /// Sur un autre split du groupe, il prend sa place. Sur les terminaux, il se pose à côté du
+    /// split visé, avec le même repère qu'un onglet.
+    private func drag(_ pane: UUID, in tab: UUID) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(TerminalScreen.space))
+            .onChanged { value in
+                isDragging = true
+                guard value.location.x < width else {
+                    return workspace.hoverDrop(dragging: .pane(pane), at: value.location)
+                }
+                workspace.hoverDrop(dragging: .pane(pane), at: nil)
+                let hovered = workspace.layout.panes(of: tab).first {
+                    paneFrames[$0].map { ($0.minY ... $0.maxY).contains(value.location.y) } ?? false
+                }
+                guard let target = hovered, target != pane else { return lastTarget = nil }
+                guard target != lastTarget else { return }
+                lastTarget = target
+                workspace.swap(pane, target)
             }
             .onEnded { _ in
                 isDragging = false

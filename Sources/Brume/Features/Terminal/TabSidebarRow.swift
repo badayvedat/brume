@@ -19,27 +19,26 @@ struct TabSidebarRow: View {
         let isSelected = layout.selectedTab == tab
         let isGroup = layout.isSplit(tab)
         let isExpanded = isGroup && !workspace.collapsed.contains(tab)
-        let title = workspace.displayedTitle(of: tab)
+        let title = workspace.displayedTitle(of: .tab(tab))
         HStack(spacing: 8) {
             TabIconView(symbol: workspace.symbol(of: tab), number: number, isLit: isSelected || isHovered)
             Group {
-                if workspace.renamingID == tab {
-                    TabRenameField(title: title) { workspace.finishRenaming(tab, input: $0, displayed: title) }
+                if workspace.renaming == .tab(tab) {
+                    TabRenameField(title: title) { workspace.finishRenaming(.tab(tab), input: $0, displayed: $1) }
                 } else {
                     Text(title)
                         .animation(nil) { $0.foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted) }
                         .lineLimit(1)
-                        // Un dossier ou une commande : la fin dit le plus.
-                        .truncationMode(.head)
                 }
             }
             .font(.system(size: 13))
             .frame(maxWidth: .infinity, alignment: .leading)
+            TabStatus(
+                isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),
+                onClose: isGroup ? nil : { workspace.close(tab) }
+            )
             if isGroup {
                 FoldButton(isExpanded: isExpanded) { workspace.toggleCollapsed(tab) }
-            }
-            TabStatus(isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab)) {
-                workspace.close(tab)
             }
         }
         .padding(.leading, 8)
@@ -47,7 +46,7 @@ struct TabSidebarRow: View {
         .frame(height: Self.height)
         // Déplié, le plein va au split actif, dessous.
         .tabBehavior(
-            tab, in: workspace, highlight: isSelected ? (isExpanded ? .half : .full) : .none,
+            .tab(tab), in: workspace, highlight: isSelected ? (isExpanded ? .half : .full) : .none,
             isHovered: $isHovered, isDragging: isDragging, isVertical: true
         )
         .accessibilityAction(named: L10n.text(isExpanded ? .collapseGroup : .expandGroup)) { workspace.toggleCollapsed(tab) }

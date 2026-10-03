@@ -9,8 +9,8 @@ struct SessionTests {
         let layout = WindowLayout(tab: a, pane: p1).splitting(toward: .down, pane: p2).settingRatio(0.3, at: []).addingTab(b, pane: p3)
         let window = SavedWindow(
             layout: layout,
-            tabs: [a: SavedTab(customTitle: "serveur", color: .red, icon: .server, isCollapsed: true)],
-            panes: [p1: SavedPane(workingDirectory: "/tmp")],
+            tabs: [a: SavedTab(label: TabLabel(color: .red), isCollapsed: true, groupNumber: 1)],
+            panes: [p1: SavedPane(workingDirectory: "/tmp", label: TabLabel(title: "serveur", icon: .server))],
             frame: CGRect(x: 10, y: 20, width: 800, height: 500)
         )
         let session = Session(windows: [window])
@@ -35,8 +35,8 @@ struct SessionTests {
         #expect(window.layout.tabs == [t1, t2, t3])
         #expect(window.layout.selectedTab == t2)
         #expect(window.layout.panes == [t1, t2, t3])
-        #expect(window.tabs[t1] == SavedTab(customTitle: "vps", color: .blue, icon: .server, isCollapsed: false))
-        #expect(window.panes[t1] == SavedPane(workingDirectory: "/tmp"))
+        #expect(window.tabs[t1]?.label == TabLabel(title: "vps", color: .blue, icon: .server))
+        #expect(window.panes[t1] == SavedPane(workingDirectory: "/tmp", label: nil))
         #expect(window.frame == CGRect(x: 10, y: 20, width: 800, height: 500))
     }
 

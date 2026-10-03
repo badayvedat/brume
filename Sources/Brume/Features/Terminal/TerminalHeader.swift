@@ -12,7 +12,7 @@ struct TerminalHeader: View {
 
     var body: some View {
         let tab = workspace.layout.selectedTab
-        let title = workspace.displayedTitle(of: tab)
+        let title = workspace.displayedTitle(of: .tab(tab))
         // Le `~` du shell, qui suit HOME : `NSHomeDirectory()` peut en différer.
         let home = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
         let folder = state.workingDirectory.map { TabTitle.folder($0, home: home) }

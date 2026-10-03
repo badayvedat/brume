@@ -33,7 +33,7 @@ struct BrumeApp: App {
         .commands {
             TabCommands()
             CloseCommands()
-            SplitCommands()
+            SplitCommands(settings: settings)
             SearchCommands()
             FontSizeCommands()
             SettingsCommands()
