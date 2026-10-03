@@ -1,6 +1,12 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Toujours sombre : un terminal clair sous du verre se lit mal. Posé avant les fenêtres,
+        // le moteur part directement en thème sombre.
+        NSApp.appearance = NSAppearance(named: .darkAqua)
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         // Comme Ghostty : ne pas bloquer un arrêt, un redémarrage ou une déconnexion du Mac.
         if let why = NSAppleEventManager.shared().currentAppleEvent?.attributeDescriptor(forKeyword: kAEQuitReason),

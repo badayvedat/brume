@@ -43,6 +43,9 @@ for plugin in zsh-syntax-highlighting zsh-autosuggestions; do
         "Vendor/$plugin" "$APP_BUNDLE/Contents/Resources/zsh/"
 done
 
+# Déclarées par ATSApplicationFontsPath : macOS les charge pour l'app seule, le moteur les trouve.
+cp -R Resources/Fonts "$APP_BUNDLE/Contents/Resources/Fonts"
+
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 fi
@@ -114,6 +117,8 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <string>26.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>ATSApplicationFontsPath</key>
+    <string>Fonts</string>
 $PERMISSION_KEYS</dict>
 </plist>
 PLIST

@@ -13,6 +13,7 @@ struct TabCell: View {
 
     @State private var isHovered = false
     @State private var draft = ""
+    @Environment(\.accent) private var accent
     @FocusState private var isFieldFocused: Bool
 
     /// Affiché dans sa zone.
@@ -38,10 +39,10 @@ struct TabCell: View {
                         .font(.system(size: 10, weight: .bold).monospacedDigit())
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.accentColor, in: .rect(cornerRadius: 4))
+                        .background(accent.color, in: .rect(cornerRadius: 4))
                 } else {
                     SystemSymbol.image("apple.terminal", size: 12)
-                        .foregroundStyle(isSelected ? .primary : .secondary)
+                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
                 }
             }
             .frame(width: 16, height: 16)
@@ -52,7 +53,7 @@ struct TabCell: View {
                     renameField
                 } else {
                     Text(title)
-                        .foregroundStyle(isSelected ? .primary : .secondary)
+                        .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
                         .lineLimit(1)
                         .truncationMode(.head)
                 }
@@ -70,45 +71,33 @@ struct TabCell: View {
             ZStack(alignment: .bottom) {
                 background
                 if isFocused {
-                    (workspace.color(of: id)?.color ?? .accentColor).frame(height: 2)
+                    (workspace.color(of: id)?.color ?? accent.color).frame(height: 2)
                 }
             }
-            .clipShape(.rect(cornerRadius: 8))
+            .clipShape(.rect(cornerRadius: 6))
         }
         .overlay {
             if isRenaming {
-                RoundedRectangle(cornerRadius: 8).strokeBorder(Color.accentColor, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 6).strokeBorder(accent.color, lineWidth: 1)
             }
         }
-        .contentShape(.rect(cornerRadius: 8))
+        .contentShape(.rect(cornerRadius: 6))
         .onTapGesture { workspace.focus(id) }
         // En plus du clic simple : le double-clic ne retarde pas la sélection.
         .simultaneousGesture(TapGesture(count: 2).onEnded(startRenaming))
-        .contextMenu {
-            Button(L10n.text(.renameTab), action: startRenaming)
-            if workspace.title(of: id) != nil {
-                Button(L10n.text(.resetTabName)) { workspace.resetTitle(id) }
-            }
-            Menu(L10n.text(.tabColor)) {
-                ForEach(TabColor.allCases, id: \.self) { color in
-                    Button { workspace.setColor(color, of: id) } label: {
-                        Label { Text(color.name) } icon: { Image(nsImage: color.swatch) }
-                    }
-                }
-                if workspace.color(of: id) != nil {
-                    Divider()
-                    Button(L10n.text(.noColor)) { workspace.setColor(nil, of: id) }
-                }
-            }
-            Divider()
-            Button(L10n.text(.closeTab), action: close)
-            Button(L10n.text(.closeOtherTabs)) { workspace.closeOthers(of: id) }
-                .disabled(workspace.layout.tabs(besides: id).isEmpty)
-            Button(L10n.text(.closeTabsToTheRight)) { workspace.closeRight(of: id) }
-                .disabled(workspace.layout.tabs(rightOf: id).isEmpty)
-        }
+        .onRightClick { PopupMenu.show(menu, at: $0) }
         .accessibilityAction(.default) { workspace.focus(id) }
         .accessibilityAction(named: L10n.text(.renameTab), startRenaming)
+        // Le menu du clic droit est une fenêtre à part, hors de portée de VoiceOver.
+        .accessibilityAction(named: L10n.text(.resetTabName)) { workspace.resetTitle(id) }
+        .accessibilityAction(named: L10n.text(.closeOtherTabs)) { workspace.closeOthers(of: id) }
+        .accessibilityAction(named: L10n.text(.closeTabsToTheRight)) { workspace.closeRight(of: id) }
+        .accessibilityActions {
+            ForEach(TabColor.allCases, id: \.self) { color in
+                Button("\(L10n.text(.tabColor)) : \(color.name)") { workspace.setColor(color, of: id) }
+            }
+            Button(L10n.text(.noColor)) { workspace.setColor(nil, of: id) }
+        }
         // Pendant un glisser, les onglets passent sous la souris en changeant de place :
         // sans ça, leur croix clignote au passage.
         .onHover { hovering in
@@ -121,6 +110,30 @@ struct TabCell: View {
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(named: L10n.text(.closeTab), close)
+    }
+
+    private var menu: [MenuEntry] {
+        // Sans raccourcis affichés : ceux du menu agissent sur l'onglet actif, pas sur celui cliqué.
+        var entries: [MenuEntry] = [.item(L10n.text(.renameTab), run: startRenaming)]
+        if workspace.title(of: id) != nil {
+            entries.append(.item(L10n.text(.resetTabName)) { workspace.resetTitle(id) })
+        }
+        let current = workspace.color(of: id)
+        let colors: [MenuEntry] = TabColor.allCases.map { color in
+            .item(color.name, swatch: color.color, checked: current == color) { workspace.setColor(color, of: id) }
+        }
+        entries.append(.submenu(L10n.text(.tabColor), colors + [.separator, .item(L10n.text(.noColor), checked: current == nil) {
+            workspace.setColor(nil, of: id)
+        }]))
+        entries.append(.separator)
+        entries.append(.item(L10n.text(.closeTab), run: close))
+        entries.append(.item(L10n.text(.closeOtherTabs), enabled: !workspace.layout.tabs(besides: id).isEmpty) {
+            workspace.closeOthers(of: id)
+        })
+        entries.append(.item(L10n.text(.closeTabsToTheRight), enabled: !workspace.layout.tabs(rightOf: id).isEmpty) {
+            workspace.closeRight(of: id)
+        })
+        return entries
     }
 
     private var title: String {
@@ -163,8 +176,8 @@ struct TabCell: View {
         if let color = workspace.color(of: id)?.color {
             return color.opacity(isSelected ? 0.28 : isHovered ? 0.18 : 0.12)
         }
-        if isSelected { return .primary.opacity(0.12) }
-        return isHovered ? .primary.opacity(0.06) : .clear
+        if isSelected { return Ink.selection }
+        return isHovered ? Ink.hover : .clear
     }
 }
 
@@ -176,9 +189,9 @@ private struct CloseButton: View {
     var body: some View {
         Button(action: action) {
             SystemSymbol.image("xmark", size: 9, weight: .bold)
-                .foregroundStyle(isHovered ? .primary : .secondary)
+                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
                 .frame(width: 18, height: 18)
-                .background(isHovered ? Color.primary.opacity(0.12) : .clear, in: .circle)
+                .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 4))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.text(.closeTab))

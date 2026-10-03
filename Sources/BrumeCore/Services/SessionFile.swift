@@ -18,6 +18,11 @@ public struct SessionFile: Sendable {
         (try? Data(contentsOf: url)).flatMap(Session.decoded)
     }
 
+    /// Brume repartira d'une fenêtre neuve.
+    public func delete() {
+        try? FileManager.default.removeItem(at: url)
+    }
+
     public func save(_ session: Session) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try session.encoded().write(to: url, options: .atomic)

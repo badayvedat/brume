@@ -17,7 +17,8 @@ let package = Package(
             name: "Brume",
             dependencies: [
                 "BrumeCore",
-                .product(name: "GhosttyTerminal", package: "libghostty-spm")
+                .product(name: "GhosttyTerminal", package: "libghostty-spm"),
+                .product(name: "GhosttyTheme", package: "libghostty-spm")
             ],
             path: "Sources/Brume"
         ),

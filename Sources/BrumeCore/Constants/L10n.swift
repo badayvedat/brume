@@ -1,6 +1,22 @@
-/// Langue de l'interface, à choisir plus tard dans les réglages.
-public enum Language: CaseIterable, Sendable {
+import Foundation
+import Observation
+
+/// Langue de l'interface, choisie dans les réglages.
+public enum Language: String, CaseIterable, Codable, Sendable {
     case french, english
+
+    /// Pour écrire les nombres comme la langue choisie, pas comme le Mac.
+    public var locale: Locale {
+        Locale(identifier: self == .french ? "fr_FR" : "en_US")
+    }
+
+    /// Chaque langue s'écrit dans sa propre langue : on la reconnaît même sans lire l'autre.
+    public var name: String {
+        switch self {
+        case .french: "Français"
+        case .english: "English"
+        }
+    }
 }
 
 /// Textes de l'interface par clé. Un `switch` exhaustif par langue : une clé
@@ -21,7 +37,12 @@ public enum TextKey: CaseIterable, Sendable {
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
     case resetTabs, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
-    case settings, windowStyle, styleNormal, styleGlass, styleNormalHint, styleGlassHint, customize, opacity, blur
+    case settings, back, general, generalHint, appearance, appearanceHint
+    case window, windowHint, glass, glassHint, opacity, opacityHint, blur, blurHint
+    case colors, colorsHint, color, colorHint, colorDefault, colorBlack, colorPink, colorTeal, commandColors, commandColorsHint
+    case tint, tintHint, strengthLow, strengthMedium, strengthHigh, showPreview, hidePreview, previewMessage, previewLink
+    case text, font, fontHint, fontSize, fontSizeHint, smaller, larger, interface, language, languageHint
+    case startup, restoreTabs, restoreTabsHint
 
     public func text(in language: Language) -> String {
         switch language {
@@ -95,15 +116,52 @@ public enum TextKey: CaseIterable, Sendable {
         case .colorGreen: "Vert"
         case .colorBlue: "Bleu"
         case .colorPurple: "Violet"
-        case .windowStyle: "Style de la fenêtre"
-        case .styleNormal: "Normal"
-        case .styleGlass: "Verre"
         case .settings: "Réglages"
-        case .styleNormalHint: "Fond plein, comme Ghostty"
-        case .styleGlassHint: "Le bureau flouté en transparence"
-        case .customize: "Personnaliser"
+        case .back: "Retour"
+        case .general: "Général"
+        case .generalHint: "Ce qui ne touche pas à l'apparence."
+        case .appearance: "Apparence"
+        case .appearanceHint: "L'allure de Brume, appliquée tout de suite : la page elle-même change avec."
+        case .window: "Fenêtre"
+        case .windowHint: "Ce qu'on voit du bureau à travers Brume."
+        case .glass: "Verre"
+        case .glassHint: "Le bureau flouté apparaît derrière les terminaux. Éteint, le fond est plein."
         case .opacity: "Opacité"
+        case .opacityHint: "La part de la couleur du fond posée sur le bureau."
         case .blur: "Flou"
+        case .blurHint: "Le flou du bureau derrière la fenêtre. Plus il est fort, plus il coûte à afficher."
+        case .colors: "Couleurs"
+        case .colorsHint: "Celles de Brume et des terminaux, appliquées tout de suite."
+        case .color: "Couleur"
+        case .colorHint: "Le fond en prend la teinte, les onglets, le curseur et la sélection la couleur pleine."
+        case .colorDefault: "Par défaut"
+        case .colorBlack: "Noir"
+        case .colorPink: "Rose"
+        case .colorTeal: "Turquoise"
+        case .tint: "Teinte du fond"
+        case .tintHint: "La part de la couleur dans le fond. Sans effet avec le noir."
+        case .strengthLow: "Faible"
+        case .strengthMedium: "Moyenne"
+        case .strengthHigh: "Forte"
+        case .showPreview: "Voir l'aperçu"
+        case .hidePreview: "Masquer l'aperçu"
+        case .previewMessage: "premier jet"
+        case .previewLink: "lien"
+        case .commandColors: "Coloration des commandes"
+        case .commandColorsHint: "Les couleurs des commandes, des fichiers et des erreurs dans le terminal."
+        case .text: "Texte"
+        case .font: "Police"
+        case .fontHint: "Celle des terminaux."
+        case .fontSize: "Taille du texte"
+        case .fontSizeHint: "La taille de départ. Cmd+plus et Cmd+moins zooment par-dessus."
+        case .smaller: "Plus petit"
+        case .larger: "Plus grand"
+        case .interface: "Interface"
+        case .language: "Langue"
+        case .languageHint: "Celle des menus et de toute l'interface."
+        case .startup: "Démarrage"
+        case .restoreTabs: "Rouvrir les onglets"
+        case .restoreTabsHint: "Au lancement, les fenêtres, zones, onglets, dossiers, noms et couleurs de la dernière fois. Éteint, Brume part d'une fenêtre neuve."
         }
     }
 
@@ -172,22 +230,70 @@ public enum TextKey: CaseIterable, Sendable {
         case .colorGreen: "Green"
         case .colorBlue: "Blue"
         case .colorPurple: "Purple"
-        case .windowStyle: "Window Style"
-        case .styleNormal: "Normal"
-        case .styleGlass: "Glass"
         case .settings: "Settings"
-        case .styleNormalHint: "Solid background, like Ghostty"
-        case .styleGlassHint: "Blurred desktop showing through"
-        case .customize: "Customize"
+        case .back: "Back"
+        case .general: "General"
+        case .generalHint: "Everything that is not about looks."
+        case .appearance: "Appearance"
+        case .appearanceHint: "How Brume looks, applied right away: this page changes with it."
+        case .window: "Window"
+        case .windowHint: "How much of the desktop shows through Brume."
+        case .glass: "Glass"
+        case .glassHint: "The blurred desktop shows behind the terminals. Off, the background is solid."
         case .opacity: "Opacity"
+        case .opacityHint: "How much of the background color covers the desktop."
         case .blur: "Blur"
+        case .blurHint: "The desktop blur behind the window. The higher, the more it costs to draw."
+        case .colors: "Colors"
+        case .colorsHint: "Brume's and the terminals', applied right away."
+        case .color: "Color"
+        case .colorHint: "The background takes its hue; tabs, cursor and selection take the full color."
+        case .colorDefault: "Default"
+        case .colorBlack: "Black"
+        case .colorPink: "Pink"
+        case .colorTeal: "Teal"
+        case .tint: "Background Tint"
+        case .tintHint: "How much of the color goes into the background. No effect with black."
+        case .strengthLow: "Low"
+        case .strengthMedium: "Medium"
+        case .strengthHigh: "High"
+        case .showPreview: "Show Preview"
+        case .hidePreview: "Hide Preview"
+        case .previewMessage: "first draft"
+        case .previewLink: "link"
+        case .commandColors: "Command Colors"
+        case .commandColorsHint: "The colors of commands, files and errors in the terminal."
+        case .text: "Text"
+        case .font: "Font"
+        case .fontHint: "The one used by terminals."
+        case .fontSize: "Text Size"
+        case .fontSizeHint: "The starting size. Cmd+plus and Cmd+minus zoom on top of it."
+        case .smaller: "Smaller"
+        case .larger: "Larger"
+        case .interface: "Interface"
+        case .language: "Language"
+        case .languageHint: "Used by menus and the whole interface."
+        case .startup: "Startup"
+        case .restoreTabs: "Reopen Tabs"
+        case .restoreTabsHint: "At launch, last time's windows, panes, tabs, folders, names and colors. Off, Brume starts with a new window."
         }
     }
 }
 
 @MainActor
 public enum L10n {
-    public static var language: Language = .french
+    /// Observée : une vue qui affiche un texte se redessine quand la langue change.
+    @Observable
+    final class Current {
+        var language = Language.french
+    }
+
+    private static let current = Current()
+
+    public static var language: Language {
+        get { current.language }
+        set { current.language = newValue }
+    }
 
     public static func text(_ key: TextKey) -> String {
         key.text(in: language)

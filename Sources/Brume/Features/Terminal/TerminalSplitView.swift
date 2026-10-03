@@ -73,10 +73,12 @@ struct TerminalSplitView: View {
 private struct DropHighlight: View {
     let frame: CGRect
 
+    @Environment(\.accent) private var accent
+
     var body: some View {
         RoundedRectangle(cornerRadius: 8)
-            .fill(Color.accentColor.opacity(0.18))
-            .strokeBorder(Color.accentColor.opacity(0.6), lineWidth: 2)
+            .fill(accent.color.opacity(0.18))
+            .strokeBorder(accent.color.opacity(0.6), lineWidth: 2)
             .padding(4)
             .frame(width: frame.width, height: frame.height)
             .offset(x: frame.minX, y: frame.minY)
@@ -91,6 +93,7 @@ private struct SplitHandle: View {
     let onDrag: (CGFloat) -> Void
 
     @State private var isActive = false
+    @Environment(\.accent) private var accent
 
     /// Plus large que le trait d'un point, pour l'attraper sans viser.
     private let grip: CGFloat = 6
@@ -101,7 +104,7 @@ private struct SplitHandle: View {
         let thickness: CGFloat = isActive ? 2 : 1
         ZStack {
             Rectangle()
-                .fill(isActive ? Color.accentColor : Color(nsColor: .separatorColor))
+                .fill(isActive ? accent.color : Color(nsColor: .separatorColor))
                 .frame(width: isVertical ? thickness : nil, height: isVertical ? nil : thickness)
         }
         .frame(width: isVertical ? grip : line.width, height: isVertical ? line.height : grip)

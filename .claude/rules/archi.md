@@ -23,7 +23,7 @@ Même idée que l'archi Nuxt : depuis un bouton de l'interface, on remonte vite 
 
 ```
 Sources/
-  BrumeCore/            # Foundation et CoreGraphics seulement, zéro SwiftUI/AppKit
+  BrumeCore/            # Foundation, CoreGraphics et Observation seulement, zéro SwiftUI/AppKit
   Brume/                # app SwiftUI
 Tests/BrumeCoreTests/   # Swift Testing
 ```
@@ -33,7 +33,8 @@ Tests/BrumeCoreTests/   # Swift Testing
 - Toute logique testable (presets, thèmes, réglages, complétion, parsing) vit dans `BrumeCore`, avec ses tests. `Brume` ne fait que l'UI et le câblage système (AppKit, moteur Ghostty, fichiers).
 - Une vue passe par le store (`@Environment(XxxStore.self)`), le store appelle le service. Une vue n'appelle pas un service directement.
 - Un état propre à une fenêtre (zones, onglets, terminaux : `TerminalWorkspace`) n'est pas un store d'app : il vit dans sa feature, créé en `@State` par la vue de la fenêtre et passé aux sous-vues. Il délègue sa logique à `BrumeCore` (`WindowLayout`).
-- Seul `Brume/Features/Terminal/` importe `GhosttyTerminal` : le reste de l'app ne connaît pas le moteur.
-- Tout texte d'interface passe par une clé `TextKey` (`BrumeCore/Constants/L10n.swift`), en français et en anglais : la langue se choisira dans les réglages.
+- Seul `Brume/Features/Terminal/` importe `GhosttyTerminal` et `GhosttyTheme` : le reste de l'app ne connaît pas le moteur.
+- Tout texte d'interface passe par une clé `TextKey` (`BrumeCore/Constants/L10n.swift`), en français et en anglais : `L10n.language` est observé, l'interface change de langue en direct.
+- Couleurs d'interface : `Ink` (un blanc à différentes opacités, comme Monocode), pas `.primary`, `.secondary` ni `Color.accentColor`. La couleur choisie dans les réglages passe par `@Environment(\.accent)`.
 - Un dossier, et un target SwiftPM, se créent avec leur premier fichier.
 - Une vue qui dépasse ~200 lignes se découpe en sous-vues dans le même dossier de feature.

@@ -2,18 +2,21 @@ import AppKit
 import BrumeCore
 
 /// Les fenêtres de la dernière fois : chaque fenêtre qui s'ouvre en reprend une, et à la sortie
-/// celles encore ouvertes sont enregistrées, comme `window-save-state` de Ghostty.
+/// celles encore ouvertes sont enregistrées, comme `window-save-state` de Ghostty. Sauf si le
+/// réglage est éteint : rien n'est relu ni gardé.
 @MainActor @Observable
 final class SessionStore {
     @ObservationIgnored private let file: SessionFile
+    @ObservationIgnored private let settings: SettingsStore
     @ObservationIgnored private var pending: [SavedWindow]
     @ObservationIgnored private var windowsToOpen: Int
     @ObservationIgnored private var workspaces: [WeakWorkspace] = []
     @ObservationIgnored nonisolated(unsafe) private var terminateObserver: NSObjectProtocol?
 
-    init(file: SessionFile = .standard) {
+    init(settings: SettingsStore, file: SessionFile = .standard) {
         self.file = file
-        pending = file.load()?.windows ?? []
+        self.settings = settings
+        pending = settings.settings.restoresSession ? file.load()?.windows ?? [] : []
         windowsToOpen = max(pending.count - 1, 0)
         terminateObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
@@ -42,6 +45,7 @@ final class SessionStore {
     }
 
     private func save() {
+        guard settings.settings.restoresSession else { return file.delete() }
         let windows = workspaces.compactMap { $0.value?.snapshot }
         try? file.save(Session(windows: windows))
     }

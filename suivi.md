@@ -8,7 +8,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - Sans Xcode : `swift build` + script qui fabrique le .app, comme Orby. GhosttyKit téléchargé précompilé.
 - Repo neuf sur le compte GitHub perso, sans historique. Muxy (MIT) sert de référence : pièces utiles par étape dans [docs/reprise-muxy.md](docs/reprise-muxy.md).
 - Terminal proche de Ghostty, pas de fonctions en trop. Barre du haut à la Muxy : onglets maison et boutons. Au choix, les onglets listés à gauche (vue agents).
-- DA inspirée de Monocode (MIT) : flou, teinte réglable, image de fond fondue.
+- DA inspirée de Monocode (MIT) : flou et teinte, sans image de fond.
 
 ## 1. Mise en place
 
@@ -67,17 +67,17 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## 5. Réglages en interface
 
-- [x] Fenêtre de réglages ouverte depuis « ... » et Cmd+virgule (à la place d'un panneau en sidebar)
-- [x] Style de fenêtre en preset avec aperçu : Verre (bureau flouté sous la couleur du terminal, par défaut) ou Normal, bascule en fondu
-- [x] Opacité et flou réglables finement (« Personnaliser » sous les presets)
-- [ ] Teinte du verre (Monocode est bleuté) et presets supplémentaires
-- [ ] Police et taille du texte
-- [ ] Thèmes de couleurs prêts à choisir (module GhosttyTheme du paquet)
-- [ ] Couleurs de la coloration syntaxique et du texte grisé de l'autocomplétion (gris trop peu contrasté par défaut)
-- [ ] Sélection lisible : le thème par défaut met un fond quasi noir (#303030) qui masque le texte sélectionné
-- [ ] Image de fond (choix, opacité)
-- [ ] Changements appliqués en direct, sans redémarrer
-- [ ] Langue de l'interface (français / anglais) : `L10n.language` passe dans le store des réglages (tous les textes sont déjà en `TextKey`)
+Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choisie change. Brume reste toujours sombre.
+
+- [x] Page de réglages dans la fenêtre du terminal (Cmd+virgule, menu « ... »), barre latérale Général / Apparence, Échap ou Cmd+W pour revenir, fondu
+- [x] Rouvrir ou non les onglets au lancement (Général)
+- [x] Verre en interrupteur, avec opacité et flou (0 à 100) réglables quand il est allumé, bascule en fondu
+- [x] Couleur en 10 pastilles (Brume par défaut, noir, bleu...) : le fond en prend la teinte (faible, moyenne, forte), les onglets, le curseur et la sélection la couleur pleine, en fondu
+- [x] Police en liste (JetBrains Mono, Menlo, Monaco et 9 polices libres embarquées), taille de départ en − / +
+- [x] Langue de l'interface (français / anglais), en direct
+- [x] Menus maison façon Monocode (« ... » et clic droit sur un onglet), raccourcis affichés en entier
+- [x] Coloration des commandes : 16 palettes reprises de thèmes connus, aperçu dépliable
+- [ ] Couleur du texte grisé de l'autocomplétion (gris trop peu contrasté)
 
 ## 6. Page de démarrage
 
@@ -98,9 +98,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## 8. DA Monocode
 
-- [ ] Couleurs et tokens de base
+- [x] Couleurs et tokens de base (`Ink` : un blanc à différentes opacités)
+- [ ] Barre d'onglets aux mesures de Monocode (40 de haut, onglets de 30)
 - [ ] Effet verre sur la sidebar
-- [ ] Effet de fondu de l'image de fond
 
 ## 9. Autocomplétion des commandes connues
 

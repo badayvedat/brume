@@ -15,4 +15,11 @@ struct SessionFileTests {
         #expect(file.load() == session)
         try FileManager.default.removeItem(at: file.url.deletingLastPathComponent())
     }
+
+    @Test func deletedSessionIsGone() throws {
+        try file.save(Session(windows: []))
+        file.delete()
+        #expect(file.load() == nil)
+        try? FileManager.default.removeItem(at: file.url.deletingLastPathComponent())
+    }
 }

@@ -19,15 +19,6 @@ extension TabColor {
         return L10n.text(key)
     }
 
-    /// Une pastille pour le menu : un symbole système y sortirait gris, rendu en modèle.
-    var swatch: NSImage {
-        NSImage(size: NSSize(width: 12, height: 12), flipped: false) { rect in
-            nsColor.setFill()
-            NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).fill()
-            return true
-        }
-    }
-
     private var nsColor: NSColor {
         switch self {
         case .red: .systemRed

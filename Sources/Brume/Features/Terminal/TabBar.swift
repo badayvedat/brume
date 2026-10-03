@@ -146,9 +146,9 @@ struct BarButton: View {
     var body: some View {
         Button(action: action) {
             SystemSymbol.image(icon, size: 13, weight: .medium)
-                .foregroundStyle(isHovered ? .primary : .secondary)
+                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
                 .frame(width: Self.size, height: Self.size)
-                .background(isHovered ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 7))
+                .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 6))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

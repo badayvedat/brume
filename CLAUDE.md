@@ -16,7 +16,7 @@ bash build-app.sh            # release
 - Vérifier un rendu : `bash capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran. Elle ne montre pas le bureau flouté du style Verre : pour le voir, `screencapture -R` sur les bornes de la fenêtre. Claude a l'Accessibilité : raccourcis et frappe via `osascript` (System Events), clics et glisser via des `CGEvent` postés aux coordonnées de la fenêtre.
 - Le `.zshrc` de Jérémy charge déjà ses greffons brew, qui masquent ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
 - Tests : `bash run-tests.sh`. `swift test` nu ne trouve pas Swift Testing avec les CLT.
-- Brume rouvre au lancement les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. Un arrêt brutal (`killall`, relance par `build-app.sh`) n'enregistre rien.
+- Brume rouvre au lancement (réglage « Rouvrir les onglets ») les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. Un arrêt brutal (`killall`, relance par `build-app.sh`) n'enregistre rien.
 
 ## Contraintes
 
@@ -29,5 +29,6 @@ bash build-app.sh            # release
 - Tout code repris de Muxy (MIT) garde sa mention de copyright dans le dépôt.
 - Pas de `Image(systemName:)` : passer par `SystemSymbol` (`DesignSystem/`). Chargés après le moteur, des symboles sortent vides, au hasard du lancement.
 - Pas de `NSAlert.runModal()` : sur macOS 27, l'alerte modale plante en dessinant un symbole système. Toujours en feuille (`beginSheetModal`), comme `CloseConfirmation`.
-- Le thème du moteur suit déjà l'apparence système : ne jamais régler l'apparence d'une fenêtre d'après la couleur du terminal, ça boucle et la fenêtre clignote.
+- Brume est toujours sombre (`AppDelegate`), le thème du moteur aussi : ne jamais régler l'apparence d'une fenêtre d'après la couleur du terminal, ça boucle et la fenêtre clignote.
+- Menus : `PopupMenu` (`DesignSystem/`), pas `Menu`, `.contextMenu` ni `NSMenu` : chargés après le moteur, leurs glyphes ⌘ sortent vides, et leur surlignage prend l'accent du Mac.
 - Jamais `windowBackgroundDragBehavior(.enabled)` : déplacer la fenêtre par le fond casse la sélection de texte du terminal.

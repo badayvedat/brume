@@ -14,11 +14,11 @@ public struct SettingsFile: Sendable {
     }
 
     /// Les réglages par défaut sans fichier, ou s'il est illisible.
-    public func load() -> Settings {
-        (try? Data(contentsOf: url)).flatMap(Settings.decoded) ?? Settings()
+    public func load() -> AppSettings {
+        (try? Data(contentsOf: url)).flatMap(AppSettings.decoded) ?? AppSettings()
     }
 
-    public func save(_ settings: Settings) throws {
+    public func save(_ settings: AppSettings) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try settings.encoded().write(to: url, options: .atomic)
     }

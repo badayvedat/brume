@@ -3,10 +3,13 @@ import SwiftUI
 @main
 struct BrumeApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-    @State private var session = SessionStore()
-    @State private var settings = SettingsStore()
+    @State private var session: SessionStore
+    @State private var settings: SettingsStore
 
     init() {
+        let settings = SettingsStore()
+        _settings = State(initialValue: settings)
+        _session = State(initialValue: SessionStore(settings: settings))
         SystemSymbol.preload()
         InstalledApps.preload()
         // Le shell hérite de cette variable : le patch zsh y trouve les greffons embarqués.
@@ -33,11 +36,7 @@ struct BrumeApp: App {
             SplitCommands()
             SearchCommands()
             FontSizeCommands()
-        }
-
-        Settings {
-            SettingsView()
-                .environment(settings)
+            SettingsCommands()
         }
     }
 }

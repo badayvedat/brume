@@ -38,19 +38,15 @@ final class TranslucencyTransition {
         let progress = min(Date().timeIntervalSince(startDate) / Self.duration, 1)
         // Le fondu passe par des étapes transparentes : la fenêtre ne s'opacifie qu'à la fin,
         // quand le voile couvre déjà tout. Rien ne saute, ni à l'aller ni au retour.
-        show(start.interpolated(to: target, at: Self.easeInOut(progress)))
+        show(start.interpolated(to: target, at: Easing.easeInOut(progress)))
         if progress == 1 { timer?.invalidate() }
     }
 
     private func show(_ translucency: Translucency) {
         shown = translucency
-        TerminalWorkspace.applyToEngine(translucency)
+        TerminalWorkspace.setTranslucent(translucency.isTranslucent)
         if let window {
             WindowTranslucency.apply(translucency, to: window)
         }
-    }
-
-    private static func easeInOut(_ t: Double) -> Double {
-        t < 0.5 ? 2 * t * t : 1 - pow(-2 * t + 2, 2) / 2
     }
 }

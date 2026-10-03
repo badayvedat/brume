@@ -22,6 +22,18 @@ enum SystemSymbol {
         Variant(name: "square.split.1x2", size: 13, weight: .medium),
         Variant(name: "macwindow.badge.plus", size: 13, weight: .medium),
         Variant(name: "ellipsis", size: 13, weight: .medium),
+        Variant(name: "checkmark", size: 11, weight: .semibold),
+        Variant(name: "chevron.down", size: 10, weight: .semibold),
+        Variant(name: "chevron.right", size: 10, weight: .semibold),
+        Variant(name: "gearshape", size: 14),
+        Variant(name: "paintpalette", size: 14),
+        Variant(name: "chevron.left", size: 14),
+        // Les glyphes des raccourcis dans les menus de macOS : chargés après le moteur, ils
+        // sortent vides et les menus n'affichent que la touche, sans ⌘.
+        Variant(name: "command"),
+        Variant(name: "shift"),
+        Variant(name: "option"),
+        Variant(name: "control"),
     ]
 
     private static let images: [Variant: NSImage] = Dictionary(uniqueKeysWithValues: variants.compactMap { variant in

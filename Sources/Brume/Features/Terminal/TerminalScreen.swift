@@ -3,7 +3,7 @@ import SwiftUI
 
 struct TerminalScreen: View {
     /// Toute la fenêtre : barres d'onglets, terminaux et glissés partagent cet espace.
-    static let space = "terminal-screen"
+    nonisolated static let space = "terminal-screen"
 
     @Environment(SessionStore.self) private var session
     @Environment(SettingsStore.self) private var settings
@@ -15,11 +15,12 @@ struct TerminalScreen: View {
     var body: some View {
         ZStack {
             if let workspace {
-                TerminalWindow(workspace: workspace, translucency: settings.translucency)
+                TerminalWindow(workspace: workspace, translucency: settings.appearance.translucency)
             }
         }
         .onAppear {
             guard workspace == nil else { return }
+            TerminalWorkspace.prepareEngine(settings.settings)
             workspace = session.makeWorkspace()
             for _ in 0 ..< session.takeWindowsToOpen() {
                 openWindow(id: BrumeApp.terminalWindowID)
@@ -44,21 +45,38 @@ private struct TerminalWindow: View {
     }
 
     var body: some View {
-        TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld && isActive)
-            .coordinateSpace(.named(TerminalScreen.space))
-            .ignoresSafeArea(.container, edges: .top)
-            .modifier(TerminalWindowChrome(
-                state: workspace.focused,
-                customTitle: workspace.title(of: workspace.focusedID),
-                translucency: translucency.shown
-            ))
-            .focusedSceneValue(\.terminalWorkspace, workspace)
-            .background(WindowReader {
-                workspace.attach(to: $0)
-                titlebar.attach(to: $0)
-                translucency.attach(to: $0)
-            })
-            .onAppear { workspace.focus(workspace.focusedID) }
-            .onChange(of: settings.translucency) { translucency.animate(to: $1) }
+        ZStack {
+            let showsTerminals = workspace.settingsSection == nil
+            // Cachés et non retirés : une vue terminal recréée tuerait son shell.
+            TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld && isActive)
+                .coordinateSpace(.named(TerminalScreen.space))
+                .opacity(showsTerminals ? 1 : 0)
+                .allowsHitTesting(showsTerminals)
+                .accessibilityHidden(!showsTerminals)
+            if let section = workspace.settingsSection {
+                SettingsPage(workspace: workspace, section: section, titlebar: titlebar)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: workspace.settingsSection)
+        .ignoresSafeArea(.container, edges: .top)
+        .modifier(TerminalWindowChrome(
+            state: workspace.focused,
+            customTitle: workspace.title(of: workspace.focusedID),
+            translucency: translucency.shown
+        ))
+        .focusedSceneValue(\.terminalWorkspace, workspace)
+        .background(WindowReader {
+            workspace.attach(to: $0)
+            titlebar.attach(to: $0)
+            translucency.attach(to: $0)
+        })
+        .onAppear { workspace.focus(workspace.focusedID) }
+        .tint(settings.appearance.accent.color)
+        .environment(\.accent, settings.appearance.accent)
+        .animation(.easeInOut(duration: 0.3), value: settings.appearance.accent)
+        .onChange(of: settings.appearance.translucency) { translucency.animate(to: $1) }
+        .onChange(of: TerminalThemes.colors(for: settings.appearance)) { ThemeFade.run(to: $1) }
+        .onChange(of: settings.font) { TerminalWorkspace.setFont($1) }
     }
 }

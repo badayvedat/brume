@@ -5,15 +5,23 @@ import SwiftUI
 
 // Un seul moteur pour tous les onglets, fenêtres et splits, comme Ghostty.
 @MainActor private let sharedController: TerminalController = {
-    let controller = TerminalController(terminalConfiguration: engineConfiguration(translucency: TranslucencyPreset.normal.translucency))
-    // Le moteur part en thème clair jusqu'à ce qu'une vue lui donne l'apparence : un nouveau
-    // terminal aurait un fond clair, et sa barre de titre avec, le temps d'une image.
-    let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-    controller.setColorScheme(isDark ? .dark : .light)
+    let controller = TerminalController(terminalConfiguration: engineConfiguration(engineOptions))
+    // Brume reste sombre : sans ça, le moteur part en clair le temps qu'une vue lui donne l'apparence.
+    controller.setColorScheme(.dark)
     return controller
 }()
 
-private func engineConfiguration(translucency: Translucency) -> TerminalConfiguration {
+/// Ce que les réglages changent dans la config du moteur, commune à toutes les fenêtres.
+private struct EngineOptions {
+    var isTranslucent = false
+    var font = TerminalFont.standard
+}
+
+@MainActor private var engineOptions = EngineOptions() {
+    didSet { sharedController.setTerminalConfiguration(engineConfiguration(engineOptions)) }
+}
+
+private func engineConfiguration(_ options: EngineOptions) -> TerminalConfiguration {
     TerminalConfiguration {
         // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
         $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
@@ -28,9 +36,15 @@ private func engineConfiguration(translucency: Translucency) -> TerminalConfigur
         $0.withCustom("keybind", "alt+right=unbind")
         // En verre, le voile vient du fond de la fenêtre, d'un seul tenant sous les onglets et
         // les terminaux : le moteur ne peint plus son fond par-dessus.
-        $0.withBackgroundOpacity(translucency.isTranslucent ? 0 : 1)
+        $0.withBackgroundOpacity(options.isTranslucent ? 0 : 1)
+        if let family = options.font.family {
+            $0.withFontFamily(family)
+        }
+        $0.withFontSize(Float(options.font.size))
     }
 }
+
+@MainActor private let liveWorkspaces = NSHashTable<TerminalWorkspace>.weakObjects()
 
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
 @MainActor private weak var lastFocused: TerminalViewState?
@@ -51,6 +65,8 @@ final class TerminalWorkspace {
     private(set) var colors: [UUID: TabColor] = [:]
     private(set) var renamingID: UUID?
     private(set) var drop: WindowLayout<UUID, UUID>.Drop?
+    /// La page de réglages affichée à la place des terminaux, qui restent ouverts dessous.
+    private(set) var settingsSection: SettingsSection?
     /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalSplitView` pour
     /// calculer les dépôts : les vues prennent la hauteur du `WindowTitlebar`, observé, pas celle-ci.
     @ObservationIgnored var bounds: CGRect = .zero
@@ -64,9 +80,29 @@ final class TerminalWorkspace {
         sharedController.needsConfirmQuit
     }
 
+    /// Avant le premier terminal : il s'ouvre déjà avec le thème et la police choisis.
+    static func prepareEngine(_ settings: AppSettings) {
+        engineOptions.font = settings.font
+        ThemeFade.start(with: TerminalThemes.colors(for: settings.appearance))
+    }
+
     /// Le moteur est commun à toutes les fenêtres : sans changement, l'appel ne fait rien.
-    static func applyToEngine(_ translucency: Translucency) {
-        sharedController.setTerminalConfiguration(engineConfiguration(translucency: translucency))
+    static func setTranslucent(_ isTranslucent: Bool) {
+        engineOptions.isTranslucent = isTranslucent
+    }
+
+    static func setFont(_ font: TerminalFont) {
+        engineOptions.font = font
+    }
+
+    /// Par les terminaux et pas le moteur seul : chacun doit reprendre la couleur de fond du thème.
+    static func applyEngineTheme(_ theme: TerminalTheme) {
+        sharedController.setTheme(theme)
+        for workspace in liveWorkspaces.allObjects {
+            for state in workspace.states.values {
+                state.setTheme(theme)
+            }
+        }
     }
 
     /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.
@@ -119,6 +155,7 @@ final class TerminalWorkspace {
     func attach(to window: NSWindow) {
         guard self.window !== window else { return }
         self.window = window
+        liveWorkspaces.add(self)
         window.tabbingMode = .disallowed
         // Pas sur un écran débranché depuis : la fenêtre rouvrirait invisible.
         if let savedFrame, let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(savedFrame) }) {
@@ -130,6 +167,20 @@ final class TerminalWorkspace {
             (states.count > 1 ? CloseConfirmation.window : .terminal).ask(in: window) { window.close() }
             return false
         }
+    }
+
+    /// Les raccourcis agissent encore sur les terminaux cachés dessous, mais aucun ne reprend le
+    /// clavier avant le retour : la frappe irait dans un terminal qu'on ne voit pas.
+    func showSettings(_ section: SettingsSection? = nil) {
+        settingsSection = section ?? settingsSection ?? .appearance
+        window?.makeFirstResponder(nil)
+        updateSurfaces()
+    }
+
+    func closeSettings() {
+        settingsSection = nil
+        updateSurfaces()
+        focus(focusedID)
     }
 
     /// Comme le bouton rouge : passe par la confirmation de `WindowCloseGuard`.
@@ -217,6 +268,7 @@ final class TerminalWorkspace {
     }
 
     func startRenaming(_ id: UUID? = nil) {
+        guard settingsSection == nil else { return }
         let id = id ?? focusedID
         select(id)
         renamingID = id
@@ -290,7 +342,7 @@ final class TerminalWorkspace {
     func focus(_ id: UUID) {
         apply(layout.selecting(id))
         lastFocused = states[id]
-        states[id]?.requestFocus()
+        if settingsSection == nil { states[id]?.requestFocus() }
     }
 
     /// Un clic donne déjà le focus au terminal : on ne fait que suivre.
@@ -300,7 +352,9 @@ final class TerminalWorkspace {
     }
 
     /// Passe par le moteur, qui signale une commande en cours à `onClose`.
+    /// Sur la page de réglages, Cmd+W la referme plutôt que le terminal caché dessous.
     func closeFocused() {
+        guard settingsSection == nil else { return closeSettings() }
         focused.surface?.performBindingAction("close_surface")
     }
 
@@ -314,6 +368,7 @@ final class TerminalWorkspace {
     }
 
     func toggleSearch() {
+        guard settingsSection == nil else { return }
         if searches[focusedID] == nil {
             openSearch(in: focusedID, needle: "")
         } else {
@@ -323,6 +378,7 @@ final class TerminalWorkspace {
 
     /// Le moteur répond par `start_search` avec la sélection : voir `makeState`.
     func searchSelection() {
+        guard settingsSection == nil else { return }
         focused.surface?.performBindingAction("search_selection")
     }
 
@@ -386,13 +442,18 @@ final class TerminalWorkspace {
     private func apply(_ new: WindowLayout<UUID, UUID>) {
         let previous = layout.focusedTab
         layout = new
-        let shown = Set(new.areas.values.map(\.selected))
-        for (id, state) in states {
-            state.isSurfaceVisible = shown.contains(id)
-        }
+        updateSurfaces()
         if new.focusedTab != previous {
             lastFocused = states[new.focusedTab]
-            states[new.focusedTab]?.requestFocus()
+            if settingsSection == nil { states[new.focusedTab]?.requestFocus() }
+        }
+    }
+
+    /// Seuls les terminaux affichés se dessinent : ni les onglets cachés, ni rien sous les réglages.
+    private func updateSurfaces() {
+        let shown = settingsSection == nil ? Set(layout.areas.values.map(\.selected)) : []
+        for (id, state) in states {
+            state.isSurfaceVisible = shown.contains(id)
         }
     }
 

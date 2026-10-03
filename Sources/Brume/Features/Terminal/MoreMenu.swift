@@ -10,54 +10,49 @@ struct MoreMenu: View {
     let workspace: TerminalWorkspace
 
     @State private var isHovered = false
-    @Environment(\.openSettings) private var openSettings
+    @State private var anchor = MenuAnchor()
 
     private var folder: URL? {
         state.workingDirectory.map { URL(fileURLWithPath: $0, isDirectory: true) }
     }
 
     var body: some View {
-        Menu {
-            if let folder {
-                if let finder = InstalledApps.finder {
-                    item(L10n.text(.showInFinder), icon: finder.icon) { finder.open(folder) }
-                }
-                ForEach(InstalledApps.editors) { editor in
-                    item("\(L10n.text(.openIn)) \(editor.name)", icon: editor.icon) { editor.open(folder) }
-                }
-                Divider()
-                Button(L10n.text(.copyPath)) {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(folder.path, forType: .string)
-                }
-            } else {
-                Text(L10n.text(.noFolderYet))
-            }
-            Divider()
-            Button(L10n.text(.resetTabs), action: workspace.reset)
-            Divider()
-            Button("\(L10n.text(.settings))…") { openSettings() }
-                .keyboardShortcut(",")
-        } label: {
+        Button(action: showMenu) {
             // Pas de symbole vertical dans macOS : l'horizontal, tourné.
             SystemSymbol.image("ellipsis", size: 13, weight: .medium)
                 .rotationEffect(.degrees(90))
-                .foregroundStyle(isHovered ? .primary : .secondary)
+                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
                 .frame(width: BarButton.size, height: BarButton.size)
-                .background(isHovered ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 7))
+                .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 6))
         }
-        .menuStyle(.button)
         .buttonStyle(.plain)
-        .menuIndicator(.hidden)
-        .fixedSize()
+        .menuAnchor(anchor)
         .accessibilityLabel(L10n.text(.moreOptions))
         .tooltip(L10n.text(.moreOptions))
         .onHover { isHovered = $0 }
     }
 
-    private func item(_ title: String, icon: NSImage, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label { Text(title) } icon: { Image(nsImage: icon) }
+    private func showMenu() {
+        guard let view = anchor.view else { return }
+        var entries: [MenuEntry] = []
+        if let folder {
+            if let finder = InstalledApps.finder {
+                entries.append(.item(L10n.text(.showInFinder), icon: finder.icon) { finder.open(folder) })
+            }
+            for editor in InstalledApps.editors {
+                entries.append(.item("\(L10n.text(.openIn)) \(editor.name)", icon: editor.icon) { editor.open(folder) })
+            }
+            entries.append(.separator)
+            entries.append(.item(L10n.text(.copyPath)) {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(folder.path, forType: .string)
+            })
+        } else {
+            entries.append(.item(L10n.text(.noFolderYet), enabled: false) {})
         }
+        entries.append(.separator)
+        entries.append(.item(L10n.text(.resetTabs), run: workspace.reset))
+        entries.append(.item("\(L10n.text(.settings))…", shortcut: "⌘,") { workspace.showSettings() })
+        PopupMenu.show(entries, below: view)
     }
 }
