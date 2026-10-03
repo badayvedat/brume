@@ -77,7 +77,6 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 - [x] Langue de l'interface (français / anglais), en direct
 - [x] Menus maison façon Monocode (« ... » et clic droit sur un onglet), raccourcis affichés en entier
 - [x] Coloration des commandes : 16 palettes reprises de thèmes connus, aperçu dépliable
-- [ ] Couleur du texte grisé de l'autocomplétion (gris trop peu contrasté)
 
 ## 6. Page de démarrage
 
