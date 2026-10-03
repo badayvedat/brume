@@ -3,6 +3,21 @@ import CoreGraphics
 /// Une fenêtre comme Muxy : découpée en zones, chacune avec sa barre d'onglets.
 /// Un onglet est un terminal ; diviser crée une zone, pas un volet dans l'onglet.
 public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>: Hashable, Sendable {
+    /// Un onglet glissé hors de sa barre, et où il ira si on le lâche.
+    public struct Drop: Hashable, Sendable {
+        public enum Target: Hashable, Sendable {
+            /// Sur la barre ou le centre d'une autre zone : il rejoint ses onglets.
+            case area(Area)
+            /// Près d'un bord : une zone neuve s'ouvre de ce côté.
+            case split(Area, SplitDirection)
+        }
+
+        public let tab: Tab
+        public let target: Target
+        /// Ce que prendra l'onglet, à montrer pendant le glisser.
+        public let highlight: CGRect
+    }
+
     public private(set) var tree: SplitTree<Area>
     public private(set) var areas: [Area: TabList<Tab>]
     public private(set) var focusedArea: Area
@@ -133,6 +148,30 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
     public func canMove(_ tab: Tab, beside target: Area) -> Bool {
         guard let source = area(of: tab), areas[target] != nil else { return false }
         return source != target || (areas[source]?.tabs.count ?? 0) > 1
+    }
+
+    /// Où irait `tab` lâché en `point`, la fenêtre occupant `bounds`, chaque zone coiffée de sa barre.
+    /// Nil : rien à proposer à cet endroit.
+    public func drop(of tab: Tab, at point: CGPoint, in bounds: CGRect, barHeight: CGFloat) -> Drop? {
+        guard let (area, frame) = tree.frames(in: bounds).first(where: { $0.value.contains(point) }) else { return nil }
+        let content = frame.divided(atDistance: barHeight, from: .minYEdge).remainder
+        let direction = SplitDirection.nearestEdge(to: point, in: content)
+        let isOwnArea = self.area(of: tab) == area
+        // Ailleurs, le centre et la barre servent à rejoindre la zone. Dans la sienne, où il est
+        // déjà, toute la surface propose un split : le repère ne disparaît jamais en route.
+        let nearEdge = content.contains(point) && direction.half(of: direction.half(of: content)).contains(point)
+        if isOwnArea || nearEdge, canMove(tab, beside: area) {
+            return Drop(tab: tab, target: .split(area, direction), highlight: direction.half(of: content))
+        }
+        return isOwnArea ? nil : Drop(tab: tab, target: .area(area), highlight: content)
+    }
+
+    /// `newArea` sert si le dépôt ouvre une zone.
+    public func dropping(_ drop: Drop, newArea: Area) -> WindowLayout {
+        switch drop.target {
+        case let .area(area): moving(drop.tab, into: area)
+        case let .split(area, direction): moving(drop.tab, beside: area, toward: direction, area: newArea)
+        }
     }
 
     public func settingRatio(_ ratio: CGFloat, at path: [Int]) -> WindowLayout {

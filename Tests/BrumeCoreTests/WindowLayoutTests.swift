@@ -1,4 +1,5 @@
 import BrumeCore
+import CoreGraphics
 import Testing
 
 struct WindowLayoutTests {
@@ -78,5 +79,35 @@ struct WindowLayoutTests {
         #expect(!twoAreas.canMove(3, beside: "B"))
         #expect(twoAreas.moving(3, beside: "B", toward: .left, area: "C") == twoAreas)
         #expect(twoAreas.canMove(1, beside: "A"))
+    }
+
+    // A à gauche, B à droite, chacune 100 de large avec une barre de 10.
+    let window = CGRect(x: 0, y: 0, width: 200, height: 110)
+
+    @Test func centreOfAnotherAreaJoinsIt() {
+        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 150, y: 60), in: window, barHeight: 10)
+        #expect(drop?.target == .area("B"))
+        #expect(drop?.highlight == CGRect(x: 100, y: 10, width: 100, height: 100))
+    }
+
+    @Test func edgeOfAnotherAreaSplitsIt() {
+        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 195, y: 60), in: window, barHeight: 10)
+        #expect(drop?.target == .split("B", .right))
+        #expect(drop?.highlight == CGRect(x: 150, y: 10, width: 50, height: 100))
+    }
+
+    @Test func anywhereInItsOwnAreaSplitsIt() {
+        #expect(twoAreas.drop(of: 1, at: CGPoint(x: 55, y: 60), in: window, barHeight: 10)?.target == .split("A", .right))
+    }
+
+    @Test func aLoneTabOverItsOwnAreaProposesNothing() {
+        #expect(twoAreas.drop(of: 3, at: CGPoint(x: 150, y: 60), in: window, barHeight: 10) == nil)
+    }
+
+    @Test func droppingOnAnEdgeOpensTheNewArea() {
+        let drop = twoAreas.drop(of: 1, at: CGPoint(x: 150, y: 105), in: window, barHeight: 10)!
+        let layout = twoAreas.dropping(drop, newArea: "C")
+        #expect(layout.tree.panes == ["A", "B", "C"])
+        #expect(layout.areas["C"]?.tabs == [1])
     }
 }

@@ -35,21 +35,6 @@ enum FontSizeChange {
 }
 
 
-/// Un onglet glissé hors de sa barre, et où il ira si on le lâche.
-struct TabDrop: Equatable {
-    enum Target: Equatable {
-        /// Sur la barre ou le terminal d'une autre zone, loin des bords : il rejoint ses onglets.
-        case area(UUID)
-        /// Près d'un bord : une zone neuve s'ouvre de ce côté.
-        case split(UUID, SplitDirection)
-    }
-
-    let tab: UUID
-    let target: Target
-    /// Ce que prendra l'onglet, dans l'espace de `TerminalScreen`.
-    let highlight: CGRect
-}
-
 /// Une fenêtre comme Muxy : des zones, chacune avec sa barre d'onglets, un terminal par onglet.
 @MainActor @Observable
 final class TerminalWorkspace {
@@ -59,7 +44,7 @@ final class TerminalWorkspace {
     /// Le nom choisi d'un onglet ; sans, il affiche le titre de son terminal.
     private(set) var customTitles: [UUID: String] = [:]
     private(set) var renamingID: UUID?
-    private(set) var drop: TabDrop?
+    private(set) var drop: WindowLayout<UUID, UUID>.Drop?
     /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalScreen`.
     @ObservationIgnored var bounds: CGRect = .zero
     @ObservationIgnored var barHeight: CGFloat = 32
@@ -262,30 +247,16 @@ final class TerminalWorkspace {
 
     // MARK: Glisser un onglet
 
-    /// Hors de sa barre. Nil : rien à proposer à cet endroit.
+    /// Hors de sa barre. Nil : plus de glisser en cours, ou rien à proposer ici.
     func hoverDrop(dragging id: UUID, at point: CGPoint?) {
-        var new: TabDrop?
-        if let point, let (area, frame) = layout.tree.frames(in: bounds).first(where: { $0.value.contains(point) }) {
-            let content = frame.divided(atDistance: barHeight, from: .minYEdge).remainder
-            let direction = SplitDirection.nearestEdge(to: point, in: content)
-            // Loin des bords, ou sur la barre : rejoindre la zone plutôt que la couper.
-            let nearEdge = content.contains(point) && direction.half(of: direction.half(of: content)).contains(point)
-            if nearEdge, layout.canMove(id, beside: area) {
-                new = TabDrop(tab: id, target: .split(area, direction), highlight: direction.half(of: content))
-            } else if layout.area(of: id) != area {
-                new = TabDrop(tab: id, target: .area(area), highlight: content)
-            }
-        }
+        let new = point.flatMap { layout.drop(of: id, at: $0, in: bounds, barHeight: barHeight) }
         if new != drop { drop = new }
     }
 
     func performDrop() {
         guard let drop else { return }
         self.drop = nil
-        switch drop.target {
-        case let .area(area): apply(layout.moving(drop.tab, into: area))
-        case let .split(area, direction): apply(layout.moving(drop.tab, beside: area, toward: direction, area: UUID()))
-        }
+        apply(layout.dropping(drop, newArea: UUID()))
         focus(drop.tab)
     }
 
