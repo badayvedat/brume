@@ -21,7 +21,7 @@ public enum TextKey: CaseIterable, Sendable {
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
     case resetTabs, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
-    case windowStyle, styleNormal, styleGlass
+    case settings, windowStyle, styleNormal, styleGlass, styleNormalHint, styleGlassHint, customize, opacity, blur
 
     public func text(in language: Language) -> String {
         switch language {
@@ -98,6 +98,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .windowStyle: "Style de la fenêtre"
         case .styleNormal: "Normal"
         case .styleGlass: "Verre"
+        case .settings: "Réglages"
+        case .styleNormalHint: "Fond plein, comme Ghostty"
+        case .styleGlassHint: "Le bureau flouté en transparence"
+        case .customize: "Personnaliser"
+        case .opacity: "Opacité"
+        case .blur: "Flou"
         }
     }
 
@@ -169,6 +175,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .windowStyle: "Window Style"
         case .styleNormal: "Normal"
         case .styleGlass: "Glass"
+        case .settings: "Settings"
+        case .styleNormalHint: "Solid background, like Ghostty"
+        case .styleGlassHint: "Blurred desktop showing through"
+        case .customize: "Customize"
+        case .opacity: "Opacity"
+        case .blur: "Blur"
         }
     }
 }

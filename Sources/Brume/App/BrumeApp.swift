@@ -34,5 +34,10 @@ struct BrumeApp: App {
             SearchCommands()
             FontSizeCommands()
         }
+
+        Settings {
+            SettingsView()
+                .environment(settings)
+        }
     }
 }

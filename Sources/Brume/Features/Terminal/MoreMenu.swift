@@ -4,13 +4,13 @@ import GhosttyTerminal
 import SwiftUI
 
 /// Les « ... » de la barre : ouvrir le dossier du terminal affiché ailleurs, copier son chemin,
-/// choisir le style de la fenêtre, réinitialiser les onglets.
+/// réinitialiser les onglets, ouvrir les réglages.
 struct MoreMenu: View {
     @ObservedObject var state: TerminalViewState
     let workspace: TerminalWorkspace
 
     @State private var isHovered = false
-    @Environment(SettingsStore.self) private var settings
+    @Environment(\.openSettings) private var openSettings
 
     private var folder: URL? {
         state.workingDirectory.map { URL(fileURLWithPath: $0, isDirectory: true) }
@@ -34,14 +34,10 @@ struct MoreMenu: View {
                 Text(L10n.text(.noFolderYet))
             }
             Divider()
-            // En attendant la fenêtre de réglages.
-            Picker(L10n.text(.windowStyle), selection: preset) {
-                ForEach(TranslucencyPreset.allCases, id: \.self) { preset in
-                    Text(L10n.text(preset.label)).tag(Optional(preset))
-                }
-            }
-            Divider()
             Button(L10n.text(.resetTabs), action: workspace.reset)
+            Divider()
+            Button("\(L10n.text(.settings))…") { openSettings() }
+                .keyboardShortcut(",")
         } label: {
             // Pas de symbole vertical dans macOS : l'horizontal, tourné.
             SystemSymbol.image("ellipsis", size: 13, weight: .medium)
@@ -59,26 +55,9 @@ struct MoreMenu: View {
         .onHover { isHovered = $0 }
     }
 
-    private var preset: Binding<TranslucencyPreset?> {
-        Binding {
-            TranslucencyPreset(matching: settings.translucency)
-        } set: {
-            if let preset = $0 { settings.setTranslucency(preset.translucency) }
-        }
-    }
-
     private func item(_ title: String, icon: NSImage, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label { Text(title) } icon: { Image(nsImage: icon) }
-        }
-    }
-}
-
-private extension TranslucencyPreset {
-    var label: TextKey {
-        switch self {
-        case .normal: .styleNormal
-        case .glass: .styleGlass
         }
     }
 }

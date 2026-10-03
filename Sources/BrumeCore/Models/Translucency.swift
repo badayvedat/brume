@@ -28,6 +28,14 @@ public struct Translucency: Codable, Hashable, Sendable {
         opacity < 1
     }
 
+    /// Une étape du fondu vers `target`, `progress` allant de 0 à 1.
+    public func interpolated(to target: Translucency, at progress: Double) -> Translucency {
+        Translucency(
+            opacity: opacity + (target.opacity - opacity) * progress,
+            blur: Int((Double(blur) + Double(target.blur - blur) * progress).rounded())
+        )
+    }
+
     private static func clamped<T: Comparable>(_ value: T, to range: ClosedRange<T>) -> T {
         min(max(value, range.lowerBound), range.upperBound)
     }
@@ -45,6 +53,11 @@ public enum TranslucencyPreset: String, CaseIterable, Sendable {
     }
 
     public init?(matching translucency: Translucency) {
+        // Opaque, le flou ne se voit pas : c'est la fenêtre normale, quel que soit son rayon.
+        guard translucency.isTranslucent else {
+            self = .normal
+            return
+        }
         guard let preset = Self.allCases.first(where: { $0.translucency == translucency }) else { return nil }
         self = preset
     }

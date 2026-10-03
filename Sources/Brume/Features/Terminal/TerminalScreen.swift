@@ -1,4 +1,4 @@
-import AppKit
+import BrumeCore
 import SwiftUI
 
 struct TerminalScreen: View {
@@ -6,6 +6,7 @@ struct TerminalScreen: View {
     static let space = "terminal-screen"
 
     @Environment(SessionStore.self) private var session
+    @Environment(SettingsStore.self) private var settings
     @Environment(\.openWindow) private var openWindow
     /// Créé à l'apparition et pas à l'init : SwiftUI peut refaire l'init, et chaque appel
     /// consommerait une fenêtre de la session.
@@ -14,7 +15,7 @@ struct TerminalScreen: View {
     var body: some View {
         ZStack {
             if let workspace {
-                TerminalWindow(workspace: workspace)
+                TerminalWindow(workspace: workspace, translucency: settings.translucency)
             }
         }
         .onAppear {
@@ -32,10 +33,15 @@ private struct TerminalWindow: View {
 
     @State private var titlebar = WindowTitlebar()
     @State private var commandKey = CommandKeyHold()
-    @State private var window: WeakWindow?
+    @State private var translucency: TranslucencyTransition
     @Environment(SettingsStore.self) private var settings
     /// Cmd+chiffre n'agit que sur la fenêtre active : les autres ne montrent pas de numéros.
     @Environment(\.appearsActive) private var isActive
+
+    init(workspace: TerminalWorkspace, translucency: Translucency) {
+        self.workspace = workspace
+        _translucency = State(initialValue: TranslucencyTransition(translucency))
+    }
 
     var body: some View {
         TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: commandKey.isHeld && isActive)
@@ -44,27 +50,15 @@ private struct TerminalWindow: View {
             .modifier(TerminalWindowChrome(
                 state: workspace.focused,
                 customTitle: workspace.title(of: workspace.focusedID),
-                translucency: settings.translucency
+                translucency: translucency.shown
             ))
             .focusedSceneValue(\.terminalWorkspace, workspace)
             .background(WindowReader {
                 workspace.attach(to: $0)
                 titlebar.attach(to: $0)
-                window = WeakWindow(value: $0)
+                translucency.attach(to: $0)
             })
             .onAppear { workspace.focus(workspace.focusedID) }
-            .onChange(of: settings.translucency, initial: true) { applyTranslucency() }
-            .onChange(of: window?.value) { applyTranslucency() }
+            .onChange(of: settings.translucency) { translucency.animate(to: $1) }
     }
-
-    private func applyTranslucency() {
-        TerminalWorkspace.applyToEngine(settings.translucency)
-        if let window = window?.value {
-            WindowTranslucency.apply(settings.translucency, to: window)
-        }
-    }
-}
-
-private struct WeakWindow {
-    weak var value: NSWindow?
 }
