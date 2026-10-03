@@ -17,10 +17,18 @@ struct SettingsFileTests {
         settings.font = TerminalFont(family: "Menlo", size: 15)
         settings.language = .english
         settings.restoresSession = false
+        settings.suggestsHistory = false
+        settings.completesCommands = false
         settings.verticalTabs = VerticalTabs(isOn: true, width: 260)
         try file.save(settings)
         #expect(file.load() == settings)
         try FileManager.default.removeItem(at: file.url.deletingLastPathComponent())
+    }
+
+    @Test func settingsFromBeforeTheShellOptionsKeepThemOn() {
+        let settings = AppSettings.decoded(from: Data(#"{"restoresSession": false}"#.utf8))
+        #expect(settings?.suggestsHistory == true)
+        #expect(settings?.completesCommands == true)
     }
 
     @Test func unreadableSettingKeepsItsDefaultAndTheOthersSurvive() {

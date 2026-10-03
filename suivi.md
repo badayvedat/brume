@@ -111,6 +111,7 @@ Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés da
 
 ## 9. Autocomplétion des commandes connues
 
+- [x] Menu de complétion de zsh (Tab, flèches, ⇧Tab, Échap), complétions de Homebrew, réglages pour couper les suggestions de l'historique et l'autocomplétion
 - [ ] Intégration zsh qui transmet la ligne en cours au terminal
 - [ ] Suggestions via carapace (gh, git, docker...)
 - [ ] Popup natif au niveau du curseur

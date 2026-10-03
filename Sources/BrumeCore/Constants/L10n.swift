@@ -43,6 +43,7 @@ public enum TextKey: CaseIterable, Sendable {
     case tint, tintHint, strengthLow, strengthMedium, strengthHigh, blurMedium, blurHigh, showPreview, hidePreview, previewMessage, previewLink
     case text, font, fontHint, fontSize, fontSizeHint, smaller, larger, interface, language, languageHint
     case startup, restoreTabs, restoreTabsHint
+    case input, historySuggestions, historySuggestionsHint, completion, completionHint
     case welcome, welcomeHint, welcomePage, showWelcome, welcomePageHint, visual, visualHint, visualGhost
     case visualSaucer, visualApple, welcomeText, welcomeTextHint, information
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
@@ -173,6 +174,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .startup: "Session"
         case .restoreTabs: "Restaurer la session"
         case .restoreTabsHint: "Au démarrage, restaure les fenêtres et les onglets de la session précédente."
+        case .input: "Saisie"
+        case .historySuggestions: "Suggestions de l'historique"
+        case .historySuggestionsHint: "Complète en gris la commande en cours d'après celles déjà saisies. La flèche → accepte la suggestion."
+        case .completion: "Autocomplétion"
+        case .completionHint: "La touche Tab propose les sous-commandes, options, fichiers et dossiers disponibles pour la commande en cours."
         case .welcome: "Démarrage"
         case .welcomeHint: "L'écran affiché à l'ouverture de chaque terminal : un visuel, un mot et les informations du Mac."
         case .welcomePage: "Affichage"
@@ -381,6 +387,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .startup: "Session"
         case .restoreTabs: "Restore Session"
         case .restoreTabsHint: "At startup, restores the windows and tabs from your previous session."
+        case .input: "Input"
+        case .historySuggestions: "History Suggestions"
+        case .historySuggestionsHint: "Completes the current command in gray based on commands you have already entered. The → key accepts the suggestion."
+        case .completion: "Autocompletion"
+        case .completionHint: "The Tab key suggests the subcommands, options, files and folders available for the current command."
         case .welcome: "Startup"
         case .welcomeHint: "The screen shown when each terminal opens: a visual, a word and information about your Mac."
         case .welcomePage: "Display"

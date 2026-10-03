@@ -12,6 +12,14 @@ struct GeneralSettings: View {
                     Switch(label: L10n.text(.restoreTabs), isOn: $settings.restoresSession)
                 }
             }
+            SettingsGroup(title: L10n.text(.input)) {
+                SettingsRow(title: L10n.text(.historySuggestions), hint: L10n.text(.historySuggestionsHint)) {
+                    Switch(label: L10n.text(.historySuggestions), isOn: $settings.suggestsHistory)
+                }
+                SettingsRow(title: L10n.text(.completion), hint: L10n.text(.completionHint), isLast: true) {
+                    Switch(label: L10n.text(.completion), isOn: $settings.completesCommands)
+                }
+            }
             SettingsGroup(title: L10n.text(.interface)) {
                 SettingsRow(title: L10n.text(.verticalTabs), hint: L10n.text(.verticalTabsHint)) {
                     Switch(label: L10n.text(.verticalTabs), isOn: $settings.verticalTabs.isOn)

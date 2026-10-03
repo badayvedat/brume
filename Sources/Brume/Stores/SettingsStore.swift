@@ -12,6 +12,9 @@ final class SettingsStore {
             if (settings.welcome, settings.appearance.accent, settings.language) != (oldValue.welcome, oldValue.appearance.accent, oldValue.language) {
                 applyWelcome()
             }
+            if (settings.suggestsHistory, settings.completesCommands) != (oldValue.suggestsHistory, oldValue.completesCommands) {
+                applyShellOptions()
+            }
             scheduleSave()
         }
     }
@@ -33,6 +36,7 @@ final class SettingsStore {
         settings = loaded
         L10n.language = loaded.language
         applyWelcome()
+        applyShellOptions()
         terminateObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -64,6 +68,16 @@ final class SettingsStore {
         set { settings.restoresSession = newValue }
     }
 
+    var suggestsHistory: Bool {
+        get { settings.suggestsHistory }
+        set { settings.suggestsHistory = newValue }
+    }
+
+    var completesCommands: Bool {
+        get { settings.completesCommands }
+        set { settings.completesCommands = newValue }
+    }
+
     var welcome: Welcome {
         get { settings.welcome }
         set { settings.welcome = newValue }
@@ -93,6 +107,13 @@ final class SettingsStore {
         setenv("BRUME_WELCOME_CONFIGS", welcomeConfigs.map(\.path).joined(separator: ":"), 1)
         setenv("BRUME_WELCOME_ALIGN", settings.welcome.alignment.rawValue, 1)
         setenv("BRUME_FASTFETCH", fastfetch.path, 1)
+    }
+
+    /// Lues par le patch zsh (`Patches/libghostty-spm-zsh-plugins.patch`) : les terminaux déjà
+    /// ouverts gardent ce qu'ils avaient.
+    private func applyShellOptions() {
+        setenv("BRUME_HISTORY_SUGGESTIONS", settings.suggestsHistory ? "1" : "0", 1)
+        setenv("BRUME_COMPLETION", settings.completesCommands ? "1" : "0", 1)
     }
 
     /// Un curseur qu'on glisse change la valeur à chaque image : on écrit une fois qu'il s'arrête.

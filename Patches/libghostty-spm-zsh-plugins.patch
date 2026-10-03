@@ -1,17 +1,62 @@
 --- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
 +++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
-@@ -139,3 +139,14 @@
+@@ -139,3 +139,59 @@
          fi
      }
  fi
 +
-+# Ajout Brume : autocomplétion grisée et coloration des commandes par défaut,
-+# sauf si le .zshrc les a déjà chargées. La coloration en dernier, comme elle le demande.
-+if (( ! ${+functions[_zsh_autosuggest_start]} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
++# Ajout Brume : suggestions de l'historique et coloration des commandes par défaut, sauf si
++# le .zshrc les a déjà chargées. Le réglage qui coupe les suggestions coupe aussi celles du .zshrc.
++if [[ "${BRUME_HISTORY_SUGGESTIONS-1}" == 0 ]]; then
++    typeset -g _ZSH_AUTOSUGGEST_DISABLED
++elif (( ! ${+functions[_zsh_autosuggest_start]} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
 +    builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
 +    # Son hook precmd arrive pendant un precmd : il ne tournerait qu'au prompt suivant.
 +    _zsh_autosuggest_start
 +fi
++
++# Ajout Brume, réglage « Autocomplétion » : Tab ouvre un menu à parcourir aux flèches, avec les
++# complétions de Homebrew (gh, brew...). Ce que le .zshrc a déjà réglé reste tel quel.
++if [[ "${BRUME_COMPLETION-1}" != 0 ]]; then
++    () {
++        local dir file line
++        local -a added
++        for dir in /opt/homebrew/share/zsh/site-functions /usr/local/share/zsh/site-functions; do
++            [[ -d "$dir" ]] && (( ! ${fpath[(Ie)$dir]} )) && added+=("$dir")
++        done
++        fpath=($added $fpath)
++        if (( ! ${+_comps} )); then
++            local cache="$HOME/Library/Caches/Brume"
++            command mkdir -p "$cache"
++            builtin autoload -Uz compinit && compinit -i -d "$cache/zcompdump-$ZSH_VERSION"
++        else
++            # Relancer compinit effacerait les compdef du .zshrc : on n'enregistre que les nouveaux.
++            for file in ${^added}/_*(N-.); do
++                builtin read -r line < "$file"
++                [[ "$line" == '#compdef '[^-]* ]] || continue
++                builtin autoload -Uz -- "${file:t}"
++                compdef "${file:t}" ${=line#'#compdef '}
++            done
++        fi
++
++        _brume_zstyle() { zstyle -L "$1" "$2" >/dev/null || zstyle "$@" }
++        _brume_zstyle ':completion:*' menu select
++        _brume_zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
++        _brume_zstyle ':completion:*' group-name ''
++        _brume_zstyle ':completion:*' list-colors 'di=34' 'ln=36'
++        _brume_zstyle ':completion:*' list-dirs-first true
++        _brume_zstyle ':completion:*:descriptions' format '%F{8}%d%f'
++        # Une liste plus haute que l'écran défile avec un compteur, au lieu de demander « do you wish to see all ».
++        _brume_zstyle ':completion:*:default' list-prompt '%S%M%s'
++        _brume_zstyle ':completion:*:default' select-prompt '%S%M%s'
++        builtin unfunction _brume_zstyle
++
++        zmodload zsh/complist
++        [[ "$(bindkey -M menuselect '^[[Z')" == *undefined-key ]] && bindkey -M menuselect '^[[Z' reverse-menu-complete
++        [[ "$(bindkey -M menuselect '^[')" == *undefined-key ]] && bindkey -M menuselect '^[' send-break
++    }
++fi
++
 +if (( ! ${+ZSH_HIGHLIGHT_VERSION} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
 +    builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 +fi

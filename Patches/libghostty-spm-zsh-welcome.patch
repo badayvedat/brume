@@ -1,6 +1,6 @@
 --- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
 +++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
-@@ -150,3 +150,43 @@
+@@ -195,3 +195,43 @@
  if (( ! ${+ZSH_HIGHLIGHT_VERSION} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
      builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
  fi
