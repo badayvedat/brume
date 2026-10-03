@@ -29,6 +29,8 @@ enum SystemSymbol {
         Variant(name: "eye.slash", size: 12),
         Variant(name: "gearshape", size: 14),
         Variant(name: "paintpalette", size: 14),
+        Variant(name: "text.below.photo", size: 14),
+        Variant(name: "apple.logo", size: 32),
         Variant(name: "chevron.left", size: 14),
         // Les glyphes des raccourcis dans les menus de macOS : chargés après le moteur, ils
         // sortent vides et les menus n'affichent que la touche, sans ⌘.

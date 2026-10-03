@@ -81,7 +81,7 @@ enum PopupMenu {
 
     @discardableResult
     fileprivate static func open(_ entries: [MenuEntry], at point: NSPoint, alignsRight: Bool, width: CGFloat) -> MenuPanel {
-        let panel = MenuPanel(entries: entries, width: width)
+        let panel = MenuPanel(entries: entries, width: width, anchor: alignsRight ? .topTrailing : .topLeading)
         let size = panel.contentView?.fittingSize ?? .zero
         let screen = NSScreen.screens.first { $0.frame.contains(point) }?.visibleFrame ?? .zero
         var origin = NSPoint(x: alignsRight ? point.x - size.width : point.x, y: point.y - size.height)
@@ -90,6 +90,8 @@ enum PopupMenu {
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
         panel.orderFront(nil)
         panel.makeKey()
+        // L'ombre se calcule sur le contenu, encore transparent au début de l'ouverture.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak panel] in panel?.invalidateShadow() }
         stack.append(panel)
         return panel
     }
@@ -156,7 +158,7 @@ private final class MenuPanel: NSPanel {
     private let entries: [MenuEntry]
     private let width: CGFloat
 
-    init(entries: [MenuEntry], width: CGFloat) {
+    init(entries: [MenuEntry], width: CGFloat, anchor: UnitPoint) {
         self.entries = entries
         self.width = width
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -167,7 +169,7 @@ private final class MenuPanel: NSPanel {
         // Comme Monocode : une ligne est déjà active, Entrée la lance. Celle cochée d'abord : dans
         // une liste de choix, Entrée garde la valeur.
         model.highlighted = actionable.first { action(at: $0)?.isChecked == true } ?? actionable.first
-        let view = NSHostingView(rootView: PopupMenuView(entries: entries, model: model, width: width) { [weak self] index, clicked in
+        let view = NSHostingView(rootView: PopupMenuView(entries: entries, model: model, width: width, anchor: anchor) { [weak self] index, clicked in
             self?.highlight(index, run: clicked)
         })
         view.sizingOptions = [.intrinsicContentSize]

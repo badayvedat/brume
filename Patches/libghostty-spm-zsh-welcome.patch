@@ -1,0 +1,46 @@
+--- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
++++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
+@@ -150,3 +150,43 @@
+ if (( ! ${+ZSH_HIGHLIGHT_VERSION} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
+     builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+ fi
++
++# Ajout Brume : l'écran de démarrage des réglages, dessiné par fastfetch puis décalé pour
++# l'aligner dans la largeur du terminal. Lancé au premier prompt : le .zshrc a fini de parler.
++if [[ -n "${BRUME_WELCOME_CONFIGS-}" && -x "${BRUME_FASTFETCH-}" ]]; then
++    () {
++        emulate -L zsh -o extended_glob
++        # Sans locale UTF-8, ${(m)#...} compterait les octets : un trait de cadre en vaut trois.
++        local LC_ALL=en_US.UTF-8
++        local config output line plain pad width fits=0
++        local -a lines
++        # Les versions vont de la taille choisie à la plus petite : la première qui tient l'emporte,
++        # et si aucune ne tient (split étroit ou bas), rien ne s'affiche.
++        for config in "${(@s.:.)BRUME_WELCOME_CONFIGS}"; do
++            [[ -r "$config" ]] || continue
++            output="$("$BRUME_FASTFETCH" --config "$config" --pipe false 2>/dev/null)" || return
++            lines=("${(@f)output}")
++            # Une seule ligne vide avant le prompt, que la page finisse par le visuel ou le texte.
++            while (( $#lines )) && [[ -z "${${lines[-1]//$'\e'\[[0-9;]#m/}//[[:space:]]/}" ]]; do
++                lines[-1]=()
++            done
++            width=0
++            for line in "${lines[@]}"; do
++                plain="${${line//$'\e'\[[0-9;]#m/}%%[[:space:]]#}"
++                (( ${(m)#plain} > width )) && width=${(m)#plain}
++            done
++            (( $#lines && width + 2 <= COLUMNS && $#lines + 3 <= LINES )) && { fits=1; break }
++        done
++        (( fits )) || return
++        case "${BRUME_WELCOME_ALIGN-}" in
++            center) pad=$(( (COLUMNS - width) / 2 )) ;;
++            right) pad=$(( COLUMNS - width - 2 )) ;;
++            *) pad=2 ;;
++        esac
++        builtin print
++        for line in "${lines[@]}"; do
++            builtin printf '%*s%s\e[0m\n' $pad '' "$line"
++        done
++        builtin print
++    }
++fi

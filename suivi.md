@@ -80,10 +80,13 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 
 ## 6. Page de démarrage
 
-- [ ] Intégrer fastfetch
-- [ ] 3 ou 4 presets au choix dans les réglages
-- [ ] Position : gauche, centré, droite
-- [ ] Option « aucune »
+- [x] Intégrer fastfetch (2.69 précompilé, figé par empreinte, embarqué et signé dans l'app)
+- [x] Page « Accueil » des réglages : visuel, texte ou les deux. 8 visuels en pixel art à la couleur d'accent (fantôme couronné, Saturne, nuage, soucoupe, slime, diamant, lune, champignon) + Apple en ASCII, visuel et texte en petit / moyen / grand, informations aucune / essentiel / par catégorie
+- [x] Terminal trop petit (split) : la page prend une taille plus petite, puis se passe du visuel
+- [x] Réglages façon Monocode : rien n'apparaît ni ne disparaît (réglages sans effet estompés), visuels en vignettes, sélecteurs à pastille glissante, aperçu en fondu, menus qui s'ouvrent en fondu
+- [x] Position : gauche, centré, droite
+- [x] Option « aucune » : interrupteur, visuel et informations désactivables
+- [x] Aperçu en direct dans les réglages, rendu par fastfetch
 
 ## 7. Vue agents
 

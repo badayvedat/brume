@@ -1,12 +1,16 @@
 import AppKit
 import SwiftUI
 
-/// Le contenu d'un panneau de `PopupMenu`, aux mesures de Monocode.
+/// Le contenu d'un panneau de `PopupMenu`, aux mesures de Monocode. Il s'ouvre comme leurs
+/// popovers : un fondu, en grandissant depuis le coin du bouton.
 struct PopupMenuView: View {
     let entries: [MenuEntry]
     let model: MenuModel
     let width: CGFloat
+    let anchor: UnitPoint
     let onRow: (Int, Bool) -> Void
+
+    @State private var isShown = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -32,6 +36,10 @@ struct PopupMenuView: View {
         .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Ink.border) }
         .font(.system(size: 13))
         .environment(\.colorScheme, .dark)
+        .scaleEffect(isShown ? 1 : 0.94, anchor: anchor)
+        .offset(y: isShown ? 0 : -6)
+        .opacity(isShown ? 1 : 0)
+        .onAppear { withAnimation(Ink.open) { isShown = true } }
     }
 
     private func row(_ index: Int, _ action: MenuAction) -> some View {

@@ -13,6 +13,8 @@ enum Ink {
     static let hint = white(0.45)
     static let meta = white(0.4)
     static let disabled = white(0.3)
+    /// La seule couleur hors du blanc : une limite dépassée.
+    static let warning = Color(hex: "f87171")
 
     static let hover = white(0.05)
     static let selection = white(0.1)
@@ -25,6 +27,8 @@ enum Ink {
     /// La courbe des retours visuels de Monocode (survol, choix), et celle des ouvertures.
     static let feedback = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.12)
     static let open = Animation.timingCurve(0.16, 1, 0.3, 1, duration: 0.17)
+    /// Un choix qui passe d'un endroit à l'autre (pastille d'un sélecteur), et un contenu qui change.
+    static let slide = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.22)
 }
 
 extension Color {

@@ -41,3 +41,28 @@ pin_plugin() {
 }
 pin_plugin zsh-syntax-highlighting 0.8.0 db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e
 pin_plugin zsh-autosuggestions v0.7.1 e52ee8ca55bcc56a17c828767a3f98f22a68d4eb
+
+# fastfetch précompilé pour la page d'accueil des terminaux, vérifié par son empreinte.
+FASTFETCH_VERSION="2.69.0"
+if [ "$(uname -m)" = "arm64" ]; then
+    FASTFETCH_ARCH="aarch64"
+    FASTFETCH_SHA="3901a90b11f1823a00fea6f3c3c877e7f336465e9d9facc98fd6b8803e8fac7e"
+else
+    FASTFETCH_ARCH="amd64"
+    FASTFETCH_SHA="ec6ea2aed26df0561c9331526f1f4289f4285b11f7e3910c29f0b66766b635f1"
+fi
+if [ "$(cat Vendor/fastfetch/.version 2>/dev/null)" != "$FASTFETCH_VERSION-$FASTFETCH_ARCH" ]; then
+    rm -rf Vendor/fastfetch
+    mkdir -p Vendor/fastfetch
+    archive="Vendor/fastfetch/fastfetch.tar.gz"
+    curl -fsSL -o "$archive" "https://github.com/fastfetch-cli/fastfetch/releases/download/$FASTFETCH_VERSION/fastfetch-macos-$FASTFETCH_ARCH.tar.gz"
+    if [ "$(shasum -a 256 "$archive" | cut -d' ' -f1)" != "$FASTFETCH_SHA" ]; then
+        echo "fastfetch $FASTFETCH_VERSION : empreinte inattendue, arrêt." >&2
+        rm -rf Vendor/fastfetch
+        exit 1
+    fi
+    tar -xzf "$archive" -C Vendor/fastfetch --strip-components 1
+    rm "$archive"
+    echo "$FASTFETCH_VERSION-$FASTFETCH_ARCH" > Vendor/fastfetch/.version
+    echo "fastfetch $FASTFETCH_VERSION prêt."
+fi

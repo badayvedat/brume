@@ -9,16 +9,22 @@ final class SettingsStore {
         didSet {
             guard settings != oldValue else { return }
             L10n.language = settings.language
+            if (settings.welcome, settings.appearance.accent, settings.language) != (oldValue.welcome, oldValue.appearance.accent, oldValue.language) {
+                applyWelcome()
+            }
             scheduleSave()
         }
     }
 
     @ObservationIgnored private let file: SettingsFile
+    @ObservationIgnored private let welcomeFiles: WelcomeFiles
+    @ObservationIgnored private var welcomeConfigs: [URL] = []
     @ObservationIgnored private var pendingSave: DispatchWorkItem?
     @ObservationIgnored nonisolated(unsafe) private var terminateObserver: NSObjectProtocol?
 
     init(file: SettingsFile = .standard) {
         self.file = file
+        welcomeFiles = WelcomeFiles(directory: file.url.deletingLastPathComponent())
         var loaded = file.load()
         // Une police désinstallée depuis : le moteur se rabattrait sans le dire, la liste resterait vide.
         if let family = loaded.font.family, !TerminalFonts.featured.contains(family) {
@@ -26,6 +32,7 @@ final class SettingsStore {
         }
         settings = loaded
         L10n.language = loaded.language
+        applyWelcome()
         terminateObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -55,6 +62,32 @@ final class SettingsStore {
     var restoresSession: Bool {
         get { settings.restoresSession }
         set { settings.restoresSession = newValue }
+    }
+
+    var welcome: Welcome {
+        get { settings.welcome }
+        set { settings.welcome = newValue }
+    }
+
+    /// L'écran de démarrage tel que fastfetch le dessinera, aux tailles choisies, pour l'aperçu.
+    func welcomePreview() async -> [[AnsiSpan]] {
+        guard let config = welcomeConfigs.first, let output = await Fastfetch.output(config: config) else { return [] }
+        return AnsiText.lines(output)
+    }
+
+    /// Le shell de chaque nouveau terminal hérite de ces variables : le patch zsh y lit les versions
+    /// de l'écran de démarrage (`Patches/libghostty-spm-zsh-welcome.patch`).
+    private func applyWelcome() {
+        welcomeConfigs = (try? welcomeFiles.save(settings.welcome, accent: settings.appearance.accent, language: settings.language)) ?? []
+        guard !welcomeConfigs.isEmpty, let fastfetch = Fastfetch.executable else {
+            for name in ["BRUME_WELCOME_CONFIGS", "BRUME_WELCOME_ALIGN", "BRUME_FASTFETCH"] {
+                unsetenv(name)
+            }
+            return
+        }
+        setenv("BRUME_WELCOME_CONFIGS", welcomeConfigs.map(\.path).joined(separator: ":"), 1)
+        setenv("BRUME_WELCOME_ALIGN", settings.welcome.alignment.rawValue, 1)
+        setenv("BRUME_FASTFETCH", fastfetch.path, 1)
     }
 
     /// Un curseur qu'on glisse change la valeur à chaque image : on écrit une fois qu'il s'arrête.

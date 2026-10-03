@@ -22,6 +22,11 @@ struct TerminalScreen: View {
             guard workspace == nil else { return }
             TerminalWorkspace.prepareEngine(settings.settings)
             workspace = session.makeWorkspace()
+            // Pour vérifier une page des réglages sans piloter l'interface :
+            // `open Brume.app --args -BrumeSettings welcome`.
+            if let name = UserDefaults.standard.string(forKey: "BrumeSettings"), let section = SettingsSection(rawValue: name) {
+                workspace?.showSettings(section)
+            }
             for _ in 0 ..< session.takeWindowsToOpen() {
                 openWindow(id: BrumeApp.terminalWindowID)
             }

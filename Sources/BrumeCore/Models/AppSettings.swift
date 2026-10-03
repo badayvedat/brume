@@ -7,6 +7,7 @@ public struct AppSettings: Codable, Hashable, Sendable {
     public var language = Language.french
     /// Rouvrir au lancement les fenêtres et les onglets de la dernière fois.
     public var restoresSession = true
+    public var welcome = Welcome()
 
     public init() {}
 
@@ -18,6 +19,7 @@ public struct AppSettings: Codable, Hashable, Sendable {
         if let value = try? container.decode(TerminalFont.self, forKey: .font) { font = value }
         if let value = try? container.decode(Language.self, forKey: .language) { language = value }
         if let value = try? container.decode(Bool.self, forKey: .restoresSession) { restoresSession = value }
+        if let value = try? container.decode(Welcome.self, forKey: .welcome) { welcome = value }
     }
 
     public func encoded() throws -> Data {

@@ -43,6 +43,10 @@ for plugin in zsh-syntax-highlighting zsh-autosuggestions; do
         "Vendor/$plugin" "$APP_BUNDLE/Contents/Resources/zsh/"
 done
 
+# La page d'accueil des terminaux. Dans Contents/MacOS, où codesign accepte un exécutable de plus.
+cp Vendor/fastfetch/usr/bin/fastfetch "$APP_BUNDLE/Contents/MacOS/fastfetch"
+cp Vendor/fastfetch/usr/share/licenses/fastfetch/LICENSE "$APP_BUNDLE/Contents/Resources/fastfetch-LICENSE"
+
 # Déclarées par ATSApplicationFontsPath : macOS les charge pour l'app seule, le moteur les trouve.
 cp -R Resources/Fonts "$APP_BUNDLE/Contents/Resources/Fonts"
 
@@ -125,13 +129,15 @@ PLIST
 
 # Un certificat stable garde les permissions macOS (accès Documents, Bureau...) entre
 # deux builds. En ad-hoc, l'identité change à chaque build et macOS redemande tout.
+IDENTITY="-"
 if security find-identity -v -p codesigning 2>/dev/null | grep -q "\"$CERT_NAME\""; then
     echo "Signing with \"$CERT_NAME\"..."
-    codesign --force --deep -s "$CERT_NAME" "$APP_BUNDLE"
+    IDENTITY="$CERT_NAME"
 else
     echo "Certificat \"$CERT_NAME\" absent : signature ad-hoc. Lancer une fois : bash create-dev-cert.sh"
-    codesign --force --deep -s - "$APP_BUNDLE"
 fi
+codesign --force -s "$IDENTITY" "$APP_BUNDLE/Contents/MacOS/fastfetch"
+codesign --force --deep -s "$IDENTITY" "$APP_BUNDLE"
 
 INSTALLED="/Applications/$APP_NAME.app"
 pkill -x "$APP_NAME" 2>/dev/null || true

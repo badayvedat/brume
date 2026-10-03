@@ -28,16 +28,20 @@ struct Switch: View {
     }
 }
 
-/// Quelques choix côte à côte, celui retenu sur un fond blanc à 10 %.
+/// Quelques choix côte à côte, celui retenu sur un fond blanc à 10 % qui glisse d'un choix à l'autre.
 struct Segmented<Value: Hashable>: View {
     let label: String
     let options: [(value: Value, label: String)]
     @Binding var selection: Value
 
+    @Namespace private var pill
+
     var body: some View {
         HStack(spacing: 2) {
             ForEach(options, id: \.value) { option in
-                Segment(label: option.label, isSelected: selection == option.value) { selection = option.value }
+                Segment(label: option.label, isSelected: selection == option.value, pill: pill) {
+                    withAnimation(Ink.slide) { selection = option.value }
+                }
             }
         }
         .padding(2)
@@ -51,6 +55,7 @@ struct Segmented<Value: Hashable>: View {
 private struct Segment: View {
     let label: String
     let isSelected: Bool
+    let pill: Namespace.ID
     let action: () -> Void
 
     @State private var isHovered = false
@@ -62,11 +67,18 @@ private struct Segment: View {
                 .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
                 .padding(.horizontal, 10)
                 .frame(minWidth: 56, minHeight: 26)
-                .background(isSelected ? Ink.selection : .clear, in: .rect(cornerRadius: 5))
+                .background {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(Ink.selection)
+                            .matchedGeometryEffect(id: "pill", in: pill)
+                    }
+                }
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
+        .animation(Ink.feedback, value: isHovered)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
@@ -145,5 +157,31 @@ struct SecondaryButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == SecondaryButtonStyle {
     static var secondary: SecondaryButtonStyle {
         SecondaryButtonStyle()
+    }
+}
+
+/// Un champ de texte court, aux mesures de `Select`.
+struct Field: View {
+    let label: String
+    var placeholder: String?
+    @Binding var text: String
+    var limit = 40
+
+    @FocusState private var isFocused: Bool
+    @State private var isHovered = false
+
+    var body: some View {
+        TextField(placeholder ?? label, text: $text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 12))
+            .foregroundStyle(Ink.text)
+            .focused($isFocused)
+            .padding(.horizontal, 8)
+            .frame(width: 180, height: 28)
+            .background(Ink.hover, in: .rect(cornerRadius: 6))
+            .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(isFocused || isHovered ? Ink.white(0.2) : Ink.border) }
+            .onHover { isHovered = $0 }
+            .onChange(of: text) { if $1.count > limit { text = String($1.prefix(limit)) } }
+            .accessibilityLabel(label)
     }
 }
