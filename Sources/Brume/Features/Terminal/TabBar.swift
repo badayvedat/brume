@@ -75,6 +75,9 @@ struct TabBar: View {
                         openWindow(id: BrumeApp.terminalWindowID)
                     }
                 }
+                if let shown = workspace.layout.areas[area]?.selected, let state = workspace.states[shown] {
+                    MoreMenu(state: state)
+                }
             }
             .padding(.leading, 12)
         }
@@ -115,7 +118,7 @@ struct TabBar: View {
     }
 }
 
-private struct BarButton: View {
+struct BarButton: View {
     static let size: CGFloat = 26
 
     let icon: String

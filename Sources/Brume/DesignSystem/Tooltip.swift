@@ -44,6 +44,12 @@ private struct TooltipAnchor: NSViewRepresentable {
             let work = DispatchWorkItem { [weak self] in self?.show() }
             pending = work
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+            // Un clic sur le bouton ne passe pas par cette vue : on le guette dès l'entrée, sinon un
+            // clic rapide laisserait le délai courir et l'infobulle s'ouvrir sur le menu du bouton.
+            clickMonitor = clickMonitor ?? NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
+                self?.hide()
+                return event
+            }
         }
 
         override func mouseExited(with event: NSEvent) {
@@ -73,11 +79,6 @@ private struct TooltipAnchor: NSViewRepresentable {
             panel.setFrameOrigin(origin)
             window.addChildWindow(panel, ordered: .above)
             self.panel = panel
-            // Un clic sur le bouton ne passe pas par cette vue : on le guette pour fermer.
-            clickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-                self?.hide()
-                return event
-            }
         }
 
         private func hide() {

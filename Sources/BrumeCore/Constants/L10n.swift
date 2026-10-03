@@ -18,6 +18,7 @@ public enum TextKey: CaseIterable, Sendable {
     case equalizeSplits, moveTabLeft, moveTabRight, moveTabUp, moveTabDown
     case find, findPlaceholder, findNext, findPrevious, findSelection, closeFind
     case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
+    case moreOptions, showInFinder, openIn, copyPath, noFolderYet
 
     public func text(in language: Language) -> String {
         switch language {
@@ -73,6 +74,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .decreaseFontSize: "Réduire le texte"
         case .resetFontSize: "Taille réelle"
         case .resetAllSizes: "Réinitialiser les tailles"
+        case .moreOptions: "Plus d'options"
+        case .showInFinder: "Ouvrir dans le Finder"
+        case .openIn: "Ouvrir dans"
+        case .copyPath: "Copier le chemin"
+        case .noFolderYet: "Dossier du terminal inconnu"
         }
     }
 
@@ -123,6 +129,11 @@ public enum TextKey: CaseIterable, Sendable {
         case .decreaseFontSize: "Decrease Font Size"
         case .resetFontSize: "Reset Font Size"
         case .resetAllSizes: "Reset All Sizes"
+        case .moreOptions: "More Options"
+        case .showInFinder: "Show in Finder"
+        case .openIn: "Open in"
+        case .copyPath: "Copy Path"
+        case .noFolderYet: "Terminal folder unknown"
         }
     }
 }
