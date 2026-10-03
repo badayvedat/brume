@@ -17,14 +17,11 @@ struct BrumeApp: App {
     var body: some Scene {
         WindowGroup(id: Self.terminalWindowID) {
             TerminalScreen()
-                .background(WindowReader { WindowTabs.adopt($0) })
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 800, height: 500)
         .commands {
-            CommandGroup(after: .newItem) {
-                NewTabButton()
-            }
+            TabCommands()
             CloseCommands()
             SplitCommands()
             SearchCommands()

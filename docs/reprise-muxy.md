@@ -8,10 +8,12 @@ Muxy (MIT, https://github.com/muxy-app/muxy, commit `ab00859`) sert de référen
 |---|---|---|
 | 3. Base | `Muxy/Info.plist` (clés `NS*UsageDescription`) | macOS attribue à l'app les accès demandés par le shell |
 | 3. Base | `Views/Terminal/GhosttyTerminalNSView.swift` (`isAppShortcut`), `Views/MainWindow.swift` (`ShortcutInterceptingView`) | Intercepter les raccourcis de l'app avant le terminal |
-| 4. Réglages | `Services/Terminal/GhosttyTransparentSurfaceConfig.swift`, `AppTransparencyService.swift`, `Views/Components/Support/AppTransparencyBackground.swift`, `MaterialMask.swift` | Opacité et flou : surface à `background-opacity = 0`, flou macOS dessous, coupé si « Réduire la transparence » |
-| 4. Réglages | `Views/Settings/Shared/SettingsComponents.swift`, `BackgroundAppearanceSliders.swift` | Briques visuelles du panneau |
-| 6. Vue agents | `Views/Components/Support/ReparentingNSViewHost.swift` | Garder la vue terminal vivante quand SwiftUI la déplace |
-| 6. Vue agents | `Views/Components/Interaction/ResizeHandle.swift`, `Models/UI/SidebarMode.swift`, `Views/Components/Support/AppSidebarBackground.swift` | Sidebar redimensionnable et translucide |
+| 4. Interface | `Views/Workspace/TabStrip.swift`, `TopLevelTabGroupStrip.swift`, `Views/MainWindow.swift` (`IconButton`, barre du haut) | Barre d'onglets maison et boutons |
+| 4. Interface | `Views/Components/Buttons/OpenProjectControl.swift` | Bouton « Ouvrir avec » |
+| 5. Réglages | `Services/Terminal/GhosttyTransparentSurfaceConfig.swift`, `AppTransparencyService.swift`, `Views/Components/Support/AppTransparencyBackground.swift`, `MaterialMask.swift` | Opacité et flou : surface à `background-opacity = 0`, flou macOS dessous, coupé si « Réduire la transparence » |
+| 5. Réglages | `Views/Settings/Shared/SettingsComponents.swift`, `BackgroundAppearanceSliders.swift` | Briques visuelles du panneau |
+| 7. Vue agents | `Views/Components/Support/ReparentingNSViewHost.swift` | Garder la vue terminal vivante quand SwiftUI la déplace |
+| 7. Vue agents | `Views/Components/Interaction/ResizeHandle.swift`, `Models/UI/SidebarMode.swift`, `Views/Components/Support/AppSidebarBackground.swift` | Sidebar redimensionnable et translucide |
 | Plus tard | `Models/Workspace/SplitNode` (logique `areaFrames`, ratio 0,15 à 0,85) | Splits |
 
 ## Pièges

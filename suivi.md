@@ -7,7 +7,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - macOS uniquement : Swift + SwiftUI, moteur Ghostty via le paquet libghostty-spm (vue terminal fournie, suit Ghostty officiel).
 - Sans Xcode : `swift build` + script qui fabrique le .app, comme Orby. GhosttyKit téléchargé précompilé.
 - Repo neuf sur le compte GitHub perso, sans historique. Muxy (MIT) sert de référence : pièces utiles par étape dans [docs/reprise-muxy.md](docs/reprise-muxy.md).
-- Interface proche de Ghostty en vue terminal : pas de fonctions en trop.
+- Terminal proche de Ghostty, pas de fonctions en trop. Barre du haut à la Muxy : onglets maison et boutons. Au choix, les onglets listés à gauche (vue agents).
 - DA inspirée de Monocode (MIT) : flou, teinte réglable, image de fond fondue.
 
 ## 1. Mise en place
@@ -43,7 +43,18 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt
 - [x] Textes d'autorisation macOS (Documents, Bureau...) dans l'Info.plist
 
-## 4. Réglages en interface
+## 4. Interface façon Muxy
+
+- [x] Onglets gérés dans la fenêtre à la place des onglets natifs de macOS : une seule liste, que la barre du haut et la vue agents affichent
+- [ ] Choisir ce qu'on reprend d'autre de Muxy (disposition, précédent / suivant...)
+- [x] Barre d'onglets maison dans la barre de titre : onglets numérotés, soulignés de la couleur d'accent, croix, à la place des onglets natifs
+- [x] Bouton nouvel onglet dans la barre (en plus de Cmd+T)
+- [ ] Bouton nouvelle fenêtre dans la barre (en plus de Cmd+N)
+- [ ] Réordonner les onglets en les glissant
+- [ ] Boutons de split dans la barre : à droite, en dessous
+- [ ] Bouton « Ouvrir avec » : dossier du terminal actif dans le Finder, un éditeur...
+
+## 5. Réglages en interface
 
 - [ ] Panneau de réglages en sidebar
 - [ ] Opacité et flou
@@ -55,34 +66,33 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Changements appliqués en direct, sans redémarrer
 - [ ] Langue de l'interface (français / anglais) : `L10n.language` passe dans le store des réglages, et les menus en dur passent aux clés `TextKey`
 
-## 5. Page de démarrage
+## 6. Page de démarrage
 
 - [ ] Intégrer fastfetch
 - [ ] 3 ou 4 presets au choix dans les réglages
 - [ ] Position : gauche, centré, droite
 - [ ] Option « aucune »
 
-## 6. Vue agents
+## 7. Vue agents
 
-- [ ] Sidebar des sessions façon conversations
+- [ ] Sidebar des sessions façon conversations : les onglets de la fenêtre listés à gauche, au choix avec la barre du haut
 - [ ] Raccourci pour basculer vue agents / vue terminal
 - [ ] Créer, renommer, fermer une session depuis la sidebar
 
-## 7. DA Monocode
+## 8. DA Monocode
 
 - [ ] Couleurs et tokens de base
 - [ ] Effet verre sur la sidebar
 - [ ] Effet de fondu de l'image de fond
-- [ ] Boutons nouvel onglet et nouvelle fenêtre dans l'interface (en plus de Cmd+T et Cmd+N)
 
-## 8. Autocomplétion des commandes connues
+## 9. Autocomplétion des commandes connues
 
 - [ ] Intégration zsh qui transmet la ligne en cours au terminal
 - [ ] Suggestions via carapace (gh, git, docker...)
 - [ ] Popup natif au niveau du curseur
 - [ ] Validation au clavier (Tab, Entrée, Échap)
 
-## 9. Finitions
+## 10. Finitions
 
 - [ ] Icône définitive
 - [ ] App installable (.app / .dmg)

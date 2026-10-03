@@ -34,15 +34,18 @@ enum FontSizeChange {
     case increase, decrease, reset
 }
 
-/// Les terminaux d'une fenêtre (ou d'un onglet) et leur découpage.
+/// Les terminaux d'un onglet et leur découpage.
 @MainActor @Observable
-final class TerminalWorkspace {
+final class TerminalWorkspace: Identifiable {
+    let id = UUID()
     private(set) var tree: SplitTree<UUID>
     private(set) var focusedID: UUID
     private(set) var states: [UUID: TerminalViewState] = [:]
     private(set) var searches: [UUID: TerminalSearch] = [:]
-    @ObservationIgnored private weak var window: NSWindow?
-    @ObservationIgnored private var closeGuard: WindowCloseGuard?
+    @ObservationIgnored weak var window: NSWindow?
+    /// Le dernier volet fermé : l'onglet part avec lui.
+    @ObservationIgnored var onEmpty: () -> Void = {}
+    @ObservationIgnored private var isVisible = true
 
     static var needsConfirmQuit: Bool {
         sharedController.needsConfirmQuit
@@ -67,18 +70,15 @@ final class TerminalWorkspace {
         tree.panes.count > 1
     }
 
-    func attach(to window: NSWindow) {
-        guard self.window !== window else { return }
-        self.window = window
-        closeGuard = WindowCloseGuard(on: window) { [weak self] window in
-            guard let self, states.values.contains(where: { $0.surface?.needsConfirmQuit == true }) else {
-                return true
-            }
-            let isTab = (window.tabGroup?.windows.count ?? 1) > 1
-            // La croix d'un onglet en arrière-plan : sa feuille serait cachée.
-            if isTab { window.tabGroup?.selectedWindow = window }
-            (isTab ? CloseConfirmation.tab : .terminal).ask(in: window) { window.close() }
-            return false
+    var hasRunningProcess: Bool {
+        states.values.contains { $0.surface?.needsConfirmQuit == true }
+    }
+
+    /// Un onglet caché garde ses shells, mais ses terminaux arrêtent de dessiner.
+    func setVisible(_ visible: Bool) {
+        isVisible = visible
+        for state in states.values {
+            state.isSurfaceVisible = visible
         }
     }
 
@@ -134,11 +134,6 @@ final class TerminalWorkspace {
         focused.surface?.performBindingAction("close_surface")
     }
 
-    /// Comme le bouton rouge : passe par la confirmation de `WindowCloseGuard`.
-    func closeWindow() {
-        window?.performClose(nil)
-    }
-
     func changeFontSize(_ change: FontSizeChange) {
         let action = switch change {
         case .increase: "increase_font_size:1"
@@ -180,11 +175,7 @@ final class TerminalWorkspace {
     private func close(_ id: UUID) {
         let order = tree.panes
         guard let index = order.firstIndex(of: id) else { return }
-        // `close()` et pas `performClose` : la confirmation a déjà eu lieu.
-        guard let remaining = tree.removing(id) else {
-            window?.close()
-            return
-        }
+        guard let remaining = tree.removing(id) else { return onEmpty() }
         tree = remaining
         states[id] = nil
         searches[id] = nil
@@ -199,6 +190,7 @@ final class TerminalWorkspace {
         as context: TerminalSurfaceContext
     ) -> TerminalViewState {
         let state = TerminalViewState(controller: sharedController)
+        state.isSurfaceVisible = isVisible
         // Comme Ghostty : un nouveau terminal part du zoom et du dossier de celui qui avait le focus.
         if let inherited = parent?.surface?.inheritedOptions(for: context) {
             if inherited.fontSize > 0 { state.configuration.fontSize = inherited.fontSize }

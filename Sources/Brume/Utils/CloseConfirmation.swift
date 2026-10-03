@@ -4,7 +4,7 @@ import BrumeCore
 /// Alerte avant de tuer une commande en cours, reprise de Ghostty.
 @MainActor
 enum CloseConfirmation {
-    case terminal, tab, quit
+    case terminal, tab, window, quit
 
     /// En feuille, une seule à la fois comme Ghostty. Pas de `runModal` : sur macOS 27,
     /// l'alerte modale plante en dessinant un symbole système après le chargement du moteur.
@@ -24,6 +24,7 @@ enum CloseConfirmation {
         let (title, message): (TextKey, TextKey) = switch self {
         case .terminal: (.closeTerminalTitle, .closeTerminalMessage)
         case .tab: (.closeTabTitle, .closeTabMessage)
+        case .window: (.closeWindowTitle, .closeWindowMessage)
         case .quit: (.quitTitle, .quitMessage)
         }
         alert.messageText = L10n.text(title)

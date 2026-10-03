@@ -23,7 +23,8 @@ bash build-app.sh            # release
 - Les `.bundle` de ressources SwiftPM vont dans `Contents/Resources` : codesign refuse tout contenu à la racine de l'app, et c'est ce que le patch fait lire au paquet.
 - L'intégration shell du paquet est une réécriture qui ignore `sudo` et `path` de Ghostty : activer une option dans la config ne suffit pas, vérifier `shell-integration/zsh/ghostty-integration`. `ssh-*` y est ajouté par `Patches/`.
 - Un raccourci de l'app se déclare dans le menu (`App/*Commands.swift`) : le patch `menu-keys` lui donne la priorité sur ceux du moteur, dont le paquet ne transmet pas les actions. Pas de `keybind = ...=unbind`.
-- Une vue terminal recréée par SwiftUI tue son shell : garder son identité (volets à plat dans un `ForEach` par identifiant, jamais déplacés d'un conteneur à l'autre).
+- Une vue terminal recréée par SwiftUI tue son shell : garder son identité (volets à plat dans un `ForEach` par identifiant, jamais déplacés d'un conteneur à l'autre). Les onglets cachés restent montés, transparents, avec `isSurfaceVisible = false`.
+- Onglets maison, pas d'onglets natifs (`tabbingMode = .disallowed`). Comme Muxy, la fenêtre a `isMovable = false` sous sa barre d'onglets : seul `WindowDragArea` la déplace.
 - Tout code repris de Muxy (MIT) garde sa mention de copyright dans le dépôt.
 - Pas de `Image(systemName:)` : passer par `SystemSymbol` (`DesignSystem/`). Chargés après le moteur, des symboles sortent vides, au hasard du lancement.
 - Pas de `NSAlert.runModal()` : sur macOS 27, l'alerte modale plante en dessinant un symbole système. Toujours en feuille (`beginSheetModal`), comme `CloseConfirmation`.

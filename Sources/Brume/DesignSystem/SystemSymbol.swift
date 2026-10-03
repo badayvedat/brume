@@ -3,20 +3,37 @@ import SwiftUI
 
 /// Symboles système chargés au lancement, avant le moteur : demandés plus tard,
 /// certains sortent vides (taille nulle), différents à chaque lancement (macOS 27).
+/// Une image AppKit ignore `.font` : chaque taille utilisée est chargée ici.
 enum SystemSymbol {
-    private static let names = ["chevron.up", "chevron.down", "xmark"]
+    private struct Variant: Hashable {
+        let name: String
+        var size: CGFloat?
+        var weight: NSFont.Weight = .regular
+    }
 
-    private static let images: [String: NSImage] = Dictionary(uniqueKeysWithValues: names.compactMap { name in
-        NSImage(systemSymbolName: name, accessibilityDescription: nil).map { (name, $0) }
+    private static let variants = [
+        Variant(name: "chevron.up"),
+        Variant(name: "chevron.down"),
+        Variant(name: "xmark"),
+        Variant(name: "xmark", size: 9, weight: .bold),
+        Variant(name: "plus", size: 13, weight: .medium),
+    ]
+
+    private static let images: [Variant: NSImage] = Dictionary(uniqueKeysWithValues: variants.compactMap { variant in
+        var image = NSImage(systemSymbolName: variant.name, accessibilityDescription: nil)
+        if let size = variant.size {
+            image = image?.withSymbolConfiguration(.init(pointSize: size, weight: variant.weight))
+        }
+        return image.map { (variant, $0) }
     })
 
     static func preload() {
         _ = images
     }
 
-    static func image(_ name: String) -> Image {
-        guard let image = images[name] else {
-            assertionFailure("Symbole \(name) absent de SystemSymbol.names")
+    static func image(_ name: String, size: CGFloat? = nil, weight: NSFont.Weight = .regular) -> Image {
+        guard let image = images[Variant(name: name, size: size, weight: weight)] else {
+            assertionFailure("Symbole \(name) absent de SystemSymbol.variants")
             return Image(systemName: name)
         }
         return Image(nsImage: image).renderingMode(.template)
