@@ -58,6 +58,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Zones façon Muxy : chaque split a sa barre d'onglets, un onglet = un terminal, numéros sur toute la fenêtre
 - [x] Glisser un onglet : au centre d'une zone il la rejoint, près d'un bord il ouvre une zone de ce côté
 - [x] Séparateur des zones en couleur d'accent au survol
+- [x] Déplacer l'onglet vers la zone voisine au clavier (Ctrl+Cmd+flèche), ou ouvrir une zone de ce côté
 - [ ] Bouton « Ouvrir avec » : dossier du terminal actif dans le Finder, un éditeur...
 
 ## 5. Réglages en interface
@@ -70,7 +71,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Sélection lisible : le thème par défaut met un fond quasi noir (#303030) qui masque le texte sélectionné
 - [ ] Image de fond (choix, opacité)
 - [ ] Changements appliqués en direct, sans redémarrer
-- [ ] Langue de l'interface (français / anglais) : `L10n.language` passe dans le store des réglages, et les menus en dur passent aux clés `TextKey`
+- [ ] Langue de l'interface (français / anglais) : `L10n.language` passe dans le store des réglages (tous les textes sont déjà en `TextKey`)
 
 ## 6. Page de démarrage
 

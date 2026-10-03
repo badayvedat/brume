@@ -13,20 +13,30 @@ struct SplitCommands: Commands {
                 .keyboardShortcut("d", modifiers: [.command, .shift])
         }
         CommandGroup(before: .windowArrangement) {
-            Button("Split précédent") { workspace?.focusPrevious() }
+            Button(L10n.text(.focusPreviousSplit)) { workspace?.focusPrevious() }
                 .keyboardShortcut("[")
-            Button("Split suivant") { workspace?.focusNext() }
+            Button(L10n.text(.focusNextSplit)) { workspace?.focusNext() }
                 .keyboardShortcut("]")
-            Button("Split à gauche") { workspace?.focus(toward: .left) }
+            Button(L10n.text(.focusSplitLeft)) { workspace?.focus(toward: .left) }
                 .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
-            Button("Split à droite") { workspace?.focus(toward: .right) }
+            Button(L10n.text(.focusSplitRight)) { workspace?.focus(toward: .right) }
                 .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
-            Button("Split au-dessus") { workspace?.focus(toward: .up) }
+            Button(L10n.text(.focusSplitUp)) { workspace?.focus(toward: .up) }
                 .keyboardShortcut(.upArrow, modifiers: [.command, .option])
-            Button("Split en dessous") { workspace?.focus(toward: .down) }
+            Button(L10n.text(.focusSplitDown)) { workspace?.focus(toward: .down) }
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
-            Button("Égaliser les splits") { workspace?.equalizeSplits() }
+            Button(L10n.text(.equalizeSplits)) { workspace?.equalizeSplits() }
                 .keyboardShortcut("=", modifiers: [.command, .control])
+            Divider()
+            // Vers la zone voisine, ou une zone neuve de ce côté s'il n'y en a pas.
+            Button(L10n.text(.moveTabLeft)) { workspace?.moveFocusedTab(toward: .left) }
+                .keyboardShortcut(.leftArrow, modifiers: [.command, .control])
+            Button(L10n.text(.moveTabRight)) { workspace?.moveFocusedTab(toward: .right) }
+                .keyboardShortcut(.rightArrow, modifiers: [.command, .control])
+            Button(L10n.text(.moveTabUp)) { workspace?.moveFocusedTab(toward: .up) }
+                .keyboardShortcut(.upArrow, modifiers: [.command, .control])
+            Button(L10n.text(.moveTabDown)) { workspace?.moveFocusedTab(toward: .down) }
+                .keyboardShortcut(.downArrow, modifiers: [.command, .control])
             Divider()
         }
     }

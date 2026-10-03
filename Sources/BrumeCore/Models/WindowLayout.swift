@@ -150,6 +150,16 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
         return source != target || (areas[source]?.tabs.count ?? 0) > 1
     }
 
+    /// Au clavier : l'onglet actif rejoint la zone voisine de ce côté, ou y ouvre une zone neuve
+    /// (`newArea`) s'il n'y en a pas.
+    public func movingFocusedTab(toward direction: SplitDirection, newArea: Area) -> WindowLayout {
+        let tab = focusedTab
+        if let neighbor = tree.neighbor(of: focusedArea, toward: direction) {
+            return moving(tab, into: neighbor)
+        }
+        return moving(tab, beside: focusedArea, toward: direction, area: newArea)
+    }
+
     /// Où irait `tab` lâché en `point`, la fenêtre occupant `bounds`, chaque zone coiffée de sa barre.
     /// Nil : rien à proposer à cet endroit.
     public func drop(of tab: Tab, at point: CGPoint, in bounds: CGRect, barHeight: CGFloat) -> Drop? {

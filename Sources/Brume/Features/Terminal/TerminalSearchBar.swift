@@ -12,7 +12,7 @@ struct TerminalSearchBar: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            TextField("Rechercher", text: $search.needle)
+            TextField(L10n.text(.findPlaceholder), text: $search.needle)
                 .textFieldStyle(.plain)
                 .frame(width: 180)
                 .padding(.leading, 8)
@@ -41,9 +41,9 @@ struct TerminalSearchBar: View {
                     search.needle.isEmpty ? onClose() : onLeave()
                 }
 
-            SearchButton(icon: "chevron.up", label: "Résultat suivant", action: search.next)
-            SearchButton(icon: "chevron.down", label: "Résultat précédent", action: search.previous)
-            SearchButton(icon: "xmark", label: "Fermer la recherche", action: onClose)
+            SearchButton(icon: "chevron.up", label: L10n.text(.findNext), action: search.next)
+            SearchButton(icon: "chevron.down", label: L10n.text(.findPrevious), action: search.previous)
+            SearchButton(icon: "xmark", label: L10n.text(.closeFind), action: onClose)
         }
         .padding(8)
         .background(.background, in: .rect(cornerRadius: 8))

@@ -1,3 +1,4 @@
+import BrumeCore
 import SwiftUI
 
 struct SearchCommands: Commands {
@@ -6,15 +7,15 @@ struct SearchCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .textEditing) {
             Divider()
-            Button("Rechercher…") { workspace?.toggleSearch() }
+            Button(L10n.text(.find)) { workspace?.toggleSearch() }
                 .keyboardShortcut("f")
-            Button("Résultat suivant") { workspace?.focusedSearch?.next() }
+            Button(L10n.text(.findNext)) { workspace?.focusedSearch?.next() }
                 .keyboardShortcut("g")
                 .disabled(workspace?.focusedSearch == nil)
-            Button("Résultat précédent") { workspace?.focusedSearch?.previous() }
+            Button(L10n.text(.findPrevious)) { workspace?.focusedSearch?.previous() }
                 .keyboardShortcut("g", modifiers: [.command, .shift])
                 .disabled(workspace?.focusedSearch == nil)
-            Button("Rechercher la sélection") { workspace?.searchSelection() }
+            Button(L10n.text(.findSelection)) { workspace?.searchSelection() }
                 .keyboardShortcut("e")
         }
     }

@@ -193,6 +193,12 @@ final class TerminalWorkspace {
         layout.tree.neighbor(of: layout.focusedArea, toward: direction).map(focusArea)
     }
 
+    func moveFocusedTab(toward direction: SplitDirection) {
+        let id = focusedID
+        apply(layout.movingFocusedTab(toward: direction, newArea: UUID()))
+        focus(id)
+    }
+
     private func focusArea(_ area: UUID) {
         apply(layout.focusing(area))
         focus(focusedID)

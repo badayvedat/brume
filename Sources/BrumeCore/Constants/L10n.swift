@@ -14,6 +14,10 @@ public enum TextKey: CaseIterable, Sendable {
     case newTab, closeTab, previousTab, nextTab, tab, lastTab, terminal
     case renameTab, resetTabName
     case splitRight, splitDown, newWindow
+    case focusPreviousSplit, focusNextSplit, focusSplitLeft, focusSplitRight, focusSplitUp, focusSplitDown
+    case equalizeSplits, moveTabLeft, moveTabRight, moveTabUp, moveTabDown
+    case find, findPlaceholder, findNext, findPrevious, findSelection, closeFind
+    case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
 
     public func text(in language: Language) -> String {
         switch language {
@@ -48,6 +52,27 @@ public enum TextKey: CaseIterable, Sendable {
         case .splitRight: "Diviser à droite"
         case .splitDown: "Diviser en dessous"
         case .newWindow: "Nouvelle fenêtre"
+        case .focusPreviousSplit: "Split précédent"
+        case .focusNextSplit: "Split suivant"
+        case .focusSplitLeft: "Split à gauche"
+        case .focusSplitRight: "Split à droite"
+        case .focusSplitUp: "Split au-dessus"
+        case .focusSplitDown: "Split en dessous"
+        case .equalizeSplits: "Égaliser les splits"
+        case .moveTabLeft: "Déplacer l'onglet à gauche"
+        case .moveTabRight: "Déplacer l'onglet à droite"
+        case .moveTabUp: "Déplacer l'onglet vers le haut"
+        case .moveTabDown: "Déplacer l'onglet vers le bas"
+        case .find: "Rechercher…"
+        case .findPlaceholder: "Rechercher"
+        case .findNext: "Résultat suivant"
+        case .findPrevious: "Résultat précédent"
+        case .findSelection: "Rechercher la sélection"
+        case .closeFind: "Fermer la recherche"
+        case .increaseFontSize: "Agrandir le texte"
+        case .decreaseFontSize: "Réduire le texte"
+        case .resetFontSize: "Taille réelle"
+        case .resetAllSizes: "Réinitialiser les tailles"
         }
     }
 
@@ -77,6 +102,27 @@ public enum TextKey: CaseIterable, Sendable {
         case .splitRight: "Split Right"
         case .splitDown: "Split Down"
         case .newWindow: "New Window"
+        case .focusPreviousSplit: "Select Previous Split"
+        case .focusNextSplit: "Select Next Split"
+        case .focusSplitLeft: "Select Split Left"
+        case .focusSplitRight: "Select Split Right"
+        case .focusSplitUp: "Select Split Above"
+        case .focusSplitDown: "Select Split Below"
+        case .equalizeSplits: "Equalize Splits"
+        case .moveTabLeft: "Move Tab Left"
+        case .moveTabRight: "Move Tab Right"
+        case .moveTabUp: "Move Tab Up"
+        case .moveTabDown: "Move Tab Down"
+        case .find: "Find…"
+        case .findPlaceholder: "Find"
+        case .findNext: "Find Next"
+        case .findPrevious: "Find Previous"
+        case .findSelection: "Use Selection for Find"
+        case .closeFind: "Close Find Bar"
+        case .increaseFontSize: "Increase Font Size"
+        case .decreaseFontSize: "Decrease Font Size"
+        case .resetFontSize: "Reset Font Size"
+        case .resetAllSizes: "Reset All Sizes"
         }
     }
 }

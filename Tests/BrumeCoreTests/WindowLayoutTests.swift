@@ -110,4 +110,20 @@ struct WindowLayoutTests {
         #expect(layout.tree.panes == ["A", "B", "C"])
         #expect(layout.areas["C"]?.tabs == [1])
     }
+
+    @Test func movingTowardANeighbourJoinsIt() {
+        let layout = twoAreas.selecting(1).movingFocusedTab(toward: .right, newArea: "C")
+        #expect(layout.areas["B"]?.tabs == [3, 1])
+        #expect(layout.focusedTab == 1)
+    }
+
+    @Test func movingTowardNothingOpensAnArea() {
+        let layout = twoAreas.selecting(1).movingFocusedTab(toward: .down, newArea: "C")
+        #expect(layout.areas["C"]?.tabs == [1])
+        #expect(layout.tree.panes == ["A", "C", "B"])
+    }
+
+    @Test func aLoneTabWithNoNeighbourStays() {
+        #expect(twoAreas.movingFocusedTab(toward: .right, newArea: "C") == twoAreas)
+    }
 }
