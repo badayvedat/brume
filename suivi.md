@@ -47,7 +47,6 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 ## 4. Interface façon Muxy
 
 - [x] Onglets gérés dans la fenêtre à la place des onglets natifs de macOS : une seule liste, que la barre du haut et la barre latérale affichent
-- [ ] Choisir ce qu'on reprend d'autre de Muxy (disposition, précédent / suivant...)
 - [x] Barre d'onglets maison dans la barre de titre : onglets arrondis, croix, à la place des onglets natifs
 - [x] Bouton nouvel onglet dans la barre (en plus de Cmd+T)
 - [x] Bouton nouvelle fenêtre dans la barre (en plus de Cmd+N)
@@ -112,10 +111,6 @@ Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés da
 ## 9. Autocomplétion des commandes connues
 
 - [x] Menu de complétion de zsh (Tab, flèches, ⇧Tab, Échap), complétions de Homebrew, réglages pour couper les suggestions de l'historique et l'autocomplétion
-- [ ] Intégration zsh qui transmet la ligne en cours au terminal
-- [ ] Suggestions via carapace (gh, git, docker...)
-- [ ] Popup natif au niveau du curseur
-- [ ] Validation au clavier (Tab, Entrée, Échap)
 
 ## 10. Finitions
 
