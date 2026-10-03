@@ -61,6 +61,8 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Déplacer l'onglet vers la zone voisine au clavier (Ctrl+Cmd+flèche), ou ouvrir une zone de ce côté
 - [x] Icône terminal dans l'onglet, remplacée par le numéro tant que Cmd est tenu
 - [x] Menu « ... » : ouvrir le dossier du terminal dans le Finder ou un éditeur détecté (icône de l'app), copier le chemin. Les réglages y entreront avec le chapitre 5
+- [x] Clic droit sur un onglet : fermer les autres, fermer ceux de droite, couleur (6 au choix)
+- [x] Restaurer au relancement les fenêtres, zones, onglets, dossiers, noms et couleurs
 
 ## 5. Réglages en interface
 
@@ -86,6 +88,10 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Sidebar des sessions façon conversations : les onglets de la fenêtre listés à gauche, au choix avec la barre du haut
 - [ ] Raccourci pour basculer vue agents / vue terminal
 - [ ] Créer, renommer, fermer une session depuis la sidebar
+- Idées à trancher le moment venu (vues chez Muxy) :
+  - Pastille sur l'onglet quand une commande finit ou attend une réponse, dans un onglet caché
+  - Barre de progression dans l'onglet (séquence OSC 9;4 envoyée par Claude Code, certains installeurs)
+  - Agrandir la zone active à toute la fenêtre le temps de lire, puis revenir (`toggle_split_zoom` de Ghostty)
 
 ## 8. DA Monocode
 

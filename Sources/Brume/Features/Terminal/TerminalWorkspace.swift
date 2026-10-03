@@ -43,6 +43,7 @@ final class TerminalWorkspace {
     private(set) var searches: [UUID: TerminalSearch] = [:]
     /// Le nom choisi d'un onglet ; sans, il affiche le titre de son terminal.
     private(set) var customTitles: [UUID: String] = [:]
+    private(set) var colors: [UUID: TabColor] = [:]
     private(set) var renamingID: UUID?
     private(set) var drop: WindowLayout<UUID, UUID>.Drop?
     /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalScreen`.
@@ -50,15 +51,40 @@ final class TerminalWorkspace {
     @ObservationIgnored var barHeight: CGFloat = 32
     @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
+    /// La place de la fenêtre restaurée, posée quand elle s'ouvre.
+    @ObservationIgnored private var savedFrame: CGRect?
 
     static var needsConfirmQuit: Bool {
         sharedController.needsConfirmQuit
     }
 
-    init() {
-        let id = UUID()
-        layout = WindowLayout(area: UUID(), tab: id)
-        states[id] = makeState(id, inheriting: lastFocused, as: .window)
+    /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.
+    init(restoring saved: SavedWindow? = nil) {
+        guard let saved, !saved.layout.tabs.isEmpty else {
+            let id = UUID()
+            layout = WindowLayout(area: UUID(), tab: id)
+            states[id] = makeState(id, inheriting: lastFocused, as: .window)
+            return
+        }
+        layout = saved.layout
+        savedFrame = saved.frame
+        for id in saved.layout.tabs {
+            let tab = saved.tabs[id]
+            let state = makeState(id, inheriting: nil, as: .window)
+            state.configuration.workingDirectory = tab?.workingDirectory
+            state.isSurfaceVisible = saved.layout.isShown(id)
+            states[id] = state
+            customTitles[id] = tab?.customTitle
+            colors[id] = tab?.color
+        }
+    }
+
+    /// Ce que la fenêtre retrouvera au prochain lancement.
+    var snapshot: SavedWindow {
+        let tabs = Dictionary(uniqueKeysWithValues: layout.tabs.map { id in
+            (id, SavedTab(workingDirectory: states[id]?.workingDirectory, customTitle: customTitles[id], color: colors[id]))
+        })
+        return SavedWindow(layout: layout, tabs: tabs, frame: window?.frame)
     }
 
     var focusedID: UUID {
@@ -81,6 +107,10 @@ final class TerminalWorkspace {
         guard self.window !== window else { return }
         self.window = window
         window.tabbingMode = .disallowed
+        if let savedFrame {
+            window.setFrame(savedFrame, display: true)
+            self.savedFrame = nil
+        }
         closeGuard = WindowCloseGuard(on: window) { [weak self] window in
             guard let self, states.values.contains(where: Self.isRunning) else { return true }
             (states.count > 1 ? CloseConfirmation.window : .terminal).ask(in: window) { window.close() }
@@ -129,6 +159,22 @@ final class TerminalWorkspace {
         // Sa feuille parle de cet onglet : on l'affiche avant de demander.
         select(id)
         CloseConfirmation.tab.ask(in: window) { [weak self] in self?.remove(id) }
+    }
+
+    func closeOthers(of id: UUID) {
+        close(layout.tabs(besides: id))
+    }
+
+    func closeRight(of id: UUID) {
+        close(layout.tabs(rightOf: id))
+    }
+
+    func color(of id: UUID) -> TabColor? {
+        colors[id]
+    }
+
+    func setColor(_ color: TabColor?, of id: UUID) {
+        colors[id] = color
     }
 
     func title(of id: UUID) -> String? {
@@ -268,6 +314,12 @@ final class TerminalWorkspace {
 
     // MARK: Interne
 
+    private func close(_ ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+        guard ids.contains(where: { states[$0].map(Self.isRunning) ?? false }) else { return ids.forEach(remove) }
+        CloseConfirmation.tabs.ask(in: window) { [weak self] in ids.forEach { self?.remove($0) } }
+    }
+
     private static func isRunning(_ state: TerminalViewState) -> Bool {
         state.surface?.needsConfirmQuit == true
     }
@@ -291,6 +343,7 @@ final class TerminalWorkspace {
         states[id] = nil
         searches[id] = nil
         customTitles[id] = nil
+        colors[id] = nil
         apply(remaining)
     }
 

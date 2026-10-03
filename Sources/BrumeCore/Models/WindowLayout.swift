@@ -184,6 +184,18 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
         }
     }
 
+    /// Les autres onglets de sa zone, pour « Fermer les autres onglets ».
+    public func tabs(besides tab: Tab) -> [Tab] {
+        guard let area = area(of: tab) else { return [] }
+        return areas[area]?.tabs.filter { $0 != tab } ?? []
+    }
+
+    /// Ceux qui le suivent dans sa barre, pour « Fermer les onglets à droite ».
+    public func tabs(rightOf tab: Tab) -> [Tab] {
+        guard let area = area(of: tab), let tabs = areas[area]?.tabs, let index = tabs.firstIndex(of: tab) else { return [] }
+        return Array(tabs[(index + 1)...])
+    }
+
     public func settingRatio(_ ratio: CGFloat, at path: [Int]) -> WindowLayout {
         var layout = self
         layout.tree = tree.settingRatio(ratio, at: path)
@@ -196,3 +208,5 @@ public struct WindowLayout<Area: Hashable & Sendable, Tab: Hashable & Sendable>:
         return layout
     }
 }
+
+extension WindowLayout: Codable where Area: Codable, Tab: Codable {}

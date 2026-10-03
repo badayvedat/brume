@@ -69,7 +69,7 @@ struct TabCell: View {
             ZStack(alignment: .bottom) {
                 background
                 if isFocused {
-                    Color.accentColor.frame(height: 2)
+                    (workspace.color(of: id)?.color ?? .accentColor).frame(height: 2)
                 }
             }
             .clipShape(.rect(cornerRadius: 8))
@@ -88,8 +88,23 @@ struct TabCell: View {
             if workspace.title(of: id) != nil {
                 Button(L10n.text(.resetTabName)) { workspace.resetTitle(id) }
             }
+            Menu(L10n.text(.tabColor)) {
+                ForEach(TabColor.allCases, id: \.self) { color in
+                    Button { workspace.setColor(color, of: id) } label: {
+                        Label { Text(color.name) } icon: { Image(nsImage: color.swatch) }
+                    }
+                }
+                if workspace.color(of: id) != nil {
+                    Divider()
+                    Button(L10n.text(.noColor)) { workspace.setColor(nil, of: id) }
+                }
+            }
             Divider()
             Button(L10n.text(.closeTab), action: close)
+            Button(L10n.text(.closeOtherTabs)) { workspace.closeOthers(of: id) }
+                .disabled(workspace.layout.tabs(besides: id).isEmpty)
+            Button(L10n.text(.closeTabsToTheRight)) { workspace.closeRight(of: id) }
+                .disabled(workspace.layout.tabs(rightOf: id).isEmpty)
         }
         .accessibilityAction(.default) { workspace.focus(id) }
         .accessibilityAction(named: L10n.text(.renameTab), startRenaming)
@@ -142,7 +157,11 @@ struct TabCell: View {
         workspace.close(id)
     }
 
+    /// Une couleur choisie teinte tout l'onglet, plus fort quand il est affiché.
     private var background: Color {
+        if let color = workspace.color(of: id)?.color {
+            return color.opacity(isSelected ? 0.28 : isHovered ? 0.18 : 0.12)
+        }
         if isSelected { return .primary.opacity(0.12) }
         return isHovered ? .primary.opacity(0.06) : .clear
     }

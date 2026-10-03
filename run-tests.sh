@@ -7,4 +7,7 @@ cd "$(dirname "$0")"
 FW="/Library/Developer/CommandLineTools/Library/Developer/Frameworks"
 
 bash setup.sh
-exec swift test -Xswiftc -F -Xswiftc "$FW" -Xlinker -rpath -Xlinker "$FW" "$@"
+# Elles livrent aussi _Testing_Foundation sans son module Swift : importer Foundation dans un
+# test casserait la compilation. Le pont n'apporte rien ici, on le coupe.
+exec swift test -Xswiftc -F -Xswiftc "$FW" -Xswiftc -Xfrontend -Xswiftc -disable-cross-import-overlays \
+    -Xlinker -rpath -Xlinker "$FW" "$@"

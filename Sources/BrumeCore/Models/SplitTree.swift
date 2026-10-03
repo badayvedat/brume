@@ -1,6 +1,6 @@
 import CoreGraphics
 
-public enum SplitAxis: Sendable {
+public enum SplitAxis: Codable, Sendable {
     /// Côte à côte.
     case horizontal
     /// L'un sous l'autre.
@@ -199,3 +199,5 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         }
     }
 }
+
+extension SplitTree: Codable where Pane: Codable {}

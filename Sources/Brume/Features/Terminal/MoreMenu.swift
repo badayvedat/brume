@@ -31,7 +31,9 @@ struct MoreMenu: View {
                 Text(L10n.text(.noFolderYet))
             }
         } label: {
+            // Pas de symbole vertical dans macOS : l'horizontal, tourné.
             SystemSymbol.image("ellipsis", size: 13, weight: .medium)
+                .rotationEffect(.degrees(90))
                 .foregroundStyle(isHovered ? .primary : .secondary)
                 .frame(width: BarButton.size, height: BarButton.size)
                 .background(isHovered ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 7))

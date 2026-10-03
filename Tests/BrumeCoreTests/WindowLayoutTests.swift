@@ -126,4 +126,12 @@ struct WindowLayoutTests {
     @Test func aLoneTabWithNoNeighbourStays() {
         #expect(twoAreas.movingFocusedTab(toward: .right, newArea: "C") == twoAreas)
     }
+
+    @Test func tabsBesidesAndRightOfStayInTheArea() {
+        let layout = twoAreas.addingTab(4).selecting(1).addingTab(5)
+        #expect(layout.areas["A"]?.tabs == [1, 5, 2])
+        #expect(layout.tabs(besides: 5) == [1, 2])
+        #expect(layout.tabs(rightOf: 1) == [5, 2])
+        #expect(layout.tabs(rightOf: 2).isEmpty)
+    }
 }

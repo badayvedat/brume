@@ -19,6 +19,8 @@ public enum TextKey: CaseIterable, Sendable {
     case find, findPlaceholder, findNext, findPrevious, findSelection, closeFind
     case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
+    case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
+    case tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
 
     public func text(in language: Language) -> String {
         switch language {
@@ -79,6 +81,18 @@ public enum TextKey: CaseIterable, Sendable {
         case .openIn: "Ouvrir dans"
         case .copyPath: "Copier le chemin"
         case .noFolderYet: "Dossier du terminal inconnu"
+        case .closeTabsTitle: "Fermer les onglets ?"
+        case .closeTabsMessage: "Une commande tourne encore dans un de ces onglets. Les fermer l'arrêtera."
+        case .closeOtherTabs: "Fermer les autres onglets"
+        case .closeTabsToTheRight: "Fermer les onglets à droite"
+        case .tabColor: "Couleur"
+        case .noColor: "Sans couleur"
+        case .colorRed: "Rouge"
+        case .colorOrange: "Orange"
+        case .colorYellow: "Jaune"
+        case .colorGreen: "Vert"
+        case .colorBlue: "Bleu"
+        case .colorPurple: "Violet"
         }
     }
 
@@ -134,6 +148,18 @@ public enum TextKey: CaseIterable, Sendable {
         case .openIn: "Open in"
         case .copyPath: "Copy Path"
         case .noFolderYet: "Terminal folder unknown"
+        case .closeTabsTitle: "Close Tabs?"
+        case .closeTabsMessage: "A terminal still has a running process. If you close these tabs the process will be killed."
+        case .closeOtherTabs: "Close Other Tabs"
+        case .closeTabsToTheRight: "Close Tabs to the Right"
+        case .tabColor: "Color"
+        case .noColor: "No Color"
+        case .colorRed: "Red"
+        case .colorOrange: "Orange"
+        case .colorYellow: "Yellow"
+        case .colorGreen: "Green"
+        case .colorBlue: "Blue"
+        case .colorPurple: "Purple"
         }
     }
 }

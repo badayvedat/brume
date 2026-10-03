@@ -60,3 +60,5 @@ public struct TabList<Tab: Hashable & Sendable>: Hashable, Sendable {
         return list
     }
 }
+
+extension TabList: Codable where Tab: Codable {}
