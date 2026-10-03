@@ -8,6 +8,8 @@ struct WordPreview: View {
     let size: WelcomeSize
     let accent: Accent
     let background: String
+    /// En verre, pas de fond : la fenêtre floutée passe dessous, comme sous les terminaux.
+    let isGlass: Bool
 
     var body: some View {
         let pixels = PixelFont.banner(text, scale: size.textScale)
@@ -34,7 +36,7 @@ struct WordPreview: View {
                     .foregroundStyle(Ink.disabled)
             }
         }
-        .background(Color(hex: background), in: .rect(cornerRadius: 8))
+        .background(isGlass ? .clear : Color(hex: background), in: .rect(cornerRadius: 8))
         .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Ink.border) }
         .animation(Ink.slide, value: size)
         .accessibilityHidden(true)

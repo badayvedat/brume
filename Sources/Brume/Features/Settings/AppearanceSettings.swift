@@ -63,8 +63,12 @@ struct AppearanceSettings: View {
                 } below: {
                     // Un simple fondu : en glissant, l'aperçu passerait par-dessus le texte de la ligne.
                     if showsPreview {
-                        CommandColorsPreview(colors: TerminalThemes.colors(for: settings.appearance), font: settings.font)
-                            .transition(.opacity)
+                        CommandColorsPreview(
+                            colors: TerminalThemes.colors(for: settings.appearance),
+                            font: settings.font,
+                            isGlass: settings.appearance.isGlass
+                        )
+                        .transition(.opacity)
                     }
                 }
                 SettingsRow(title: L10n.text(.fontSize), hint: L10n.text(.fontSizeHint), isLast: true) {

@@ -7,6 +7,8 @@ import SwiftUI
 struct CommandColorsPreview: View {
     let colors: ThemeColors
     let font: TerminalFont
+    /// En verre, pas de fond : la fenêtre floutée passe dessous, comme sous les terminaux.
+    let isGlass: Bool
 
     var body: some View {
         let p = colors.palette
@@ -19,7 +21,7 @@ struct CommandColorsPreview: View {
         .font(.custom(font.family ?? TerminalFont.defaultFamily, size: 12))
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(hex: colors.background), in: .rect(cornerRadius: 8))
+        .background(isGlass ? .clear : Color(hex: colors.background), in: .rect(cornerRadius: 8))
         .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(Ink.border) }
         .animation(Ink.feedback, value: colors)
         .accessibilityHidden(true)

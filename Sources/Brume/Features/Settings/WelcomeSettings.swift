@@ -141,7 +141,8 @@ struct WelcomeSettings: View {
                 placeholder: L10n.text(.welcomeTextPlaceholder),
                 size: settings.welcome.size,
                 accent: settings.appearance.accent,
-                background: TerminalThemes.colors(for: settings.appearance).background
+                background: TerminalThemes.colors(for: settings.appearance).background,
+                isGlass: settings.appearance.isGlass
             )
             .frame(minHeight: 96, maxHeight: .infinity)
             .padding(16)
