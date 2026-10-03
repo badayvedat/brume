@@ -51,6 +51,37 @@ fi
 mkdir -p "$APP_BUNDLE/Contents/Resources/fr.lproj"
 touch "$APP_BUNDLE/Contents/Resources/fr.lproj/InfoPlist.strings"
 
+# Ce que macOS affiche quand un programme lancé dans le terminal demande un accès : sans texte,
+# certaines demandes sont refusées d'office. Lu par macOS, pas par l'app : hors de TextKey.
+PERMISSIONS=(
+    "NSDesktopFolderUsageDescription|Un programme lancé dans Brume voudrait accéder au dossier Bureau.|A program running within Brume would like to access your Desktop folder."
+    "NSDocumentsFolderUsageDescription|Un programme lancé dans Brume voudrait accéder au dossier Documents.|A program running within Brume would like to access your Documents folder."
+    "NSDownloadsFolderUsageDescription|Un programme lancé dans Brume voudrait accéder au dossier Téléchargements.|A program running within Brume would like to access your Downloads folder."
+    "NSRemovableVolumesUsageDescription|Un programme lancé dans Brume voudrait accéder aux disques amovibles.|A program running within Brume would like to access removable volumes."
+    "NSNetworkVolumesUsageDescription|Un programme lancé dans Brume voudrait accéder aux volumes réseau.|A program running within Brume would like to access network volumes."
+    "NSAppleEventsUsageDescription|Un programme lancé dans Brume voudrait utiliser AppleScript.|A program running within Brume would like to use AppleScript."
+    "NSAudioCaptureUsageDescription|Un programme lancé dans Brume voudrait accéder au son du système.|A program running within Brume would like to access your system's audio."
+    "NSBluetoothAlwaysUsageDescription|Un programme lancé dans Brume voudrait utiliser le Bluetooth.|A program running within Brume would like to use Bluetooth."
+    "NSCalendarsUsageDescription|Un programme lancé dans Brume voudrait accéder à votre Calendrier.|A program running within Brume would like to access your Calendar."
+    "NSCameraUsageDescription|Un programme lancé dans Brume voudrait utiliser la caméra.|A program running within Brume would like to use the camera."
+    "NSContactsUsageDescription|Un programme lancé dans Brume voudrait accéder à vos Contacts.|A program running within Brume would like to access your Contacts."
+    "NSLocalNetworkUsageDescription|Un programme lancé dans Brume voudrait accéder au réseau local.|A program running within Brume would like to access the local network."
+    "NSLocationUsageDescription|Un programme lancé dans Brume voudrait connaître votre position.|A program running within Brume would like to access your location information."
+    "NSMicrophoneUsageDescription|Un programme lancé dans Brume voudrait utiliser le micro.|A program running within Brume would like to use your microphone."
+    "NSMotionUsageDescription|Un programme lancé dans Brume voudrait accéder aux données de mouvement.|A program running within Brume would like to access motion data."
+    "NSPhotoLibraryUsageDescription|Un programme lancé dans Brume voudrait accéder à votre photothèque.|A program running within Brume would like to access your Photo Library."
+    "NSRemindersUsageDescription|Un programme lancé dans Brume voudrait accéder à vos Rappels.|A program running within Brume would like to access your reminders."
+    "NSSpeechRecognitionUsageDescription|Un programme lancé dans Brume voudrait utiliser la reconnaissance vocale.|A program running within Brume would like to use speech recognition."
+    "NSSystemAdministrationUsageDescription|Un programme lancé dans Brume demande les droits d'administrateur.|A program running within Brume requires elevated privileges."
+)
+PERMISSION_KEYS=""
+mkdir -p "$APP_BUNDLE/Contents/Resources/en.lproj"
+for entry in "${PERMISSIONS[@]}"; do
+    IFS='|' read -r key french english <<< "$entry"
+    PERMISSION_KEYS+="    <key>$key</key>"$'\n'"    <string>$french</string>"$'\n'
+    echo "\"$key\" = \"$english\";" >> "$APP_BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings"
+done
+
 cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -67,6 +98,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundleLocalizations</key>
     <array>
         <string>fr</string>
+        <string>en</string>
     </array>
     <key>CFBundleExecutable</key>
     <string>$APP_NAME</string>
@@ -82,7 +114,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <string>26.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
-</dict>
+$PERMISSION_KEYS</dict>
 </plist>
 PLIST
 
