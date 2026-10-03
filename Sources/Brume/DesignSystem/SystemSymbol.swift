@@ -25,6 +25,8 @@ enum SystemSymbol {
         Variant(name: "checkmark", size: 11, weight: .semibold),
         Variant(name: "chevron.down", size: 10, weight: .semibold),
         Variant(name: "chevron.right", size: 10, weight: .semibold),
+        Variant(name: "eye", size: 12),
+        Variant(name: "eye.slash", size: 12),
         Variant(name: "gearshape", size: 14),
         Variant(name: "paintpalette", size: 14),
         Variant(name: "chevron.left", size: 14),

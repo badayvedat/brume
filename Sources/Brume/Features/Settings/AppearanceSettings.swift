@@ -61,8 +61,7 @@ struct AppearanceSettings: View {
                         Button {
                             withAnimation(Ink.open) { showsPreview.toggle() }
                         } label: {
-                            SystemSymbol.image("chevron.down", size: 10, weight: .semibold)
-                                .rotationEffect(.degrees(showsPreview ? 180 : 0))
+                            SystemSymbol.image(showsPreview ? "eye.slash" : "eye", size: 12)
                         }
                         .buttonStyle(.secondary)
                         .tooltip(L10n.text(showsPreview ? .hidePreview : .showPreview))

@@ -44,7 +44,13 @@ private func engineConfiguration(_ options: EngineOptions) -> TerminalConfigurat
     }
 }
 
-@MainActor private let liveWorkspaces = NSHashTable<TerminalWorkspace>.weakObjects()
+/// Les fenêtres ouvertes, dans l'ordre où elles se sont ouvertes : la session les rouvrira
+/// dans le même ordre, et un changement de couleurs passe par tous leurs terminaux.
+@MainActor private var openWorkspaces: [WeakWorkspace] = []
+
+private struct WeakWorkspace {
+    weak var value: TerminalWorkspace?
+}
 
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
 @MainActor private weak var lastFocused: TerminalViewState?
@@ -98,11 +104,16 @@ final class TerminalWorkspace {
     /// Par les terminaux et pas le moteur seul : chacun doit reprendre la couleur de fond du thème.
     static func applyEngineTheme(_ theme: TerminalTheme) {
         sharedController.setTheme(theme)
-        for workspace in liveWorkspaces.allObjects {
+        for workspace in all {
             for state in workspace.states.values {
                 state.setTheme(theme)
             }
         }
+    }
+
+    static var all: [TerminalWorkspace] {
+        openWorkspaces.removeAll { $0.value == nil }
+        return openWorkspaces.compactMap(\.value)
     }
 
     /// Nil : une fenêtre neuve, un onglet dans le dossier du terminal actif.
@@ -111,6 +122,7 @@ final class TerminalWorkspace {
             let id = UUID()
             layout = WindowLayout(area: UUID(), tab: id)
             states[id] = makeState(id, inheriting: lastFocused, as: .window)
+            openWorkspaces.append(WeakWorkspace(value: self))
             return
         }
         layout = saved.layout
@@ -124,6 +136,7 @@ final class TerminalWorkspace {
             customTitles[id] = tab?.customTitle
             colors[id] = tab?.color
         }
+        openWorkspaces.append(WeakWorkspace(value: self))
     }
 
     /// Ce que la fenêtre retrouvera au prochain lancement.
@@ -155,7 +168,6 @@ final class TerminalWorkspace {
     func attach(to window: NSWindow) {
         guard self.window !== window else { return }
         self.window = window
-        liveWorkspaces.add(self)
         window.tabbingMode = .disallowed
         // Pas sur un écran débranché depuis : la fenêtre rouvrirait invisible.
         if let savedFrame, let screen = NSScreen.screens.first(where: { $0.visibleFrame.intersects(savedFrame) }) {

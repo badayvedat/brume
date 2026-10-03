@@ -10,7 +10,6 @@ final class SessionStore {
     @ObservationIgnored private let settings: SettingsStore
     @ObservationIgnored private var pending: [SavedWindow]
     @ObservationIgnored private var windowsToOpen: Int
-    @ObservationIgnored private var workspaces: [WeakWorkspace] = []
     @ObservationIgnored nonisolated(unsafe) private var terminateObserver: NSObjectProtocol?
 
     init(settings: SettingsStore, file: SessionFile = .standard) {
@@ -31,10 +30,7 @@ final class SessionStore {
 
     /// La fenêtre suivante de la session, ou une neuve quand il n'en reste plus.
     func makeWorkspace() -> TerminalWorkspace {
-        let workspace = TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
-        workspaces.removeAll { $0.value == nil }
-        workspaces.append(WeakWorkspace(value: workspace))
-        return workspace
+        TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
     }
 
     /// Combien d'autres fenêtres la première doit ouvrir. Ne répond qu'une fois : les fenêtres
@@ -46,11 +42,7 @@ final class SessionStore {
 
     private func save() {
         guard settings.settings.restoresSession else { return file.delete() }
-        let windows = workspaces.compactMap { $0.value?.snapshot }
+        let windows = TerminalWorkspace.all.map(\.snapshot)
         try? file.save(Session(windows: windows))
     }
-}
-
-private struct WeakWorkspace {
-    weak var value: TerminalWorkspace?
 }

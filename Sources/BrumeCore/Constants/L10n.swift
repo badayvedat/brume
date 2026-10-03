@@ -121,9 +121,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .general: "Général"
         case .generalHint: "Ce qui ne touche pas à l'apparence."
         case .appearance: "Apparence"
-        case .appearanceHint: "L'allure de Brume, appliquée tout de suite : la page elle-même change avec."
+        case .appearanceHint: "L'allure des fenêtres et des terminaux, appliquée tout de suite : cette page change avec."
         case .window: "Fenêtre"
-        case .windowHint: "Ce qu'on voit du bureau à travers Brume."
+        case .windowHint: "Ce qu'on voit du bureau à travers la fenêtre."
         case .glass: "Verre"
         case .glassHint: "Le bureau flouté apparaît derrière les terminaux. Éteint, le fond est plein."
         case .opacity: "Opacité"
@@ -131,7 +131,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .blur: "Flou"
         case .blurHint: "Le flou du bureau derrière la fenêtre. Plus il est fort, plus il coûte à afficher."
         case .colors: "Couleurs"
-        case .colorsHint: "Celles de Brume et des terminaux, appliquées tout de suite."
+        case .colorsHint: "Celles de l'interface et des terminaux, appliquées tout de suite."
         case .color: "Couleur"
         case .colorHint: "Le fond en prend la teinte, les onglets, le curseur et la sélection la couleur pleine."
         case .colorDefault: "Par défaut"
@@ -161,7 +161,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Celle des menus et de toute l'interface."
         case .startup: "Démarrage"
         case .restoreTabs: "Rouvrir les onglets"
-        case .restoreTabsHint: "Au lancement, les fenêtres, zones, onglets, dossiers, noms et couleurs de la dernière fois. Éteint, Brume part d'une fenêtre neuve."
+        case .restoreTabsHint: "Retrouver au lancement les fenêtres et les onglets laissés en quittant."
         }
     }
 
@@ -235,9 +235,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .general: "General"
         case .generalHint: "Everything that is not about looks."
         case .appearance: "Appearance"
-        case .appearanceHint: "How Brume looks, applied right away: this page changes with it."
+        case .appearanceHint: "How windows and terminals look, applied right away: this page changes with it."
         case .window: "Window"
-        case .windowHint: "How much of the desktop shows through Brume."
+        case .windowHint: "How much of the desktop shows through the window."
         case .glass: "Glass"
         case .glassHint: "The blurred desktop shows behind the terminals. Off, the background is solid."
         case .opacity: "Opacity"
@@ -245,7 +245,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .blur: "Blur"
         case .blurHint: "The desktop blur behind the window. The higher, the more it costs to draw."
         case .colors: "Colors"
-        case .colorsHint: "Brume's and the terminals', applied right away."
+        case .colorsHint: "The interface's and the terminals', applied right away."
         case .color: "Color"
         case .colorHint: "The background takes its hue; tabs, cursor and selection take the full color."
         case .colorDefault: "Default"
@@ -275,7 +275,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Used by menus and the whole interface."
         case .startup: "Startup"
         case .restoreTabs: "Reopen Tabs"
-        case .restoreTabsHint: "At launch, last time's windows, panes, tabs, folders, names and colors. Off, Brume starts with a new window."
+        case .restoreTabsHint: "Bring back at launch the windows and tabs left when quitting."
         }
     }
 }
