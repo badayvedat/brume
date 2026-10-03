@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct BrumeApp: App {
+    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+
     init() {
         SystemSymbol.preload()
         // Le shell hérite de cette variable : le patch zsh y trouve les greffons embarqués.

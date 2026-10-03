@@ -14,7 +14,7 @@ import SwiftUI
             $0.withCustom("mouse-scroll-multiplier", "precision:2")
             // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
             // on les rend au menu de l'app.
-            for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
+            for key in ["q", "t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
                 $0.withCustom("keybind", "super+\(key)=unbind")
             }
         }
@@ -40,7 +40,12 @@ final class TerminalWorkspace {
     private(set) var focusedID: UUID
     private(set) var states: [UUID: TerminalViewState] = [:]
     private(set) var searches: [UUID: TerminalSearch] = [:]
-    var onEmpty: () -> Void = {}
+    @ObservationIgnored private weak var window: NSWindow?
+    @ObservationIgnored private var closeGuard: WindowCloseGuard?
+
+    static var needsConfirmQuit: Bool {
+        sharedController.needsConfirmQuit
+    }
 
     init() {
         let id = UUID()
@@ -59,6 +64,21 @@ final class TerminalWorkspace {
 
     var isSplit: Bool {
         tree.panes.count > 1
+    }
+
+    func attach(to window: NSWindow) {
+        guard self.window !== window else { return }
+        self.window = window
+        closeGuard = WindowCloseGuard(on: window) { [weak self] window in
+            guard let self, states.values.contains(where: { $0.surface?.needsConfirmQuit == true }) else {
+                return true
+            }
+            let isTab = (window.tabGroup?.windows.count ?? 1) > 1
+            // La croix d'un onglet en arrière-plan : sa feuille serait cachée.
+            if isTab { window.tabGroup?.selectedWindow = window }
+            (isTab ? CloseConfirmation.tab : .terminal).ask(in: window) { window.close() }
+            return false
+        }
     }
 
     func split(_ axis: SplitAxis) {
@@ -149,8 +169,9 @@ final class TerminalWorkspace {
     private func close(_ id: UUID) {
         let order = tree.panes
         guard let index = order.firstIndex(of: id) else { return }
+        // `close()` et pas `performClose` : la confirmation a déjà eu lieu.
         guard let remaining = tree.removing(id) else {
-            onEmpty()
+            window?.close()
             return
         }
         tree = remaining
@@ -172,7 +193,12 @@ final class TerminalWorkspace {
             if inherited.fontSize > 0 { state.configuration.fontSize = inherited.fontSize }
             state.configuration.workingDirectory = inherited.workingDirectory
         }
-        state.onClose = { [weak self] _ in self?.close(id) }
+        // Cmd+W passe par le moteur, qui signale une commande en cours.
+        state.onClose = { [weak self] processAlive in
+            guard let self else { return }
+            guard processAlive else { return close(id) }
+            CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.close(id) }
+        }
         state.onStartSearch = { [weak self] in self?.openSearch(in: id, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: id) }
         return state

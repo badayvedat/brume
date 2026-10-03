@@ -1,0 +1,35 @@
+diff --git a/Sources/GhosttyTerminal/Controller/TerminalController.swift b/Sources/GhosttyTerminal/Controller/TerminalController.swift
+index 1486fc7..2bfd95e 100644
+--- a/Sources/GhosttyTerminal/Controller/TerminalController.swift
++++ b/Sources/GhosttyTerminal/Controller/TerminalController.swift
+@@ -314,6 +314,12 @@ public final class TerminalController {
+         ghostty_app_tick(app)
+     }
+ 
++    /// Whether any surface of the app would kill a running command on quit. Brume.
++    public var needsConfirmQuit: Bool {
++        guard let app else { return false }
++        return ghostty_app_needs_confirm_quit(app)
++    }
++
+     func handleWakeup() {
+         let observers = Array(wakeupObservers.values)
+         // One detached surface must not stop the tick for the others.
+diff --git a/Sources/GhosttyTerminal/Surface/TerminalSurface.swift b/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
+index 18f728b..c28b175 100644
+--- a/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
++++ b/Sources/GhosttyTerminal/Surface/TerminalSurface.swift
+@@ -197,6 +197,13 @@ public final class TerminalSurface {
+         performBindingAction("scroll_to_row:\(row)")
+     }
+ 
++    /// Whether closing this surface would kill a running command, per
++    /// `confirm-close-surface`: false when the shell sits at its prompt. Brume.
++    public var needsConfirmQuit: Bool {
++        guard let s = surface else { return false }
++        return ghostty_surface_needs_confirm_quit(s)
++    }
++
+     // MARK: - Rendering
+ 
+     func draw() {
