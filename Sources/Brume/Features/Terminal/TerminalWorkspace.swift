@@ -128,6 +128,11 @@ final class TerminalWorkspace {
         focused.surface?.performBindingAction("close_surface")
     }
 
+    /// Comme le bouton rouge : passe par la confirmation de `WindowCloseGuard`.
+    func closeWindow() {
+        window?.performClose(nil)
+    }
+
     func changeFontSize(_ change: FontSizeChange) {
         let action = switch change {
         case .increase: "increase_font_size:1"

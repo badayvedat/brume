@@ -53,6 +53,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [ ] Sélection lisible : le thème par défaut met un fond quasi noir (#303030) qui masque le texte sélectionné
 - [ ] Image de fond (choix, opacité)
 - [ ] Changements appliqués en direct, sans redémarrer
+- [ ] Langue de l'interface (français / anglais) : `L10n.language` passe dans le store des réglages, et les menus en dur passent aux clés `TextKey`
 
 ## 5. Page de démarrage
 

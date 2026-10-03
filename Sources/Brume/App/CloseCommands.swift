@@ -1,4 +1,3 @@
-import AppKit
 import BrumeCore
 import SwiftUI
 
@@ -10,7 +9,7 @@ struct CloseCommands: Commands {
         CommandGroup(replacing: .saveItem) {
             Button(L10n.text(.close)) { workspace?.closeFocused() }
                 .keyboardShortcut("w")
-            Button(L10n.text(.closeWindow)) { NSApp.keyWindow?.performClose(nil) }
+            Button(L10n.text(.closeWindow)) { workspace?.closeWindow() }
                 .keyboardShortcut("w", modifiers: [.command, .shift])
         }
     }
