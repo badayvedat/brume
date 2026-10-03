@@ -26,4 +26,5 @@ bash build-app.sh            # release
 - Une vue terminal recréée par SwiftUI tue son shell : garder son identité (volets à plat dans un `ForEach` par identifiant, jamais déplacés d'un conteneur à l'autre).
 - Tout code repris de Muxy (MIT) garde sa mention de copyright dans le dépôt.
 - Pas de `Image(systemName:)` : passer par `SystemSymbol` (`DesignSystem/`). Chargés après le moteur, des symboles sortent vides, au hasard du lancement.
+- Le thème du moteur suit déjà l'apparence système : ne jamais régler l'apparence d'une fenêtre d'après la couleur du terminal, ça boucle et la fenêtre clignote.
 - Jamais `windowBackgroundDragBehavior(.enabled)` : déplacer la fenêtre par le fond casse la sélection de texte du terminal.

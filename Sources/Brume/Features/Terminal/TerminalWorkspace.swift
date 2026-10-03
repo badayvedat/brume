@@ -4,20 +4,27 @@ import GhosttyTerminal
 import SwiftUI
 
 // Un seul moteur pour tous les onglets, fenêtres et splits, comme Ghostty.
-@MainActor private let sharedController = TerminalController(
-    terminalConfiguration: TerminalConfiguration {
-        // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
-        $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
-        // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
-        // sans ça, le défilement est deux fois plus lent que dans Ghostty.
-        $0.withCustom("mouse-scroll-multiplier", "precision:2")
-        // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
-        // on les rend au menu de l'app.
-        for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
-            $0.withCustom("keybind", "super+\(key)=unbind")
+@MainActor private let sharedController: TerminalController = {
+    let controller = TerminalController(
+        terminalConfiguration: TerminalConfiguration {
+            // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
+            $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
+            // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
+            // sans ça, le défilement est deux fois plus lent que dans Ghostty.
+            $0.withCustom("mouse-scroll-multiplier", "precision:2")
+            // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
+            // on les rend au menu de l'app.
+            for key in ["t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
+                $0.withCustom("keybind", "super+\(key)=unbind")
+            }
         }
-    }
-)
+    )
+    // Le moteur part en thème clair jusqu'à ce qu'une vue lui donne l'apparence : un nouveau
+    // terminal aurait un fond clair, et sa barre de titre avec, le temps d'une image.
+    let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+    controller.setColorScheme(isDark ? .dark : .light)
+    return controller
+}()
 
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
 @MainActor private weak var lastFocused: TerminalViewState?

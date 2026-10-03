@@ -37,7 +37,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Zoom du texte (Cmd+plus, Cmd+moins, Cmd+0)
 - [x] Nouveau split ou onglet ouvert dans le dossier du terminal actif (comme Ghostty)
 - [x] Réinitialiser les tailles : texte des terminaux de la fenêtre, splits remis à parts égales
-- [ ] Barre d'onglets claire sur un terminal sombre : la fenêtre doit suivre la couleur du terminal
+- [x] Barre d'onglets claire sur un terminal sombre (fond clair des terminaux ouverts avant le passage du moteur en sombre)
 - [ ] Confirmation avant de fermer un terminal où une commande tourne
 - [ ] Raccourcis de l'app interceptés avant le terminal
 - [ ] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt

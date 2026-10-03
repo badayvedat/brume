@@ -1,0 +1,21 @@
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState+Mutation.swift b/Sources/GhosttyTerminal/State/TerminalViewState+Mutation.swift
+index 0b98dc6..6b3b8ee 100644
+--- a/Sources/GhosttyTerminal/State/TerminalViewState+Mutation.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState+Mutation.swift
+@@ -13,10 +13,13 @@ public extension TerminalViewState {
+     }
+ 
+     func adopt(terminalColorScheme colorScheme: TerminalColorScheme) {
+-        guard colorScheme != controller.effectiveColorScheme else { return }
+-        controller.setColorScheme(colorScheme) {
+-            self.objectWillChange.send()
++        if colorScheme != controller.effectiveColorScheme {
++            controller.setColorScheme(colorScheme) {
++                self.objectWillChange.send()
++            }
+         }
++        // Brume: states share one controller. The first to adopt switches it,
++        // the others still hold the old scheme's background and must refresh.
+         publishBackgroundColor()
+     }
+ 
