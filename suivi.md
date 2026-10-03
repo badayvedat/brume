@@ -7,7 +7,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - macOS uniquement : Swift + SwiftUI, moteur Ghostty via le paquet libghostty-spm (vue terminal fournie, suit Ghostty officiel).
 - Sans Xcode : `swift build` + script qui fabrique le .app, comme Orby. GhosttyKit téléchargé précompilé.
 - Repo neuf sur le compte GitHub perso, sans historique. Muxy (MIT) sert de référence : pièces utiles par étape dans [docs/reprise-muxy.md](docs/reprise-muxy.md).
-- Terminal proche de Ghostty, pas de fonctions en trop. Barre du haut à la Muxy : onglets maison et boutons. Au choix, les onglets listés à gauche (vue agents).
+- Terminal proche de Ghostty, pas de fonctions en trop. Barre du haut à la Muxy : onglets maison et boutons. Au choix, les onglets listés dans une barre latérale à gauche (onglets verticaux).
 - DA inspirée de Monocode (MIT) : flou et teinte, sans image de fond.
 
 ## 1. Mise en place
@@ -45,7 +45,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 
 ## 4. Interface façon Muxy
 
-- [x] Onglets gérés dans la fenêtre à la place des onglets natifs de macOS : une seule liste, que la barre du haut et la vue agents affichent
+- [x] Onglets gérés dans la fenêtre à la place des onglets natifs de macOS : une seule liste, que la barre du haut et la barre latérale affichent
 - [ ] Choisir ce qu'on reprend d'autre de Muxy (disposition, précédent / suivant...)
 - [x] Barre d'onglets maison dans la barre de titre : onglets arrondis, croix, à la place des onglets natifs
 - [x] Bouton nouvel onglet dans la barre (en plus de Cmd+T)
@@ -88,11 +88,15 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 - [x] Option « aucune » : interrupteur, visuel et informations désactivables
 - [x] Aperçu en direct dans les réglages, rendu par fastfetch
 
-## 7. Vue agents
+## 7. Onglets verticaux
 
-- [ ] Sidebar des sessions façon conversations : les onglets de la fenêtre listés à gauche, au choix avec la barre du haut
-- [ ] Raccourci pour basculer vue agents / vue terminal
-- [ ] Créer, renommer, fermer une session depuis la sidebar
+Comme les onglets verticaux de Chrome, Firefox ou Arc : les terminaux listés dans une barre latérale à gauche plutôt qu'en haut. Pas une vue « agents » : rien pour surveiller des processus.
+
+- [ ] Barre latérale des onglets à gauche, au choix avec la barre du haut
+- [ ] Chaque onglet a un nom, une couleur et une icône (projet, serveur, machine…)
+- [ ] Au relancement, on retrouve ses onglets tels quels (session déjà sauvegardée) : projets, VPS…
+- [ ] Raccourci clavier pour basculer entre les onglets en haut et la barre latérale, aussi dans le menu « … » avec son raccourci affiché
+- [ ] Dans la barre latérale, les mêmes actions qu'en haut : créer, renommer, réordonner, fermer, couleur et icône
 - Idées à trancher le moment venu (vues chez Muxy) :
   - Pastille sur l'onglet quand une commande finit ou attend une réponse, dans un onglet caché
   - Barre de progression dans l'onglet (séquence OSC 9;4 envoyée par Claude Code, certains installeurs)
