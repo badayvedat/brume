@@ -42,6 +42,8 @@ final class TerminalWorkspace: Identifiable {
     private(set) var focusedID: UUID
     private(set) var states: [UUID: TerminalViewState] = [:]
     private(set) var searches: [UUID: TerminalSearch] = [:]
+    /// Nil : l'onglet affiche le titre du terminal actif.
+    var customTitle: String?
     @ObservationIgnored weak var window: NSWindow?
     /// Le dernier volet fermé : l'onglet part avec lui.
     @ObservationIgnored var onEmpty: () -> Void = {}

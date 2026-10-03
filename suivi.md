@@ -51,6 +51,8 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Bouton nouvel onglet dans la barre (en plus de Cmd+T)
 - [ ] Bouton nouvelle fenêtre dans la barre (en plus de Cmd+N)
 - [x] Réordonner les onglets en les glissant
+- [x] Renommer un onglet : double-clic, clic droit ou Cmd+Shift+R, champ vidé = nom automatique
+- [ ] Numéros des onglets affichés tant qu'on tient Cmd, pour Cmd+1, Cmd+2...
 - [ ] Boutons de split dans la barre : à droite, en dessous
 - [ ] Bouton « Ouvrir avec » : dossier du terminal actif dans le Finder, un éditeur...
 

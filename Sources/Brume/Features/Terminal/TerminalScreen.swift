@@ -19,7 +19,7 @@ struct TerminalScreen: View {
             }
         }
         .ignoresSafeArea(.container, edges: .top)
-        .modifier(TerminalWindowChrome(state: tabs.selected.focused))
+        .modifier(TerminalWindowChrome(state: tabs.selected.focused, customTitle: tabs.selected.customTitle))
         .focusedSceneValue(\.terminalTabs, tabs)
         .focusedSceneValue(\.terminalWorkspace, tabs.selected)
         .background(WindowReader { tabs.attach(to: $0) })

@@ -12,6 +12,7 @@ public enum TextKey: CaseIterable, Sendable {
     case quitTitle, quitMessage
     case close, closeWindow, quit, cancel
     case newTab, closeTab, previousTab, nextTab, tab, lastTab, terminal
+    case renameTab, resetTabName
 
     public func text(in language: Language) -> String {
         switch language {
@@ -41,6 +42,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .tab: "Onglet"
         case .lastTab: "Dernier onglet"
         case .terminal: "Terminal"
+        case .renameTab: "Renommer l'onglet"
+        case .resetTabName: "Rendre le nom automatique"
         }
     }
 
@@ -65,6 +68,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .tab: "Tab"
         case .lastTab: "Last Tab"
         case .terminal: "Terminal"
+        case .renameTab: "Rename Tab"
+        case .resetTabName: "Reset Tab Name"
         }
     }
 }

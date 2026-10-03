@@ -7,6 +7,7 @@ import SwiftUI
 @MainActor @Observable
 final class TerminalTabs {
     private var list: TabList<UUID>
+    private(set) var renamingID: UUID?
     private var workspaces: [UUID: TerminalWorkspace] = [:]
     @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
@@ -63,6 +64,27 @@ final class TerminalTabs {
 
     func move(_ id: UUID, to index: Int) {
         list = list.moving(id, to: index)
+    }
+
+    func startRenaming(_ id: UUID? = nil) {
+        let id = id ?? list.selected
+        select(id)
+        renamingID = id
+    }
+
+    /// Nil : renommage annulé. Le champ qui disparaît rappelle cette fonction en perdant le focus :
+    /// seul le premier appel compte.
+    func finishRenaming(_ id: UUID, input: String?, displayed: String) {
+        guard renamingID == id else { return }
+        renamingID = nil
+        if let input, let workspace = workspaces[id] {
+            workspace.customTitle = TabTitle.renamed(input: input, displayed: displayed, current: workspace.customTitle)
+        }
+        selected.focus(selected.focusedID)
+    }
+
+    func resetTitle(_ id: UUID) {
+        workspaces[id]?.customTitle = nil
     }
 
     /// La croix d'un onglet : confirme si une commande y tourne.

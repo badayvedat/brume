@@ -106,13 +106,14 @@ private struct TerminalPane: View {
     }
 }
 
-/// Titre et couleur de la fenêtre, pris sur le terminal qui a le focus.
+/// Titre et couleur de la fenêtre, pris sur le terminal qui a le focus, sauf nom choisi pour l'onglet.
 struct TerminalWindowChrome: ViewModifier {
     @ObservedObject var state: TerminalViewState
+    let customTitle: String?
 
     func body(content: Content) -> some View {
         content
-            .navigationTitle(state.title)
+            .navigationTitle(customTitle ?? state.title)
             // La barre de titre prend la couleur du terminal, comme dans Ghostty.
             .containerBackground(Color(state.backgroundColor), for: .window)
     }

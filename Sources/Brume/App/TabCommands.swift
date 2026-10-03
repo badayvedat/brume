@@ -8,6 +8,8 @@ struct TabCommands: Commands {
         CommandGroup(after: .newItem) {
             Button(L10n.text(.newTab)) { tabs?.newTab() }
                 .keyboardShortcut("t")
+            Button(L10n.text(.renameTab)) { tabs?.startRenaming() }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
         }
         CommandGroup(before: .windowArrangement) {
             Button(L10n.text(.previousTab)) { tabs?.selectPrevious() }
