@@ -62,10 +62,6 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
         }
     }
 
-    public func splitting(_ target: Pane, axis: SplitAxis, adding new: Pane) -> SplitTree {
-        inserting(.pane(new), beside: target, toward: axis == .horizontal ? .right : .down)
-    }
-
     /// Pose `subtree` (un volet, ou les splits d'un autre onglet) du côté `direction` de `target`.
     public func inserting(_ subtree: SplitTree, beside target: Pane, toward direction: SplitDirection) -> SplitTree {
         switch self {

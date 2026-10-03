@@ -8,8 +8,8 @@ struct SplitTreeTests {
     // a | b, avec b coupé en b (haut) / c (bas).
     var threePanes: SplitTree<String> {
         SplitTree.pane("a")
-            .splitting("a", axis: .horizontal, adding: "b")
-            .splitting("b", axis: .vertical, adding: "c")
+            .inserting(.pane("b"), beside: "a", toward: .right)
+            .inserting(.pane("c"), beside: "b", toward: .down)
     }
 
     @Test func splittingPlacesNewPaneAfterTarget() {
@@ -18,7 +18,7 @@ struct SplitTreeTests {
 
     @Test func splittingUnknownPaneChangesNothing() {
         let tree = SplitTree.pane("a")
-        #expect(tree.splitting("z", axis: .horizontal, adding: "b") == tree)
+        #expect(tree.inserting(.pane("b"), beside: "z", toward: .right) == tree)
     }
 
     @Test func removingCollapsesTheSplit() {
@@ -82,8 +82,8 @@ struct SplitTreeTests {
     @Test func equalizedSharesTheSameAxisByPaneCount() {
         // a | b | c : chacun un tiers.
         let tree = SplitTree.pane("a")
-            .splitting("a", axis: .horizontal, adding: "b")
-            .splitting("b", axis: .horizontal, adding: "c")
+            .inserting(.pane("b"), beside: "a", toward: .right)
+            .inserting(.pane("c"), beside: "b", toward: .right)
             .equalized()
         let frames = tree.frames(in: CGRect(x: 0, y: 0, width: 90, height: 10))
         #expect(frames["a"]?.width == 30)
@@ -97,7 +97,7 @@ struct SplitTreeTests {
     }
 
     @Test func insertingPlacesSubtreeOnTheChosenSide() {
-        let other = SplitTree.pane("x").splitting("x", axis: .vertical, adding: "y")
+        let other = SplitTree.pane("x").inserting(.pane("y"), beside: "x", toward: .down)
         let left = SplitTree.pane("a").inserting(other, beside: "a", toward: .left)
         #expect(left == .split(.horizontal, ratio: 0.5, other, .pane("a")))
         let down = SplitTree.pane("a").inserting(other, beside: "a", toward: .down)

@@ -55,7 +55,9 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Numéros des onglets affichés tant qu'on tient Cmd, pour Cmd+1, Cmd+2...
 - [x] Boutons de split dans la barre : à droite, en dessous
 - [x] Infobulles maison sous les boutons et les onglets, avec le raccourci
-- [x] Glisser un onglet sur le terminal pour en faire un split (comme Muxy, en plus fluide)
+- [x] Zones façon Muxy : chaque split a sa barre d'onglets, un onglet = un terminal, numéros sur toute la fenêtre
+- [x] Glisser un onglet : au centre d'une zone il la rejoint, près d'un bord il ouvre une zone de ce côté
+- [x] Séparateur des zones en couleur d'accent au survol
 - [ ] Bouton « Ouvrir avec » : dossier du terminal actif dans le Finder, un éditeur...
 
 ## 5. Réglages en interface

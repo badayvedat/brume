@@ -17,25 +17,19 @@ public struct TabList<Tab: Hashable & Sendable>: Hashable, Sendable {
         return list
     }
 
+    /// En bout de barre, et l'affiche : un onglet venu d'une autre zone.
+    public func appending(_ tab: Tab) -> TabList {
+        var list = self
+        list.tabs.append(tab)
+        list.selected = tab
+        return list
+    }
+
     public func selecting(_ tab: Tab) -> TabList {
         guard tabs.contains(tab) else { return self }
         var list = self
         list.selected = tab
         return list
-    }
-
-    /// Cmd+1 à Cmd+8 par position, Cmd+9 toujours le dernier, comme Ghostty et les navigateurs.
-    public func selecting(number: Int) -> TabList {
-        let index = number == 9 ? tabs.count - 1 : number - 1
-        guard tabs.indices.contains(index) else { return self }
-        return selecting(tabs[index])
-    }
-
-    /// Le chiffre du raccourci de l'onglet : Cmd+1 à Cmd+8 par position, Cmd+9 pour le dernier.
-    public func shortcutNumber(of tab: Tab) -> Int? {
-        guard let index = tabs.firstIndex(of: tab) else { return nil }
-        if index == tabs.count - 1, index >= 8 { return 9 }
-        return index < 8 ? index + 1 : nil
     }
 
     /// Fait le tour : après le dernier vient le premier.

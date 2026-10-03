@@ -3,10 +3,10 @@ import GhosttyTerminal
 import SwiftUI
 
 struct TabCell: View {
-    /// Le terminal actif de l'onglet, dont il affiche le titre.
+    /// Le terminal de l'onglet, dont il affiche le titre.
     @ObservedObject var state: TerminalViewState
+    let id: UUID
     let workspace: TerminalWorkspace
-    let tabs: TerminalTabs
     let isDragging: Bool
     let showsNumber: Bool
 
@@ -14,17 +14,23 @@ struct TabCell: View {
     @State private var draft = ""
     @FocusState private var isFieldFocused: Bool
 
+    /// Affiché dans sa zone.
     private var isSelected: Bool {
-        workspace === tabs.selected
+        workspace.layout.isShown(id)
+    }
+
+    /// Le trait d'accent ne va qu'à l'onglet qui reçoit le clavier.
+    private var isFocused: Bool {
+        workspace.focusedID == id
     }
 
     private var isRenaming: Bool {
-        tabs.renamingID == workspace.id
+        workspace.renamingID == id
     }
 
     var body: some View {
         HStack(spacing: 4) {
-            if showsNumber, let number = tabs.shortcutNumber(of: workspace.id) {
+            if showsNumber, let number = workspace.layout.shortcutNumber(of: id) {
                 Text("\(number)")
                     .font(.system(size: 10, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white)
@@ -55,7 +61,7 @@ struct TabCell: View {
         .background(alignment: .bottom) {
             ZStack(alignment: .bottom) {
                 background
-                if isSelected {
+                if isFocused {
                     Color.accentColor.frame(height: 2)
                 }
             }
@@ -67,18 +73,18 @@ struct TabCell: View {
             }
         }
         .contentShape(.rect(cornerRadius: 8))
-        .onTapGesture { tabs.select(workspace.id) }
+        .onTapGesture { workspace.focus(id) }
         // En plus du clic simple : le double-clic ne retarde pas la sélection.
         .simultaneousGesture(TapGesture(count: 2).onEnded(startRenaming))
         .contextMenu {
             Button(L10n.text(.renameTab), action: startRenaming)
-            if workspace.customTitle != nil {
-                Button(L10n.text(.resetTabName)) { tabs.resetTitle(workspace.id) }
+            if workspace.title(of: id) != nil {
+                Button(L10n.text(.resetTabName)) { workspace.resetTitle(id) }
             }
             Divider()
             Button(L10n.text(.closeTab), action: close)
         }
-        .accessibilityAction(.default) { tabs.select(workspace.id) }
+        .accessibilityAction(.default) { workspace.focus(id) }
         .accessibilityAction(named: L10n.text(.renameTab), startRenaming)
         // Pendant un glisser, les onglets passent sous la souris en changeant de place :
         // sans ça, leur croix clignote au passage.
@@ -95,7 +101,7 @@ struct TabCell: View {
     }
 
     private var title: String {
-        workspace.customTitle ?? (state.title.isEmpty ? L10n.text(.terminal) : state.title)
+        workspace.title(of: id) ?? (state.title.isEmpty ? L10n.text(.terminal) : state.title)
     }
 
     private var renameField: some View {
@@ -117,16 +123,16 @@ struct TabCell: View {
     }
 
     private func startRenaming() {
-        tabs.startRenaming(workspace.id)
+        workspace.startRenaming(id)
     }
 
     /// Nil : annulé.
     private func finishRenaming(_ input: String?) {
-        tabs.finishRenaming(workspace.id, input: input, displayed: title)
+        workspace.finishRenaming(id, input: input, displayed: title)
     }
 
     private func close() {
-        tabs.close(workspace.id)
+        workspace.close(id)
     }
 
     private var background: Color {
