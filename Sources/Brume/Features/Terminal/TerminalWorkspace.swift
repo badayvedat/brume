@@ -54,49 +54,44 @@ private struct WeakWorkspace {
 }
 
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
-@MainActor private weak var lastFocused: TerminalViewState?
+@MainActor weak var lastFocused: TerminalViewState?
 
 enum FontSizeChange {
     case increase, decrease, reset
 }
 
-/// Ce qui porte un nom, une couleur et une icône : un onglet, ou un split d'un groupe.
-enum TabItem: Hashable {
-    case tab(UUID), pane(UUID)
-}
-
 /// Une fenêtre comme Ghostty : des onglets, chacun divisé en splits, un terminal par split.
 @MainActor @Observable
 final class TerminalWorkspace {
-    private(set) var layout: WindowLayout<UUID, UUID> {
+    var layout: WindowLayout<UUID, UUID> {
         // Un autre split prend le clavier, ou l'onglet change : fin de l'agrandissement.
         didSet {
             if let zoomedPane, layout.focusedPane != zoomedPane || !isSplit { self.zoomedPane = nil }
         }
     }
     /// Les terminaux, par split.
-    private(set) var states: [UUID: TerminalViewState] = [:]
+    var states: [UUID: TerminalViewState] = [:]
     private(set) var searches: [UUID: TerminalSearch] = [:]
     /// Le titre et la progression que chaque terminal annonce, relevés ici : un onglet ou un
     /// groupe qui les affiche se met à jour sans observer chacun de ses terminaux.
     private(set) var terminalTitles: [UUID: String] = [:]
     private(set) var paneProgress: [UUID: TerminalProgress] = [:]
     /// Les noms, couleurs et icônes choisis, des onglets et des splits d'un groupe.
-    private(set) var labels = WindowLabels<UUID, UUID>()
+    var labels = WindowLabels<UUID, UUID>()
     /// Les onglets divisés repliés dans la barre latérale.
-    private(set) var collapsed: Set<UUID> = []
-    private(set) var renaming: TabItem?
+    var collapsed: Set<UUID> = []
+    var renaming: TabItem?
     /// Les splits cachés où une commande ou une progression a fini, où ça a sonné ou notifié
     /// (Claude Code qui attend une réponse) depuis qu'on les a quittés.
     private(set) var activity: Set<UUID> = []
     /// Le split agrandi à tout l'onglet le temps de lire, comme `toggle_split_zoom` de Ghostty.
-    private(set) var zoomedPane: UUID?
-    private(set) var drop: WindowLayout<UUID, UUID>.Drop?
+    var zoomedPane: UUID?
+    var drop: WindowLayout<UUID, UUID>.Drop?
     /// La page de réglages affichée à la place des terminaux, qui restent ouverts dessous.
     private(set) var settingsSection: SettingsSection?
     /// La place des splits, posée par `TerminalSplitView` pour calculer les dépôts.
     @ObservationIgnored var bounds: CGRect = .zero
-    @ObservationIgnored private weak var window: NSWindow?
+    @ObservationIgnored private(set) weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
     @ObservationIgnored private var watchers: [UUID: [AnyCancellable]] = [:]
     /// La place de la fenêtre restaurée, posée quand elle s'ouvre.
@@ -237,240 +232,7 @@ final class TerminalWorkspace {
         window?.performClose(nil)
     }
 
-    // MARK: Onglets
-
-    /// ⌘T l'ouvre après l'onglet actif, comme Ghostty ; les boutons +, en bout de liste où ils sont.
-    func newTab(atEnd: Bool = false) {
-        let pane = UUID()
-        states[pane] = makeState(pane, inheriting: focused, as: .window)
-        apply(atEnd ? layout.appendingTab(UUID(), pane: pane) : layout.addingTab(UUID(), pane: pane))
-    }
-
-    func select(_ tab: UUID) {
-        apply(layout.selecting(tab))
-    }
-
-    func select(number: Int) {
-        apply(layout.selecting(number: number))
-    }
-
-    func selectNext() {
-        apply(layout.selecting(offset: 1))
-    }
-
-    func selectPrevious() {
-        apply(layout.selecting(offset: -1))
-    }
-
-    func move(_ tab: UUID, to index: Int) {
-        layout = layout.moving(tab, to: index)
-    }
-
-    func moveSelectedTab(by offset: Int) {
-        layout = layout.moving(layout.selectedTab, by: offset)
-    }
-
-    /// La croix d'un onglet : confirme si une commande tourne dans un de ses splits.
-    func close(_ tab: UUID) {
-        guard layout.panes(of: tab).contains(where: hasRunningCommand) else { return removeTab(tab) }
-        // Sa feuille parle de cet onglet : on l'affiche avant de demander.
-        select(tab)
-        CloseConfirmation.tab.ask(in: window) { [weak self] in self?.removeTab(tab) }
-    }
-
-    func closeSelectedTab() {
-        close(layout.selectedTab)
-    }
-
-    func closeOthers(of tab: UUID) {
-        close(layout.tabs(besides: tab))
-    }
-
-    func closeAfter(_ tab: UUID) {
-        close(layout.tabs(after: tab))
-    }
-
-    /// Retour à un seul onglet : le terminal actif reste, avec son shell ; les autres onglets et
-    /// splits se ferment, couleurs, icônes, noms et taille du texte reviennent à la normale.
-    func reset() {
-        let kept = focusedID
-        let others = layout.panes.filter { $0 != kept }
-        let reset = { [weak self] in
-            guard let self else { return }
-            others.forEach(forget)
-            labels = WindowLabels()
-            collapsed = []
-            apply(WindowLayout(tab: layout.selectedTab, pane: kept))
-            states[kept]?.surface?.performBindingAction("reset_font_size")
-            focus(kept)
-        }
-        guard others.contains(where: hasRunningCommand) else { return reset() }
-        CloseConfirmation.tabs.ask(in: window, then: reset)
-    }
-
-    func label(of item: TabItem) -> TabLabel? {
-        switch item {
-        case let .tab(tab): labels.tabs[tab]
-        case let .pane(pane): labels.panes[pane]
-        }
-    }
-
-    func setColor(_ color: TabColor?, of item: TabItem) {
-        updateLabel(of: item) { $0.color = color }
-    }
-
-    /// Sans icône choisie, celle du terminal.
-    func icon(of item: TabItem) -> TabIcon {
-        label(of: item)?.icon ?? .terminal
-    }
-
-    func setIcon(_ icon: TabIcon, of item: TabItem) {
-        updateLabel(of: item) { $0.icon = icon == .terminal ? nil : icon }
-    }
-
-    /// Celle choisie, sinon un split pour un groupe : on le reconnaît en haut comme sur le côté.
-    func symbol(of tab: UUID) -> String {
-        labels.tabs[tab]?.icon?.symbol ?? (layout.isSplit(tab) ? "square.split.2x1" : TabIcon.terminal.symbol)
-    }
-
-    /// Le nom choisi, sinon celui qu'annonce le terminal : la commande en cours, ou le dernier
-    /// dossier de son chemin, entier dans l'en-tête. Un groupe sans nom choisi s'appelle « Groupe 1 »,
-    /// « Groupe 2 »…
-    func displayedTitle(of item: TabItem) -> String {
-        if let title = label(of: item)?.title { return title }
-        switch item {
-        case let .tab(tab):
-            let panes = layout.panes(of: tab)
-            guard panes.count == 1 else { return "\(L10n.text(.group)) \(labels.groupNumbers[tab] ?? 1)" }
-            return terminalTitle(panes[0])
-        case let .pane(pane):
-            return terminalTitle(pane)
-        }
-    }
-
-    /// Celle d'un de ses splits : l'onglet travaille tant que l'un d'eux travaille.
-    func progress(of tab: UUID) -> TerminalProgress? {
-        layout.panes(of: tab).lazy.compactMap { self.paneProgress[$0] }.first
-    }
-
-    func hasActivity(_ tab: UUID) -> Bool {
-        layout.panes(of: tab).contains(where: activity.contains)
-    }
-
-    /// Nil : l'onglet affiché.
-    func startRenaming(_ item: TabItem? = nil) {
-        guard settingsSection == nil else { return }
-        let item = item ?? .tab(layout.selectedTab)
-        switch item {
-        case let .tab(tab): select(tab)
-        case let .pane(pane): focus(pane)
-        }
-        renaming = item
-    }
-
-    /// Nil : renommage annulé. Le champ qui disparaît rappelle cette fonction en perdant le focus :
-    /// seul le premier appel compte.
-    func finishRenaming(_ item: TabItem, input: String?, displayed: String) {
-        guard renaming == item else { return }
-        renaming = nil
-        if let input {
-            updateLabel(of: item) { $0.title = TabTitle.renamed(input: input, displayed: displayed, current: $0.title) }
-        }
-        focus(focusedID)
-    }
-
-    func resetTitle(_ item: TabItem) {
-        updateLabel(of: item) { $0.title = nil }
-    }
-
-    func toggleCollapsed(_ tab: UUID) {
-        collapsed.formSymmetricDifference([tab])
-    }
-
-    /// Chaque split de l'onglet part dans son propre onglet ; le clavier reste où il était.
-    func separate(_ tab: UUID) {
-        let pane = layout.splits[tab]?.focused
-        apply(layout.separating(tab, into: layout.panes(of: tab).dropFirst().map { _ in UUID() }))
-        if let pane { focus(pane) }
-    }
-
-    func detach(_ pane: UUID) {
-        apply(layout.detaching(pane, into: UUID()))
-        focus(pane)
-    }
-
-    // MARK: Splits
-
-    /// Nil : le split actif. Le groupe se déplie : le nouveau split s'y voit.
-    func split(_ axis: SplitAxis, from origin: UUID? = nil) {
-        if let origin { focus(origin) }
-        let pane = UUID()
-        states[pane] = makeState(pane, inheriting: focused, as: .split)
-        collapsed.remove(layout.selectedTab)
-        apply(layout.splitting(toward: axis == .horizontal ? .right : .down, pane: pane))
-    }
-
-    func setRatio(_ ratio: CGFloat, at path: [Int]) {
-        layout = layout.settingRatio(ratio, at: path)
-    }
-
-    /// Nil : le terminal actif.
-    func toggleZoom(_ pane: UUID? = nil) {
-        if let pane { focus(pane) }
-        zoomedPane = zoomedPane == nil && isSplit ? focusedID : nil
-        updateSurfaces()
-    }
-
-    func equalizeSplits() {
-        layout = layout.equalized()
-    }
-
-    /// Cmd+0 ne remet que le terminal actif, comme Ghostty : ici, toute la fenêtre.
-    func resetSizes() {
-        for state in states.values {
-            state.surface?.performBindingAction("reset_font_size")
-        }
-        equalizeSplits()
-    }
-
-    func focusNext() {
-        apply(layout.focusingPane(offset: 1))
-    }
-
-    func focusPrevious() {
-        apply(layout.focusingPane(offset: -1))
-    }
-
-    func focus(toward direction: SplitDirection) {
-        apply(layout.focusingPane(toward: direction))
-    }
-
-    /// Deux splits d'un groupe échangent leur place, glissés l'un sur l'autre dans la barre latérale.
-    func swap(_ a: UUID, _ b: UUID) {
-        layout = layout.swapping(a, b)
-    }
-
-    /// La croix d'un split dans la barre latérale : confirme si une commande y tourne.
-    func closePane(_ pane: UUID) {
-        guard states[pane] != nil else { return }
-        guard hasRunningCommand(pane) else { return remove(pane) }
-        focus(pane)
-        CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.remove(pane) }
-    }
-
     // MARK: Terminal actif
-
-    func focus(_ pane: UUID) {
-        apply(layout.focusing(pane))
-        lastFocused = states[pane]
-        if settingsSection == nil { states[pane]?.requestFocus() }
-    }
-
-    /// Un clic donne déjà le focus au terminal : on ne fait que suivre.
-    func didFocus(_ pane: UUID) {
-        layout = layout.focusing(pane)
-        lastFocused = states[pane]
-    }
 
     /// Passe par le moteur, qui signale une commande en cours à `onClose`.
     /// Sur la page de réglages, Cmd+W la referme plutôt que le terminal caché dessous.
@@ -509,32 +271,9 @@ final class TerminalWorkspace {
         focus(pane)
     }
 
-    // MARK: Glisser un onglet
-
-    /// Sur les terminaux. Nil : plus de glisser en cours, ou rien à proposer ici.
-    func hoverDrop(dragging: WindowLayout<UUID, UUID>.Dragged, at point: CGPoint?) {
-        if point != nil { unzoom() }
-        let new = point.flatMap { layout.drop(of: dragging, at: $0, in: bounds) }
-        if new != drop { drop = new }
-    }
-
-    /// Lâché sur les splits de l'onglet affiché, il les rejoint, avec son nom.
-    func performDrop() {
-        guard let drop else { return }
-        self.drop = nil
-        apply(layout.dropping(drop))
-        focus(layout.focusedPane)
-    }
-
     // MARK: Interne
 
-    private func close(_ tabs: [UUID]) {
-        guard !tabs.isEmpty else { return }
-        guard tabs.flatMap(layout.panes(of:)).contains(where: hasRunningCommand) else { return tabs.forEach(removeTab) }
-        CloseConfirmation.tabs.ask(in: window) { [weak self] in tabs.forEach { self?.removeTab($0) } }
-    }
-
-    private func hasRunningCommand(_ pane: UUID) -> Bool {
+    func hasRunningCommand(_ pane: UUID) -> Bool {
         states[pane].map(Self.isRunning) ?? false
     }
 
@@ -553,7 +292,7 @@ final class TerminalWorkspace {
     }
 
     /// `close()` et pas `performClose` : la confirmation a déjà eu lieu.
-    private func remove(_ pane: UUID) {
+    func remove(_ pane: UUID) {
         guard let remaining = layout.removing(pane) else {
             window?.close()
             return
@@ -561,18 +300,7 @@ final class TerminalWorkspace {
         forget(pane)
         apply(remaining)
     }
-
-    private func removeTab(_ tab: UUID) {
-        let panes = layout.panes(of: tab)
-        guard let remaining = layout.removingTab(tab) else {
-            window?.close()
-            return
-        }
-        panes.forEach(forget)
-        apply(remaining)
-    }
-
-    private func forget(_ pane: UUID) {
+    func forget(_ pane: UUID) {
         states[pane] = nil
         searches[pane] = nil
         watchers[pane] = nil
@@ -581,23 +309,8 @@ final class TerminalWorkspace {
         activity.remove(pane)
     }
 
-    private func terminalTitle(_ pane: UUID) -> String {
-        let title = terminalTitles[pane] ?? ""
-        return title.isEmpty ? L10n.text(.terminal) : TabTitle.short(title)
-    }
-
-    private func updateLabel(of item: TabItem, _ change: (inout TabLabel) -> Void) {
-        var label = label(of: item) ?? TabLabel()
-        change(&label)
-        let value = label.isEmpty ? nil : label
-        switch item {
-        case let .tab(tab): labels.tabs[tab] = value
-        case let .pane(pane): labels.panes[pane] = value
-        }
-    }
-
     /// Seul l'onglet affiché dessine ; les autres gardent leurs shells. Le focus suit le split actif.
-    private func apply(_ new: WindowLayout<UUID, UUID>) {
+    func apply(_ new: WindowLayout<UUID, UUID>) {
         let previous = layout.focusedPane
         let reconciled = labels.reconciled(from: layout, to: new)
         if reconciled != labels { labels = reconciled }
@@ -619,7 +332,7 @@ final class TerminalWorkspace {
     }
 
     /// Seuls les terminaux affichés se dessinent : ni les autres onglets, ni rien sous les réglages.
-    private func updateSurfaces() {
+    func updateSurfaces() {
         let shown = shownPanes
         if !activity.isDisjoint(with: shown) { activity.subtract(shown) }
         let drawn = settingsSection == nil ? shown : []
@@ -628,18 +341,12 @@ final class TerminalWorkspace {
         }
     }
 
-    private func unzoom() {
-        guard zoomedPane != nil else { return }
-        zoomedPane = nil
-        updateSurfaces()
-    }
-
     private func noteActivity(in pane: UUID) {
         guard !shownPanes.contains(pane) else { return }
         activity.insert(pane)
     }
 
-    private func makeState(
+    func makeState(
         _ pane: UUID,
         inheriting parent: TerminalViewState?,
         as context: TerminalSurfaceContext

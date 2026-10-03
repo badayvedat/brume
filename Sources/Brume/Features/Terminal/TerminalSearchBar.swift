@@ -18,13 +18,13 @@ struct TerminalSearchBar: View {
                 .padding(.leading, 8)
                 .padding(.trailing, 50)
                 .padding(.vertical, 6)
-                .background(Color.primary.opacity(0.1), in: .rect(cornerRadius: 6))
+                .background(Ink.selection, in: .rect(cornerRadius: 6))
                 .overlay(alignment: .trailing) {
                     if let label = count.label {
                         Text(label)
                             .font(.caption)
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Ink.muted)
                             .padding(.trailing, 8)
                     }
                 }
@@ -69,10 +69,10 @@ private struct SearchButton: View {
     var body: some View {
         Button(action: action) {
             SystemSymbol.image(icon)
-                .foregroundStyle(isHovered ? .primary : .secondary)
+                .foregroundStyle(isHovered ? Ink.text : Ink.muted)
                 .padding(.horizontal, 2)
                 .frame(height: 26)
-                .background(isHovered ? Color.primary.opacity(0.1) : .clear, in: .rect(cornerRadius: 6))
+                .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 6))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
