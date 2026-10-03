@@ -30,15 +30,22 @@ struct TabCell: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            if showsNumber, let number = workspace.layout.shortcutNumber(of: id) {
-                Text("\(number)")
-                    .font(.system(size: 10, weight: .bold).monospacedDigit())
-                    .foregroundStyle(.white)
-                    .frame(width: 16, height: 16)
-                    .background(Color.accentColor, in: .rect(cornerRadius: 4))
-                    .padding(.trailing, 3)
-                    .accessibilityHidden(true)
+            // Comme Muxy : l'icône terminal, et à sa place le numéro tant que Cmd est tenu.
+            Group {
+                if showsNumber, let number = workspace.layout.shortcutNumber(of: id) {
+                    Text("\(number)")
+                        .font(.system(size: 10, weight: .bold).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.accentColor, in: .rect(cornerRadius: 4))
+                } else {
+                    SystemSymbol.image("apple.terminal", size: 12)
+                        .foregroundStyle(isSelected ? .primary : .secondary)
+                }
             }
+            .frame(width: 16, height: 16)
+            .padding(.trailing, 4)
+            .accessibilityHidden(true)
             Group {
                 if isRenaming {
                     renameField

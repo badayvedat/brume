@@ -59,6 +59,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Glisser un onglet : au centre d'une zone il la rejoint, près d'un bord il ouvre une zone de ce côté
 - [x] Séparateur des zones en couleur d'accent au survol
 - [x] Déplacer l'onglet vers la zone voisine au clavier (Ctrl+Cmd+flèche), ou ouvrir une zone de ce côté
+- [x] Icône terminal dans l'onglet, remplacée par le numéro tant que Cmd est tenu
 - [ ] Bouton « Ouvrir avec » : dossier du terminal actif dans le Finder, un éditeur...
 
 ## 5. Réglages en interface

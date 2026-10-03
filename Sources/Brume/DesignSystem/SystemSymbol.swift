@@ -17,6 +17,7 @@ enum SystemSymbol {
         Variant(name: "xmark"),
         Variant(name: "xmark", size: 9, weight: .bold),
         Variant(name: "plus", size: 13, weight: .medium),
+        Variant(name: "apple.terminal", size: 12),
         Variant(name: "square.split.2x1", size: 13, weight: .medium),
         Variant(name: "square.split.1x2", size: 13, weight: .medium),
         Variant(name: "macwindow.badge.plus", size: 13, weight: .medium),
