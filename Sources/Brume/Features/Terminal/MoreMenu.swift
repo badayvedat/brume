@@ -30,6 +30,7 @@ struct MoreMenu: View {
         .accessibilityLabel(L10n.text(.moreOptions))
         .tooltip(L10n.text(.moreOptions))
         .onHover { isHovered = $0 }
+        .animation(Ink.feedback, value: isHovered)
     }
 
     private func showMenu() {

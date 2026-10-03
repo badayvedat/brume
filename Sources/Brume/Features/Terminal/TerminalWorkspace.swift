@@ -76,7 +76,7 @@ final class TerminalWorkspace {
     /// Toute la fenêtre et la hauteur d'une barre d'onglets, posées par `TerminalSplitView` pour
     /// calculer les dépôts : les vues prennent la hauteur du `WindowTitlebar`, observé, pas celle-ci.
     @ObservationIgnored var bounds: CGRect = .zero
-    @ObservationIgnored var barHeight: CGFloat = 32
+    @ObservationIgnored var barHeight: CGFloat = 40
     @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
     /// La place de la fenêtre restaurée, posée quand elle s'ouvre.

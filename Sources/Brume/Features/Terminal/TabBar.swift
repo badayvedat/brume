@@ -1,7 +1,7 @@
 import BrumeCore
 import SwiftUI
 
-/// La barre d'onglets d'une zone, comme Muxy : onglets arrondis, + et boutons de split.
+/// La barre d'onglets d'une zone : onglets arrondis, + et boutons de split, aux mesures de Monocode.
 /// Celles du haut de la fenêtre tiennent lieu de barre de titre.
 struct TabBar: View {
     let workspace: TerminalWorkspace
@@ -20,8 +20,8 @@ struct TabBar: View {
     @State private var stripOriginX: CGFloat = 0
     @Environment(\.openWindow) private var openWindow
 
-    private let spacing: CGFloat = 4
-    private let tabWidth: ClosedRange<CGFloat> = 110 ... 220
+    private let spacing: CGFloat = 2
+    private let tabWidth: ClosedRange<CGFloat> = 112 ... 224
 
     private var tabs: [UUID] {
         workspace.layout.areas[area]?.tabs ?? []
@@ -94,6 +94,7 @@ struct TabBar: View {
         .padding(.trailing, 8)
         .frame(width: frame.width, height: height)
         .background { if isAtTop { WindowDragArea() } }
+        .overlay(alignment: .bottom) { Ink.rule.frame(height: 1).allowsHitTesting(false) }
     }
 
     private var newTabButton: some View {
@@ -154,5 +155,6 @@ struct BarButton: View {
         .accessibilityLabel(label)
         .tooltip(label, shortcut: shortcut)
         .onHover { isHovered = $0 }
+        .animation(Ink.feedback, value: isHovered)
     }
 }

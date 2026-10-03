@@ -21,7 +21,7 @@ struct TabCell: View {
         workspace.layout.isShown(id)
     }
 
-    /// Le trait d'accent ne va qu'à l'onglet qui reçoit le clavier.
+    /// Celui qui reçoit le clavier : avec des splits, le seul en plein dans sa barre.
     private var isFocused: Bool {
         workspace.focusedID == id
     }
@@ -61,21 +61,14 @@ struct TabCell: View {
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
             CloseButton(action: close)
-                .opacity(isSelected || isHovered ? 1 : 0)
+                .opacity(isHovered ? 1 : 0)
         }
-        .padding(.leading, 10)
+        .padding(.leading, 8)
         .padding(.trailing, 4)
-        .frame(height: 26)
-        // Le trait d'accent court sur toute la largeur et suit l'arrondi des coins.
-        .background(alignment: .bottom) {
-            ZStack(alignment: .bottom) {
-                background
-                if isFocused {
-                    (workspace.color(of: id)?.color ?? accent.color).frame(height: 2)
-                }
-            }
-            .clipShape(.rect(cornerRadius: 6))
-        }
+        .frame(height: 30)
+        .background(background, in: .rect(cornerRadius: 6))
+        .animation(Ink.feedback, value: isHovered)
+        .animation(Ink.feedback, value: isFocused)
         .overlay {
             if isRenaming {
                 RoundedRectangle(cornerRadius: 6).strokeBorder(accent.color, lineWidth: 1)
@@ -171,13 +164,15 @@ struct TabCell: View {
         workspace.close(id)
     }
 
-    /// Une couleur choisie teinte tout l'onglet, plus fort quand il est affiché.
+    /// Une couleur choisie teinte tout l'onglet, plus fort quand il est affiché. Avec des splits,
+    /// l'onglet affiché d'une zone sans le clavier reste à mi-teinte : seul celui qui l'a est plein.
     private var background: Color {
+        let isFull = isFocused || (isSelected && isHovered)
+        let isHalf = isSelected || isHovered
         if let color = workspace.color(of: id)?.color {
-            return color.opacity(isSelected ? 0.28 : isHovered ? 0.18 : 0.12)
+            return color.opacity(isFull ? 0.28 : isHalf ? 0.18 : 0.12)
         }
-        if isSelected { return Ink.selection }
-        return isHovered ? Ink.hover : .clear
+        return isFull ? Ink.selection : isHalf ? Ink.hover : .clear
     }
 }
 
@@ -190,12 +185,13 @@ private struct CloseButton: View {
         Button(action: action) {
             SystemSymbol.image("xmark", size: 9, weight: .bold)
                 .foregroundStyle(isHovered ? Ink.text : Ink.muted)
-                .frame(width: 18, height: 18)
+                .frame(width: 20, height: 20)
                 .background(isHovered ? Ink.selection : .clear, in: .rect(cornerRadius: 4))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.text(.closeTab))
         .tooltip(L10n.text(.closeTab))
         .onHover { isHovered = $0 }
+        .animation(Ink.feedback, value: isHovered)
     }
 }

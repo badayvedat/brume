@@ -98,7 +98,7 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 ## 8. DA Monocode
 
 - [x] Couleurs et tokens de base (`Ink` : un blanc à différentes opacités)
-- [ ] Barre d'onglets aux mesures de Monocode (40 de haut, onglets de 30)
+- [x] Barre d'onglets aux mesures de Monocode (40 de haut, onglets de 30)
 - [ ] Effet verre sur la sidebar
 
 ## 9. Autocomplétion des commandes connues
