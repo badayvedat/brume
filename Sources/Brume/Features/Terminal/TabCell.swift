@@ -8,6 +8,7 @@ struct TabCell: View {
     let workspace: TerminalWorkspace
     let tabs: TerminalTabs
     let isDragging: Bool
+    let showsNumber: Bool
 
     @State private var isHovered = false
     @State private var draft = ""
@@ -23,6 +24,15 @@ struct TabCell: View {
 
     var body: some View {
         HStack(spacing: 4) {
+            if showsNumber, let number = tabs.shortcutNumber(of: workspace.id) {
+                Text("\(number)")
+                    .font(.system(size: 10, weight: .bold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .frame(width: 16, height: 16)
+                    .background(Color.accentColor, in: .rect(cornerRadius: 4))
+                    .padding(.trailing, 3)
+                    .accessibilityHidden(true)
+            }
             Group {
                 if isRenaming {
                     renameField
@@ -78,7 +88,7 @@ struct TabCell: View {
         .onChange(of: isDragging) { _, dragging in
             if dragging { isHovered = false }
         }
-        .help(title)
+        .tooltip(title)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
@@ -140,7 +150,7 @@ private struct CloseButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.text(.closeTab))
-        .help(L10n.text(.closeTab))
+        .tooltip(L10n.text(.closeTab))
         .onHover { isHovered = $0 }
     }
 }

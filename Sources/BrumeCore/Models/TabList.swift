@@ -31,6 +31,13 @@ public struct TabList<Tab: Hashable & Sendable>: Hashable, Sendable {
         return selecting(tabs[index])
     }
 
+    /// Le chiffre du raccourci de l'onglet : Cmd+1 à Cmd+8 par position, Cmd+9 pour le dernier.
+    public func shortcutNumber(of tab: Tab) -> Int? {
+        guard let index = tabs.firstIndex(of: tab) else { return nil }
+        if index == tabs.count - 1, index >= 8 { return 9 }
+        return index < 8 ? index + 1 : nil
+    }
+
     /// Fait le tour : après le dernier vient le premier.
     public func selecting(offset: Int) -> TabList {
         guard let index = tabs.firstIndex(of: selected) else { return self }

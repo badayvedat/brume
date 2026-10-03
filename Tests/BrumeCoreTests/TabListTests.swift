@@ -25,6 +25,15 @@ struct TabListTests {
         #expect(threeTabs.selecting(number: 9).selected == "c")
     }
 
+    @Test func shortcutNumbersFollowCommandDigits() {
+        let ten = (1 ... 9).reduce(TabList("t0")) { $0.inserting("t\($1)") }
+        #expect(ten.shortcutNumber(of: "t0") == 1)
+        #expect(ten.shortcutNumber(of: "t7") == 8)
+        #expect(ten.shortcutNumber(of: "t8") == nil)
+        #expect(ten.shortcutNumber(of: "t9") == 9)
+        #expect(threeTabs.shortcutNumber(of: "c") == 3)
+    }
+
     @Test func offsetWrapsAround() {
         #expect(threeTabs.selecting(number: 3).selecting(offset: 1).selected == "a")
         #expect(threeTabs.selecting(number: 1).selecting(offset: -1).selected == "c")

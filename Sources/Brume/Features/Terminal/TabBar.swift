@@ -2,39 +2,61 @@ import BrumeCore
 import SwiftUI
 
 /// Barre d'onglets maison, à la place de la barre de titre, comme Muxy : onglets
-/// arrondis, à côté des boutons de la fenêtre.
+/// arrondis à côté des boutons de la fenêtre, splits et nouvelle fenêtre à droite.
 struct TabBar: View {
     let tabs: TerminalTabs
 
     @State private var titlebar = WindowTitlebar()
     @State private var isDragging = false
+    @State private var commandKey = CommandKeyHold()
+    @Environment(\.openWindow) private var openWindow
 
     private let spacing: CGFloat = 4
     private let tabWidth: ClosedRange<CGFloat> = 110 ... 220
     private let space = "tab-bar"
 
     var body: some View {
-        GeometryReader { geometry in
-            let width = cellWidth(available: geometry.size.width)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: spacing) {
-                    ForEach(tabs.tabs) { workspace in
-                        TabCell(state: workspace.focused, workspace: workspace, tabs: tabs, isDragging: isDragging)
+        HStack(spacing: 0) {
+            GeometryReader { geometry in
+                let width = cellWidth(available: geometry.size.width)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: spacing) {
+                        ForEach(tabs.tabs) { workspace in
+                            TabCell(
+                                state: workspace.focused,
+                                workspace: workspace,
+                                tabs: tabs,
+                                isDragging: isDragging,
+                                showsNumber: commandKey.isHeld
+                            )
                             .frame(width: width)
                             // Pendant le renommage, glisser dans le champ sélectionne du texte.
                             .gesture(
                                 reorder(workspace.id, step: width + spacing),
                                 including: tabs.renamingID == workspace.id ? .subviews : .all
                             )
+                        }
+                        BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T", action: tabs.newTab)
                     }
-                    BarButton(icon: "plus", label: "\(L10n.text(.newTab)) (⌘T)", action: tabs.newTab)
+                    .animation(.easeInOut(duration: 0.15), value: tabs.tabs.map(\.id))
+                    .coordinateSpace(.named(space))
+                    .frame(maxHeight: .infinity)
+                    .frame(minWidth: geometry.size.width, alignment: .leading)
+                    .background(WindowDragArea())
                 }
-                .animation(.easeInOut(duration: 0.15), value: tabs.tabs.map(\.id))
-                .coordinateSpace(.named(space))
-                .frame(maxHeight: .infinity)
-                .frame(minWidth: geometry.size.width, alignment: .leading)
-                .background(WindowDragArea())
             }
+            HStack(spacing: 2) {
+                BarButton(icon: "square.split.2x1", label: L10n.text(.splitRight), shortcut: "⌘D") {
+                    tabs.selected.split(.horizontal)
+                }
+                BarButton(icon: "square.split.1x2", label: L10n.text(.splitDown), shortcut: "⇧⌘D") {
+                    tabs.selected.split(.vertical)
+                }
+                BarButton(icon: "macwindow.badge.plus", label: L10n.text(.newWindow), shortcut: "⌘N") {
+                    openWindow(id: BrumeApp.terminalWindowID)
+                }
+            }
+            .padding(.leading, 12)
         }
         .padding(.leading, titlebar.isFullScreen ? 8 : titlebar.buttonsWidth + 14)
         .padding(.trailing, 8)
@@ -73,6 +95,7 @@ private struct BarButton: View {
 
     let icon: String
     let label: String
+    let shortcut: String
     let action: () -> Void
 
     @State private var isHovered = false
@@ -86,7 +109,7 @@ private struct BarButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
-        .help(label)
+        .tooltip(label, shortcut: shortcut)
         .onHover { isHovered = $0 }
     }
 }

@@ -22,6 +22,10 @@ final class TerminalTabs {
         list.tabs.compactMap { workspaces[$0] }
     }
 
+    func shortcutNumber(of id: UUID) -> Int? {
+        list.shortcutNumber(of: id)
+    }
+
     var selected: TerminalWorkspace {
         workspaces[list.selected]!
     }

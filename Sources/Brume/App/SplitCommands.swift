@@ -1,3 +1,4 @@
+import BrumeCore
 import SwiftUI
 
 struct SplitCommands: Commands {
@@ -6,9 +7,9 @@ struct SplitCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Divider()
-            Button("Diviser à droite") { workspace?.split(.horizontal) }
+            Button(L10n.text(.splitRight)) { workspace?.split(.horizontal) }
                 .keyboardShortcut("d")
-            Button("Diviser en dessous") { workspace?.split(.vertical) }
+            Button(L10n.text(.splitDown)) { workspace?.split(.vertical) }
                 .keyboardShortcut("d", modifiers: [.command, .shift])
         }
         CommandGroup(before: .windowArrangement) {
