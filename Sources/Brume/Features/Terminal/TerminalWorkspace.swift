@@ -12,11 +12,6 @@ import SwiftUI
             // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
             // sans ça, le défilement est deux fois plus lent que dans Ghostty.
             $0.withCustom("mouse-scroll-multiplier", "precision:2")
-            // Le moteur avale ces raccourcis pour des actions que le paquet ne transmet pas :
-            // on les rend au menu de l'app.
-            for key in ["q", "t", "n", "d", "shift+d", "[", "]", "f", "e", "g", "shift+g", "ctrl+=", "alt+arrow_left", "alt+arrow_right", "alt+arrow_up", "alt+arrow_down"] {
-                $0.withCustom("keybind", "super+\(key)=unbind")
-            }
         }
     )
     // Le moteur part en thème clair jusqu'à ce qu'une vue lui donne l'apparence : un nouveau
@@ -126,6 +121,11 @@ final class TerminalWorkspace {
     func didFocus(_ id: UUID) {
         focusedID = id
         lastFocused = states[id]
+    }
+
+    /// Passe par le moteur, qui signale une commande en cours à `onClose`.
+    func closeFocused() {
+        focused.surface?.performBindingAction("close_surface")
     }
 
     func changeFontSize(_ change: FontSizeChange) {

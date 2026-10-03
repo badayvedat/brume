@@ -9,7 +9,7 @@ public enum TextKey: CaseIterable, Sendable {
     case closeTerminalTitle, closeTerminalMessage
     case closeTabTitle, closeTabMessage
     case quitTitle, quitMessage
-    case close, quit, cancel
+    case close, closeWindow, quit, cancel
 
     public func text(in language: Language) -> String {
         switch language {
@@ -27,6 +27,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .quitTitle: "Quitter Brume ?"
         case .quitMessage: "Une commande tourne encore dans un terminal. Quitter l'arrêtera."
         case .close: "Fermer"
+        case .closeWindow: "Fermer la fenêtre"
         case .quit: "Quitter"
         case .cancel: "Annuler"
         }
@@ -41,6 +42,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .quitTitle: "Quit Brume?"
         case .quitMessage: "The terminal still has a running process. If you quit, the process will be killed."
         case .close: "Close"
+        case .closeWindow: "Close Window"
         case .quit: "Quit"
         case .cancel: "Cancel"
         }

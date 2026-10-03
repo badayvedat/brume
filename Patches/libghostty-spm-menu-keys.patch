@@ -1,0 +1,49 @@
+diff --git a/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift b/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift
+index 9104f1b..42c3fb6 100644
+--- a/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift
++++ b/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift
+@@ -29,7 +29,16 @@
+             guard window?.firstResponder === self else { return false }
+             guard let surface else { return false }
+ 
+-            if keyIsBinding(event, on: surface) {
++            if let flags = bindingFlags(event, on: surface) {
++                // Brume: the app menu owns its shortcuts, as in Ghostty. The core
++                // would swallow them for actions this package does not forward.
++                let skipsMenu = GHOSTTY_BINDING_FLAGS_ALL.rawValue | GHOSTTY_BINDING_FLAGS_PERFORMABLE.rawValue
++                if flags.rawValue & GHOSTTY_BINDING_FLAGS_CONSUMED.rawValue != 0,
++                   flags.rawValue & skipsMenu == 0,
++                   NSApp.mainMenu?.performKeyEquivalent(with: event) == true
++                {
++                    return true
++                }
+                 keyDown(with: event)
+                 return true
+             }
+@@ -269,21 +278,22 @@
+             NSMenu.popUpContextMenu(menu, with: event, for: self)
+         }
+ 
+-        private func keyIsBinding(
++        private func bindingFlags(
+             _ event: NSEvent,
+             on surface: TerminalSurface
+-        ) -> Bool {
++        ) -> ghostty_binding_flags_e? {
+             guard let rawSurface = surface.rawValue else {
+-                return false
++                return nil
+             }
+ 
+             var keyEvent = event.buildKeyInput(action: GHOSTTY_ACTION_PRESS)
+             var bindingFlags = ghostty_binding_flags_e(rawValue: 0)
+             let text = event.characters ?? ""
+-            return text.withCString { ptr in
++            let isBinding = text.withCString { ptr in
+                 keyEvent.text = ptr
+                 return ghostty_surface_key_is_binding(rawSurface, keyEvent, &bindingFlags)
+             }
++            return isBinding ? bindingFlags : nil
+         }
+     }
+ #endif
