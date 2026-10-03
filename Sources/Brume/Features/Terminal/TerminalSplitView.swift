@@ -5,16 +5,23 @@ import SwiftUI
 struct TerminalSplitView: View {
     static let space = "terminal-splits"
 
-    let workspace: TerminalWorkspace
+    let tabs: TerminalTabs
 
     var body: some View {
         GeometryReader { geometry in
             let bounds = CGRect(origin: .zero, size: geometry.size)
-            let frames = workspace.tree.frames(in: bounds)
-            // Tous les volets au même niveau, rangés par identifiant : SwiftUI garde chaque
-            // vue quand l'arbre change. Une vue recréée tuerait le shell qu'elle porte.
+            let selected = tabs.selected
+            let frames = tabs.tabs.reduce(into: [UUID: CGRect]()) { frames, workspace in
+                frames.merge(workspace.tree.frames(in: bounds)) { current, _ in current }
+            }
+            // Les volets de tous les onglets au même niveau, rangés par identifiant : changer
+            // d'onglet, diviser ou fusionner deux onglets garde chaque vue. Une vue recréée
+            // tuerait le shell qu'elle porte. Ceux des onglets cachés restent montés, transparents.
             ZStack(alignment: .topLeading) {
-                ForEach(workspace.tree.panes, id: \.self) { id in
+                ForEach(tabs.panes) { pane in
+                    let workspace = pane.workspace
+                    let id = pane.id
+                    let isShown = workspace === selected
                     if let state = workspace.states[id], let frame = frames[id] {
                         TerminalPane(
                             state: state,
@@ -26,11 +33,14 @@ struct TerminalSplitView: View {
                         )
                         .frame(width: frame.width, height: frame.height)
                         .offset(x: frame.minX, y: frame.minY)
+                        .opacity(isShown ? 1 : 0)
+                        .allowsHitTesting(isShown)
+                        .accessibilityHidden(!isShown)
                     }
                 }
                 // Identifiées par leur place dans l'arbre : stable pendant un glissé.
-                ForEach(workspace.tree.dividers(in: bounds), id: \.path) { divider in
-                    SplitHandle(divider: divider) { workspace.setRatio($0, at: divider.path) }
+                ForEach(selected.tree.dividers(in: bounds), id: \.path) { divider in
+                    SplitHandle(divider: divider) { selected.setRatio($0, at: divider.path) }
                 }
             }
             .coordinateSpace(.named(Self.space))

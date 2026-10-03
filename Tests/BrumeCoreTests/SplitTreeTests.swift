@@ -95,4 +95,30 @@ struct SplitTreeTests {
         let tree = threePanes.settingRatio(0.8, at: []).settingRatio(0.2, at: [1]).equalized()
         #expect(tree == .split(.horizontal, ratio: 0.5, .pane("a"), .split(.vertical, ratio: 0.5, .pane("b"), .pane("c"))))
     }
+
+    @Test func insertingPlacesSubtreeOnTheChosenSide() {
+        let other = SplitTree.pane("x").splitting("x", axis: .vertical, adding: "y")
+        let left = SplitTree.pane("a").inserting(other, beside: "a", toward: .left)
+        #expect(left == .split(.horizontal, ratio: 0.5, other, .pane("a")))
+        let down = SplitTree.pane("a").inserting(other, beside: "a", toward: .down)
+        #expect(down == .split(.vertical, ratio: 0.5, .pane("a"), other))
+    }
+
+    @Test func insertingBesideANestedPane() {
+        #expect(threePanes.inserting(.pane("d"), beside: "c", toward: .right).panes == ["a", "b", "c", "d"])
+    }
+
+    @Test func nearestEdgeSplitsThePaneInFourTriangles() {
+        #expect(SplitDirection.nearestEdge(to: CGPoint(x: 10, y: 50), in: unit) == .left)
+        #expect(SplitDirection.nearestEdge(to: CGPoint(x: 90, y: 60), in: unit) == .right)
+        #expect(SplitDirection.nearestEdge(to: CGPoint(x: 50, y: 5), in: unit) == .up)
+        #expect(SplitDirection.nearestEdge(to: CGPoint(x: 60, y: 95), in: unit) == .down)
+        // Près du coin bas droit, le bord le plus proche l'emporte.
+        #expect(SplitDirection.nearestEdge(to: CGPoint(x: 97, y: 90), in: unit) == .right)
+    }
+
+    @Test func halfIsTheSideTheDropWillTake() {
+        #expect(SplitDirection.right.half(of: unit) == CGRect(x: 50, y: 0, width: 50, height: 100))
+        #expect(SplitDirection.up.half(of: unit) == CGRect(x: 0, y: 0, width: 100, height: 50))
+    }
 }

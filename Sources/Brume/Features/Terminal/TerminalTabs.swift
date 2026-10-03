@@ -2,12 +2,30 @@ import AppKit
 import BrumeCore
 import SwiftUI
 
+/// Un volet et l'onglet qui le porte.
+struct TabPane: Identifiable {
+    let id: UUID
+    let workspace: TerminalWorkspace
+}
+
+/// Un onglet glissé sur un terminal de l'onglet affiché : il y deviendra un split.
+struct SplitDrop: Equatable {
+    let tab: UUID
+    let pane: UUID
+    let direction: SplitDirection
+    /// La moitié du volet qu'il prendra, dans l'espace de `TerminalScreen`.
+    let highlight: CGRect
+}
+
 /// Les onglets d'une fenêtre. Gérés ici plutôt qu'en onglets natifs : une seule liste,
 /// que la barre du haut affiche et que la vue agents listera.
 @MainActor @Observable
 final class TerminalTabs {
     private var list: TabList<UUID>
     private(set) var renamingID: UUID?
+    private(set) var splitDrop: SplitDrop?
+    /// La zone des terminaux, dans l'espace de `TerminalScreen`, comme les glissés d'onglet.
+    @ObservationIgnored var terminalArea: CGRect = .zero
     private var workspaces: [UUID: TerminalWorkspace] = [:]
     @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
@@ -24,6 +42,11 @@ final class TerminalTabs {
 
     func shortcutNumber(of id: UUID) -> Int? {
         list.shortcutNumber(of: id)
+    }
+
+    /// Les volets de tous les onglets, à plat.
+    var panes: [TabPane] {
+        tabs.flatMap { workspace in workspace.tree.panes.map { TabPane(id: $0, workspace: workspace) } }
     }
 
     var selected: TerminalWorkspace {
@@ -89,6 +112,27 @@ final class TerminalTabs {
 
     func resetTitle(_ id: UUID) {
         workspaces[id]?.customTitle = nil
+    }
+
+    /// Nil, ou hors des terminaux de l'onglet affiché : pas de split à proposer.
+    func hoverSplit(dragging id: UUID, at point: CGPoint?) {
+        var drop: SplitDrop?
+        if let point, id != list.selected, terminalArea.contains(point),
+           let (pane, frame) = selected.tree.frames(in: terminalArea).first(where: { $0.value.contains(point) }) {
+            let direction = SplitDirection.nearestEdge(to: point, in: frame)
+            drop = SplitDrop(tab: id, pane: pane, direction: direction, highlight: direction.half(of: frame))
+        }
+        if drop != splitDrop { splitDrop = drop }
+    }
+
+    /// Les terminaux de l'onglet glissé rejoignent l'onglet affiché ; l'onglet glissé disparaît.
+    func dropSplit() {
+        guard let drop = splitDrop else { return }
+        splitDrop = nil
+        guard let source = workspaces[drop.tab], let remaining = list.removing(drop.tab) else { return }
+        selected.absorb(source, beside: drop.pane, toward: drop.direction)
+        workspaces[drop.tab] = nil
+        list = remaining
     }
 
     /// La croix d'un onglet : confirme si une commande y tourne.

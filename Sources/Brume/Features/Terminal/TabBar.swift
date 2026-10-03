@@ -13,7 +13,12 @@ struct TabBar: View {
 
     private let spacing: CGFloat = 4
     private let tabWidth: ClosedRange<CGFloat> = 110 ... 220
-    private let space = "tab-bar"
+    /// Le début de la rangée d'onglets dans l'espace de `TerminalScreen`, défilement compris.
+    @State private var stripOriginX: CGFloat = 0
+
+    private var height: CGFloat {
+        titlebar.buttonsCenterY * 2
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -30,16 +35,19 @@ struct TabBar: View {
                                 showsNumber: commandKey.isHeld
                             )
                             .frame(width: width)
+                            .opacity(tabs.splitDrop?.tab == workspace.id ? 0.5 : 1)
                             // Pendant le renommage, glisser dans le champ sélectionne du texte.
                             .gesture(
-                                reorder(workspace.id, step: width + spacing),
+                                drag(workspace.id, step: width + spacing),
                                 including: tabs.renamingID == workspace.id ? .subviews : .all
                             )
                         }
                         BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T", action: tabs.newTab)
                     }
                     .animation(.easeInOut(duration: 0.15), value: tabs.tabs.map(\.id))
-                    .coordinateSpace(.named(space))
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(TerminalScreen.space)).minX } action: {
+                        stripOriginX = $0
+                    }
                     .frame(maxHeight: .infinity)
                     .frame(minWidth: geometry.size.width, alignment: .leading)
                     .background(WindowDragArea())
@@ -60,26 +68,31 @@ struct TabBar: View {
         }
         .padding(.leading, titlebar.isFullScreen ? 8 : titlebar.buttonsWidth + 14)
         .padding(.trailing, 8)
-        .frame(height: titlebar.buttonsCenterY * 2)
+        .frame(height: height)
         .background(WindowDragArea())
         .background(WindowReader { titlebar.attach(to: $0) })
     }
 
-    /// Comme Muxy : l'onglet tenu prend la place de celui que survole la souris.
-    /// Toutes les cases ont la même largeur : la place se lit dans la position.
-    private func reorder(_ id: UUID, step: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 4, coordinateSpace: .named(space))
+    /// Dans la barre, comme Muxy : l'onglet tenu prend la place de celui que survole la souris
+    /// (toutes les cases ont la même largeur). Sur un terminal, il y deviendra un split.
+    private func drag(_ id: UUID, step: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(TerminalScreen.space))
             .onChanged { value in
-                if !isDragging {
-                    isDragging = true
-                    tabs.select(id)
+                isDragging = true
+                guard value.location.y <= height else {
+                    return tabs.hoverSplit(dragging: id, at: value.location)
                 }
-                let target = min(max(Int(value.location.x / step), 0), tabs.tabs.count - 1)
+                tabs.hoverSplit(dragging: id, at: nil)
+                let slot = Int((value.location.x - stripOriginX) / step)
+                let target = min(max(slot, 0), tabs.tabs.count - 1)
                 if tabs.tabs.firstIndex(where: { $0.id == id }) != target {
                     tabs.move(id, to: target)
                 }
             }
-            .onEnded { _ in isDragging = false }
+            .onEnded { _ in
+                isDragging = false
+                tabs.dropSplit()
+            }
     }
 
     /// Parts égales, sans dépasser `tabWidth` : au-delà, la barre défile.

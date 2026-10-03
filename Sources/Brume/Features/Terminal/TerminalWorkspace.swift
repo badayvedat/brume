@@ -91,6 +91,17 @@ final class TerminalWorkspace: Identifiable {
         focus(id)
     }
 
+    /// Reprend les terminaux d'un autre onglet, posés du côté `direction` du volet `target`.
+    func absorb(_ other: TerminalWorkspace, beside target: UUID, toward direction: SplitDirection) {
+        tree = tree.inserting(other.tree, beside: target, toward: direction)
+        for (id, state) in other.states {
+            states[id] = state
+            bind(state, as: id)
+        }
+        searches.merge(other.searches) { current, _ in current }
+        focus(other.focusedID)
+    }
+
     func setRatio(_ ratio: CGFloat, at path: [Int]) {
         tree = tree.settingRatio(ratio, at: path)
     }
@@ -192,12 +203,18 @@ final class TerminalWorkspace: Identifiable {
         as context: TerminalSurfaceContext
     ) -> TerminalViewState {
         let state = TerminalViewState(controller: sharedController)
-        state.isSurfaceVisible = isVisible
         // Comme Ghostty : un nouveau terminal part du zoom et du dossier de celui qui avait le focus.
         if let inherited = parent?.surface?.inheritedOptions(for: context) {
             if inherited.fontSize > 0 { state.configuration.fontSize = inherited.fontSize }
             state.configuration.workingDirectory = inherited.workingDirectory
         }
+        bind(state, as: id)
+        return state
+    }
+
+    /// Les rappels du moteur visent l'onglet qui porte le terminal : à refaire quand il change d'onglet.
+    private func bind(_ state: TerminalViewState, as id: UUID) {
+        state.isSurfaceVisible = isVisible
         // Cmd+W passe par le moteur, qui signale une commande en cours.
         state.onClose = { [weak self] processAlive in
             guard let self else { return }
@@ -206,7 +223,6 @@ final class TerminalWorkspace: Identifiable {
         }
         state.onStartSearch = { [weak self] in self?.openSearch(in: id, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: id) }
-        return state
     }
 }
 

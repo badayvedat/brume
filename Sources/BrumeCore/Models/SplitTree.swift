@@ -9,6 +9,25 @@ public enum SplitAxis: Sendable {
 
 public enum SplitDirection: Sendable {
     case left, right, up, down
+
+    /// Le bord le plus proche : les diagonales coupent le volet en quatre triangles,
+    /// sans zone morte.
+    public static func nearestEdge(to point: CGPoint, in rect: CGRect) -> SplitDirection {
+        let x = (point.x - rect.minX) / rect.width
+        let y = (point.y - rect.minY) / rect.height
+        let distances: [(SplitDirection, CGFloat)] = [(.left, x), (.right, 1 - x), (.up, y), (.down, 1 - y)]
+        return distances.min { $0.1 < $1.1 }!.0
+    }
+
+    /// La moitié du volet que prendra ce qu'on y dépose.
+    public func half(of rect: CGRect) -> CGRect {
+        switch self {
+        case .left: rect.divided(atDistance: rect.width / 2, from: .minXEdge).slice
+        case .right: rect.divided(atDistance: rect.width / 2, from: .maxXEdge).slice
+        case .up: rect.divided(atDistance: rect.height / 2, from: .minYEdge).slice
+        case .down: rect.divided(atDistance: rect.height / 2, from: .maxYEdge).slice
+        }
+    }
 }
 
 /// Une séparation qu'on peut glisser. `path` la retrouve dans l'arbre : 0 = premier, 1 = second.
@@ -44,17 +63,25 @@ public indirect enum SplitTree<Pane: Hashable & Sendable>: Hashable, Sendable {
     }
 
     public func splitting(_ target: Pane, axis: SplitAxis, adding new: Pane) -> SplitTree {
+        inserting(.pane(new), beside: target, toward: axis == .horizontal ? .right : .down)
+    }
+
+    /// Pose `subtree` (un volet, ou les splits d'un autre onglet) du côté `direction` de `target`.
+    public func inserting(_ subtree: SplitTree, beside target: Pane, toward direction: SplitDirection) -> SplitTree {
         switch self {
         case let .pane(pane) where pane == target:
-            .split(axis, ratio: 0.5, .pane(pane), .pane(new))
+            let axis: SplitAxis = direction == .left || direction == .right ? .horizontal : .vertical
+            return direction == .left || direction == .up
+                ? .split(axis, ratio: 0.5, subtree, self)
+                : .split(axis, ratio: 0.5, self, subtree)
         case .pane:
-            self
-        case let .split(splitAxis, ratio, first, second):
-            .split(
-                splitAxis,
+            return self
+        case let .split(axis, ratio, first, second):
+            return .split(
+                axis,
                 ratio: ratio,
-                first.splitting(target, axis: axis, adding: new),
-                second.splitting(target, axis: axis, adding: new)
+                first.inserting(subtree, beside: target, toward: direction),
+                second.inserting(subtree, beside: target, toward: direction)
             )
         }
     }

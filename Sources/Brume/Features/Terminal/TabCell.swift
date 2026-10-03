@@ -88,7 +88,6 @@ struct TabCell: View {
         .onChange(of: isDragging) { _, dragging in
             if dragging { isHovered = false }
         }
-        .tooltip(title)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
