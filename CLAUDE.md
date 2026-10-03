@@ -20,7 +20,7 @@ bash build-app.sh --debug --no-install   # fabrique le .app sans toucher au Brum
 - Capturer sans toucher à la fenêtre de Jérémy : une copie du `.app` lancée par `open -n --env CFFIXED_USER_HOME=<dossier>` prend session et réglages dans `<dossier>/Library/Application Support/Brume/`. Avec `open -g`, aucune fenêtre ne s'ouvre ; `screencapture -l` échoue si la fenêtre est sur un autre bureau. Raccourcis et frappe vers la copie seule : `CGEvent.postToPid`. `--no-install` fabrique cette copie sans fermer le Brume ouvert.
 - Le `.zshrc` de Jérémy charge déjà ses greffons brew, qui masquent ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
 - Tests : `bash run-tests.sh`. `swift test` nu ne trouve pas Swift Testing avec les CLT.
-- Brume rouvre au lancement (réglage « Restaurer la session ») les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. Un arrêt brutal (`killall`, relance par `build-app.sh`) n'enregistre rien.
+- Brume rouvre au lancement (réglage « Restaurer la session ») les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. `killall` et la relance par `build-app.sh` (SIGTERM) enregistrent aussi ; `kill -9` non.
 
 ## Contraintes
 

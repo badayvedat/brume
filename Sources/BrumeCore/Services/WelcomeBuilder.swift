@@ -30,6 +30,11 @@ public enum WelcomeBuilder {
             text = text.smaller ?? .small
             steps.append((visual, text))
         }
+        if welcome.visual == .apple {
+            // La pomme de fastfetch n'a qu'une taille : réduite, elle ne tiendrait pas mieux.
+            steps = steps.map { ($0.0.map { _ in welcome.size }, $0.1) }
+            steps = steps.enumerated().filter { $0.offset == 0 || steps[$0.offset - 1] != $0.element }.map(\.element)
+        }
         let infos: [WelcomeInfo] = welcome.info == .categories ? [.categories, .essential] : [welcome.info]
         return steps.flatMap { step in infos.map { WelcomeVariant(visualSize: step.0, textSize: step.1, info: $0) } }
     }
@@ -72,10 +77,11 @@ public enum WelcomeBuilder {
         ]
 
         var visualHeight = 0
-        if let size = variant.visualSize, welcome.visual == .apple {
-            // Les bandes arc-en-ciel d'origine, prises à la palette du terminal.
-            root["logo"] = ["type": "builtin", "source": size == .small ? "macOS_small" : "macOS", "padding": ["right": 4]]
-            visualHeight = size == .small ? 7 : 17
+        if variant.visualSize != nil, welcome.visual == .apple {
+            // La pomme officielle de fastfetch, à toutes les tailles : sa petite (`macOS_small`)
+            // est en traits grossiers. Quand elle ne tient pas, la page passe sans visuel.
+            root["logo"] = ["type": "builtin", "source": "macOS", "padding": ["right": 4]]
+            visualHeight = 17
         } else if let size = variant.visualSize, let logo = logo(for: welcome.visual, size: size, accent: accent) {
             root["logo"] = ["type": "file-raw", "source": logoPath, "width": logo.width, "height": logo.height, "padding": ["right": 4]]
             visualHeight = logo.height

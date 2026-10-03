@@ -46,8 +46,21 @@ struct WelcomeTests {
         }
     }
 
+    @Test func theAppleIsAlwaysTheOfficialOneAndNeverShrunk() throws {
+        var welcome = Welcome()
+        welcome.visual = .apple
+        welcome.content = .visual
+        welcome.size = .medium
+        let variants = WelcomeBuilder.variants(for: welcome)
+        #expect(variants.map(\.visualSize) == [.medium, .medium, nil, nil])
+        let config = WelcomeBuilder.config(for: welcome, variant: variants[0], accent: .brume, language: .french, logoPath: "/tmp/logo")
+        #expect(config.contains("\"macOS\""))
+        #expect(!config.contains("macOS_small"))
+    }
+
     @Test func variantsShrinkDownToNoVisual() {
         var welcome = Welcome()
+        welcome.visual = .ghost
         welcome.content = .both
         welcome.text = "hello"
         welcome.size = .large
@@ -133,6 +146,7 @@ struct WelcomeTests {
     @Test func savingFewerVersionsRemovesTheOldOnes() throws {
         let files = WelcomeFiles(directory: FileManager.default.temporaryDirectory.appending(path: "brume-\(UUID())"))
         var welcome = Welcome()
+        welcome.visual = .ghost
         welcome.size = .large
         let many = try files.save(welcome, accent: .brume, language: .french)
         welcome.size = .small
