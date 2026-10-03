@@ -12,6 +12,12 @@ import SwiftUI
             // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
             // sans ça, le défilement est deux fois plus lent que dans Ghostty.
             $0.withCustom("mouse-scroll-multiplier", "precision:2")
+            // Repris de la config Ghostty de Jérémy. Shift+Entrée : saut de ligne dans Claude Code.
+            $0.withCustom("keybind", "shift+enter=text:\\n")
+            $0.withCustom("macos-option-as-alt", "left")
+            // Option+flèche brut, sans le « mot précédent / suivant » de Ghostty.
+            $0.withCustom("keybind", "alt+left=unbind")
+            $0.withCustom("keybind", "alt+right=unbind")
         }
     )
     // Le moteur part en thème clair jusqu'à ce qu'une vue lui donne l'apparence : un nouveau

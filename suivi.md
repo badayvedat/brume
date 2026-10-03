@@ -40,7 +40,7 @@ Terminal perso pour macOS, simple et beau, qui remplace Ghostty.
 - [x] Barre d'onglets claire sur un terminal sombre (fond clair des terminaux ouverts avant le passage du moteur en sombre)
 - [x] Confirmation avant de fermer un terminal où une commande tourne
 - [x] Raccourcis de l'app interceptés avant le terminal
-- [ ] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt
+- [x] Reprendre tes réglages Ghostty : Shift+Entrée = saut de ligne (Claude Code), Option gauche = Alt
 - [ ] Textes d'autorisation macOS (Documents, Bureau...) dans l'Info.plist
 
 ## 4. Réglages en interface
