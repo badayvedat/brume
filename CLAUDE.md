@@ -2,6 +2,8 @@
 
 Terminal macOS perso, simple et beau, qui remplace Ghostty. Étapes et avancement dans `suivi.md`, local et gitignoré : cocher en fin de tâche.
 
+Avant de toucher à l'icône de l'app ou aux visuels de la page Démarrage : lire `docs/icone.md` ou `docs/visuels-demarrage.md`.
+
 ## Build
 
 ```bash
