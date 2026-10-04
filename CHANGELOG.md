@@ -11,6 +11,7 @@ What changes in each version of Brume. The newest version comes first.
 - Command highlighting, suggestions from history and a Tab completion menu, on by default.
 - Settings inside the window: glass effect, 10 accent colors, 12 fonts, 16 command color palettes, English and French.
 - A welcome screen in every new terminal: a pixel-art visual tinted with your accent color, a word in large letters, and your Mac's information.
+- Full Path in Tabs (Settings › General) shows a tab's folder from your home folder, like ~/Desktop/project, instead of its name alone. Renamed tabs keep their name.
 - Keyboard shortcuts you can change in Settings › Shortcuts, for tabs, splits and vertical tabs, with a warning when a combination is already taken.
 - A confirmation before closing a terminal where a command is still running.
 - Drop files or folders from Finder onto a terminal to type their paths at the cursor, escaped for the shell. In a split, they go to the terminal under the pointer. Dropped text is pasted as is.

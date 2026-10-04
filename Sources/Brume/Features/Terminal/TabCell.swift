@@ -22,9 +22,8 @@ struct TabCell: View {
                 if workspace.renaming == .tab(tab) {
                     TabRenameField(title: title) { workspace.finishRenaming(.tab(tab), input: $0, displayed: $1) }
                 } else {
-                    Text(title)
+                    TabTitleText(title: title, size: 12)
                         .foregroundStyle(isSelected || isHovered ? Ink.text : Ink.muted)
-                        .lineLimit(1)
                 }
             }
             .font(.system(size: 12))

@@ -88,6 +88,11 @@ final class SettingsStore {
         set { settings.verticalTabs = newValue }
     }
 
+    var showsFullPath: Bool {
+        get { settings.showsFullPath }
+        set { settings.showsFullPath = newValue }
+    }
+
     var shortcuts: Shortcuts {
         get { settings.shortcuts }
         set { settings.shortcuts = newValue }

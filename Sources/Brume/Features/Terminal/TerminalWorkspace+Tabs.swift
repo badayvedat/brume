@@ -128,8 +128,8 @@ extension TerminalWorkspace {
     }
 
     /// Le nom choisi, sinon celui qu'annonce le terminal : la commande en cours, ou le dernier
-    /// dossier de son chemin, entier dans l'en-tête. Un groupe sans nom choisi s'appelle « Groupe 1 »,
-    /// « Groupe 2 »…
+    /// dossier de son chemin, entier dans l'en-tête et avec « Chemin complet dans les onglets ».
+    /// Un groupe sans nom choisi s'appelle « Groupe 1 », « Groupe 2 »…
     func displayedTitle(of item: TabItem) -> String {
         if let title = label(of: item)?.title { return title }
         switch item {
@@ -199,7 +199,8 @@ extension TerminalWorkspace {
 
     private func terminalTitle(_ pane: UUID) -> String {
         let title = terminalTitles[pane] ?? ""
-        return title.isEmpty ? L10n.text(.terminal) : TabTitle.short(title)
+        if title.isEmpty { return L10n.text(.terminal) }
+        return settings?.showsFullPath == true ? title : TabTitle.short(title)
     }
 
     private func updateLabel(of item: TabItem, _ change: (inout TabLabel) -> Void) {

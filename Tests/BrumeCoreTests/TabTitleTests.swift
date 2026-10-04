@@ -31,4 +31,26 @@ struct TabTitleTests {
         #expect(TabTitle.short("/") == "/")
         #expect(TabTitle.short("npm run dev") == "npm run dev")
     }
+
+    /// Un caractère vaut 1 : « … » compris.
+    private func truncated(_ title: String, _ width: Double) -> String {
+        TabTitle.truncated(title, fitting: width) { Double($0.count) }
+    }
+
+    @Test func titleThatFitsIsKept() {
+        #expect(truncated("~/Desktop/papa", 14) == "~/Desktop/papa")
+    }
+
+    @Test func longTitleEndsWithAnEllipsis() {
+        #expect(truncated("~/Desktop/papa", 8) == "~/Deskt…")
+    }
+
+    @Test func ellipsisSticksToTheText() {
+        #expect(truncated("~/Mon dossier", 7) == "~/Mon…")
+        #expect(truncated("npm run dev", 9) == "npm run…")
+    }
+
+    @Test func noRoomLeavesTheEllipsis() {
+        #expect(truncated("papa", 0) == "…")
+    }
 }

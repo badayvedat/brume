@@ -49,7 +49,7 @@ public enum TextKey: CaseIterable, Sendable {
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
     case visualSlime, visualGem, visualMoon, visualMushroom, visualBreath, visualPrompt
     case visualSaturn, visualCloud, content, contentHint, contentVisual, contentText, contentBoth, welcomeSize, welcomeSizeHint, sizeSmall, sizeMedium, sizeLarge, informationGroup, informationGroupHint, showContent, showContentHint, characters, welcomeTextPlaceholder
-    case tabs, verticalTabs, verticalTabsHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress
+    case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
@@ -240,6 +240,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .tabs: "Onglets"
         case .verticalTabs: "Onglets verticaux"
         case .verticalTabsHint: "Liste les onglets dans une barre latérale à gauche plutôt qu'en haut de la fenêtre."
+        case .fullPath: "Chemin complet dans les onglets"
+        case .fullPathHint: "Affiche le chemin du dossier depuis le dossier personnel, comme ~/Desktop/projet, plutôt que son seul nom. Un onglet renommé garde son nom."
         case .closeTabsBelow: "Fermer les onglets en dessous"
         case .tabIcon: "Icône"
         case .sidebarWidth: "Largeur de la barre latérale"
@@ -504,6 +506,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .tabs: "Tabs"
         case .verticalTabs: "Vertical Tabs"
         case .verticalTabsHint: "Lists tabs in a sidebar on the left instead of across the top of the window."
+        case .fullPath: "Full Path in Tabs"
+        case .fullPathHint: "Shows the folder's path from your home folder, like ~/Desktop/project, instead of its name alone. A renamed tab keeps its name."
         case .closeTabsBelow: "Close Tabs Below"
         case .tabIcon: "Icon"
         case .sidebarWidth: "Sidebar Width"

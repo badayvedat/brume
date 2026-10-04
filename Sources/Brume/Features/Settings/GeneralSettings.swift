@@ -32,6 +32,9 @@ struct GeneralSettings: View {
                 SettingsRow(title: L10n.text(.verticalTabs), hint: hint(.verticalTabsHint, shortcut: .verticalTabs)) {
                     Switch(label: L10n.text(.verticalTabs), isOn: $settings.verticalTabs.isOn)
                 }
+                SettingsRow(title: L10n.text(.fullPath), hint: L10n.text(.fullPathHint)) {
+                    Switch(label: L10n.text(.fullPath), isOn: $settings.showsFullPath)
+                }
                 SettingsRow(title: L10n.text(.language), hint: L10n.text(.languageHint), isLast: true) {
                     Segmented(label: L10n.text(.language), options: Language.allCases.map { ($0, $0.name) }, selection: $settings.language)
                 }

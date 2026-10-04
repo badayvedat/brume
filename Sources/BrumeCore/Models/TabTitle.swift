@@ -18,6 +18,20 @@ public enum TabTitle {
         return String(last)
     }
 
+    /// Coupé à droite pour tenir dans `width`, le « … » collé au dernier caractère gardé : coupée
+    /// sur une espace, la mise en page de SwiftUI la laisse devant.
+    public static func truncated(_ title: String, fitting width: Double, measure: (String) -> Double) -> String {
+        guard measure(title) > width else { return title }
+        let characters = Array(title)
+        var low = 0, high = characters.count - 1
+        while low < high {
+            let mid = (low + high + 1) / 2
+            if measure(String(characters[..<mid]) + "…") <= width { low = mid } else { high = mid - 1 }
+        }
+        let kept = String(characters[..<low])
+        return kept.replacing(/\s+$/, with: "") + "…"
+    }
+
     /// Le dossier d'un terminal, le dossier personnel écrit `~` comme dans le shell.
     public static func folder(_ path: String, home: String) -> String {
         guard path == home || path.hasPrefix(home + "/") else { return path }
