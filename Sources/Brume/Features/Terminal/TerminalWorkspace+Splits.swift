@@ -57,7 +57,7 @@ extension TerminalWorkspace {
     func focus(_ pane: UUID) {
         apply(layout.focusing(pane))
         lastFocused = states[pane]
-        if settingsSection == nil { states[pane]?.requestFocus() }
+        if isKeyboardFree { states[pane]?.requestFocus() }
     }
 
     /// Un clic donne déjà le focus au terminal : on ne fait que suivre.

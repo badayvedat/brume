@@ -24,6 +24,9 @@ struct TabCommands: Commands {
             Button(L10n.text(.lastTab)) { workspace?.select(number: 9) }
                 .keyboardShortcut(settings.tabShortcut(9))
             Divider()
+            Button(L10n.text(.resetWindow)) { workspace?.askReset() }
+                .keyboardShortcut(settings.keyboardShortcut(.resetWindow))
+            Divider()
         }
     }
 }

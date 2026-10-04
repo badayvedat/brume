@@ -36,7 +36,7 @@ public enum TextKey: CaseIterable, Sendable {
     case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
-    case resetTabs, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
+    case resetWindow, resetWindowHint, resetWindowTitle, resetWindowMessage, resetWindowRunning, reset, tabColor, noColor, colorRed, colorOrange, colorYellow, colorGreen, colorBlue, colorPurple
     case settings, back, general, generalHint, appearance, appearanceHint
     case window, windowHint, glass, glassHint, opacity, opacityHint, blur, blurHint
     case colors, colorsHint, color, colorHint, colorDefault, colorBlack, colorPink, colorTeal, commandColors, commandColorsHint
@@ -123,7 +123,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .closeTabsMessage: "Une commande tourne encore dans un de ces onglets. Les fermer l'arrêtera."
         case .closeOtherTabs: "Fermer les autres onglets"
         case .closeTabsToTheRight: "Fermer les onglets à droite"
-        case .resetTabs: "Réinitialiser les onglets"
+        case .resetWindow: "Réinitialiser la fenêtre"
+        case .resetWindowHint: "Rend à la fenêtre son état d'origine."
+        case .resetWindowTitle: "Réinitialiser la fenêtre ?"
+        case .resetWindowMessage: "Seul le terminal actif reste ouvert. Les autres onglets, groupes et splits se ferment, et les noms, couleurs, icônes, la taille du texte et celle de la fenêtre reviennent par défaut. Vos réglages sont conservés."
+        case .resetWindowRunning: "Une commande tourne encore dans un autre terminal. Elle sera arrêtée."
+        case .reset: "Réinitialiser"
         case .tabColor: "Couleur"
         case .noColor: "Sans couleur"
         case .colorRed: "Rouge"
@@ -179,7 +184,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Langue des menus et de l'interface."
         case .startup: "Session"
         case .restoreTabs: "Restaurer la session"
-        case .restoreTabsHint: "Au démarrage, restaure les fenêtres et les onglets de la session précédente."
+        case .restoreTabsHint: "Au démarrage, rouvre les fenêtres à leur place et à leur taille, avec leurs onglets, groupes, noms, couleurs, icônes et le dossier de chaque terminal. Les commandes en cours ne sont pas relancées."
         case .input: "Saisie"
         case .historySuggestions: "Suggestions de l'historique"
         case .historySuggestionsHint: "Complète en gris la commande en cours d'après celles déjà saisies. La flèche → accepte la suggestion."
@@ -382,7 +387,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .closeTabsMessage: "A terminal still has a running process. If you close these tabs the process will be killed."
         case .closeOtherTabs: "Close Other Tabs"
         case .closeTabsToTheRight: "Close Tabs to the Right"
-        case .resetTabs: "Reset Tabs"
+        case .resetWindow: "Reset Window"
+        case .resetWindowHint: "Returns the window to its original state."
+        case .resetWindowTitle: "Reset Window?"
+        case .resetWindowMessage: "Only the active terminal stays open. Other tabs, groups and splits are closed, and names, colors, icons, text size and window size go back to their defaults. Your settings are kept."
+        case .resetWindowRunning: "A command is still running in another terminal. It will be stopped."
+        case .reset: "Reset"
         case .tabColor: "Color"
         case .noColor: "No Color"
         case .colorRed: "Red"
@@ -438,7 +448,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .languageHint: "Language of menus and the interface."
         case .startup: "Session"
         case .restoreTabs: "Restore Session"
-        case .restoreTabsHint: "At startup, restores the windows and tabs from your previous session."
+        case .restoreTabsHint: "At startup, reopens your windows where they were and at the same size, with their tabs, groups, names, colors, icons and each terminal's folder. Running commands are not restarted."
         case .input: "Input"
         case .historySuggestions: "History Suggestions"
         case .historySuggestionsHint: "Completes the current command in gray based on commands you have already entered. The → key accepts the suggestion."

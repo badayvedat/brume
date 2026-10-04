@@ -160,6 +160,38 @@ extension ButtonStyle where Self == SecondaryButtonStyle {
     }
 }
 
+/// Le bouton de l'action retenue : plein, du blanc de `Ink`, aux mesures du secondaire.
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PrimaryButton(configuration: configuration)
+    }
+
+    private struct PrimaryButton: View {
+        let configuration: Configuration
+
+        @State private var isHovered = false
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.black.opacity(0.85))
+                .padding(.horizontal, 12)
+                .frame(minWidth: 28, minHeight: 28)
+                .background(Ink.white(isHovered || configuration.isPressed ? 1 : 0.9), in: .rect(cornerRadius: 6))
+                .scaleEffect(configuration.isPressed ? 0.97 : 1)
+                .contentShape(.rect)
+                .onHover { isHovered = $0 }
+                .animation(Ink.feedback, value: isHovered)
+        }
+    }
+}
+
+extension ButtonStyle where Self == PrimaryButtonStyle {
+    static var primary: PrimaryButtonStyle {
+        PrimaryButtonStyle()
+    }
+}
+
 /// Un champ de texte court, aux mesures de `Select`.
 struct Field: View {
     let label: String

@@ -19,12 +19,12 @@ public enum ShortcutCategory: CaseIterable, Sendable {
 /// (⌘Q, ⌘N, ⌘,) restent fixes. Le nom de chaque cas est sa clé dans le fichier des réglages :
 /// ne pas le renommer.
 public enum ShortcutAction: String, CaseIterable, Sendable {
-    case newTab, renameTab, closeTab, previousTab, nextTab, selectTab, verticalTabs
+    case newTab, renameTab, closeTab, previousTab, nextTab, selectTab, verticalTabs, resetWindow
     case splitRight, splitDown, closeTerminal, zoomSplit, focusPreviousSplit, focusNextSplit, equalizeSplits
 
     public var category: ShortcutCategory {
         switch self {
-        case .newTab, .renameTab, .closeTab, .previousTab, .nextTab, .selectTab, .verticalTabs: .tabs
+        case .newTab, .renameTab, .closeTab, .previousTab, .nextTab, .selectTab, .verticalTabs, .resetWindow: .tabs
         case .splitRight, .splitDown, .closeTerminal, .zoomSplit, .focusPreviousSplit, .focusNextSplit, .equalizeSplits: .splits
         }
     }
@@ -45,6 +45,7 @@ public enum ShortcutAction: String, CaseIterable, Sendable {
         case .focusNextSplit: .focusNextSplit
         case .equalizeSplits: .equalizeSplits
         case .verticalTabs: .verticalTabs
+        case .resetWindow: .resetWindow
         }
     }
 
@@ -74,6 +75,7 @@ public enum ShortcutAction: String, CaseIterable, Sendable {
         case .focusNextSplit: Shortcut("]")
         case .equalizeSplits: Shortcut("=", [.command, .control])
         case .verticalTabs: Shortcut("s", [.command, .control])
+        case .resetWindow: Shortcut("r", [.command, .option])
         }
     }
 }

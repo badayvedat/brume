@@ -1,6 +1,11 @@
+import AppKit
 import BrumeCore
-import Foundation
 import GhosttyTerminal
+
+/// `stopsCommands` : une commande tourne dans un des terminaux qui vont se fermer.
+struct ResetPrompt: Equatable {
+    let stopsCommands: Bool
+}
 
 /// Ce qui porte un nom, une couleur et une icône : un onglet, ou un split d'un groupe.
 enum TabItem: Hashable {
@@ -59,22 +64,42 @@ extension TerminalWorkspace {
         close(layout.tabs(after: tab))
     }
 
-    /// Retour à un seul onglet : le terminal actif reste, avec son shell ; les autres onglets et
-    /// splits se ferment, couleurs, icônes, noms et taille du texte reviennent à la normale.
+    /// Par-dessus les réglages s'ils sont ouverts. Le clavier quitte le terminal pour qu'Entrée et
+    /// Échap aillent à la carte.
+    func askReset() {
+        guard resetPrompt == nil else { return }
+        renaming = nil
+        resetPrompt = ResetPrompt(stopsCommands: layout.panes.contains { $0 != focusedID && hasRunningCommand($0) })
+        window?.makeFirstResponder(window?.contentView)
+    }
+
+    func cancelReset() {
+        resetPrompt = nil
+        focus(focusedID)
+    }
+
+    /// Retour à une fenêtre neuve : le terminal actif reste, avec son shell, seul dans son onglet ;
+    /// noms, couleurs, icônes et taille du texte reviennent à la normale, la fenêtre à sa taille
+    /// d'ouverture, au centre de l'écran.
     func reset() {
         let kept = focusedID
-        let others = layout.panes.filter { $0 != kept }
-        let reset = { [weak self] in
-            guard let self else { return }
-            others.forEach(forget)
-            labels = WindowLabels()
-            collapsed = []
-            apply(WindowLayout(tab: layout.selectedTab, pane: kept))
-            states[kept]?.surface?.performBindingAction("reset_font_size")
-            focus(kept)
-        }
-        guard others.contains(where: hasRunningCommand) else { return reset() }
-        CloseConfirmation.tabs.ask(in: window, then: reset)
+        resetPrompt = nil
+        layout.panes.filter { $0 != kept }.forEach(forget)
+        labels = WindowLabels()
+        collapsed = []
+        apply(WindowLayout(tab: layout.selectedTab, pane: kept))
+        states[kept]?.surface?.performBindingAction("reset_font_size")
+        if settingsSection != nil { closeSettings() } else { focus(kept) }
+        restoreDefaultFrame()
+    }
+
+    /// En plein écran, la fenêtre garde l'écran : sa taille ne veut rien dire.
+    private func restoreDefaultFrame() {
+        guard let window, let settings, !window.styleMask.contains(.fullScreen),
+              let screen = (window.screen ?? NSScreen.main)?.visibleFrame else { return }
+        let size = window.frameRect(forContentRect: CGRect(origin: .zero, size: BrumeApp.defaultWindowSize(settings))).size
+        let frame = CGRect(x: screen.midX - size.width / 2, y: screen.midY - size.height / 2, width: size.width, height: size.height)
+        window.setFrame(frame, display: true, animate: !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion)
     }
 
     func label(of item: TabItem) -> TabLabel? {

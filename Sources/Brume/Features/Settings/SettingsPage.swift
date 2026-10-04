@@ -20,7 +20,7 @@ struct SettingsPage: View {
             VStack(spacing: 0) {
                 breadcrumb
                 switch section {
-                case .general: SettingsScroll(section: section) { GeneralSettings() }
+                case .general: SettingsScroll(section: section) { GeneralSettings(workspace: workspace) }
                 case .appearance: SettingsScroll(section: section) { AppearanceSettings() }
                 case .welcome: WelcomeSettings(section: section, onPreview: { showsPreview = true })
                 case .shortcuts: SettingsScroll(section: section) { ShortcutsSettings() }
@@ -40,6 +40,8 @@ struct SettingsPage: View {
         }
         // Une autre page le cacherait sans le fermer : Échap n'y ramènerait plus aux terminaux.
         .onChange(of: section) { showsPreview = false }
+        // Deux Échap en jeu sinon : celui de l'aperçu et celui de la carte.
+        .onChange(of: workspace.resetPrompt) { if $1 != nil { showsPreview = false } }
     }
 
     private var sidebar: some View {
@@ -51,7 +53,7 @@ struct SettingsPage: View {
             }
             Spacer()
             SidebarItem(icon: "chevron.left", title: L10n.text(.back), isSelected: false, action: workspace.closeSettings)
-                .keyboardShortcut(showsPreview ? nil : .cancelAction)
+                .keyboardShortcut(showsPreview || workspace.resetPrompt != nil ? nil : .cancelAction)
         }
         .padding(.horizontal, 8)
         .padding(.top, titlebar.buttonsCenterY * 2 + 12)

@@ -89,6 +89,17 @@ private struct TerminalWindow: View {
                 SettingsPage(workspace: workspace, section: section, titlebar: titlebar)
                     .transition(.opacity)
             }
+            if let prompt = workspace.resetPrompt {
+                ConfirmationCard(
+                    title: L10n.text(.resetWindowTitle),
+                    message: L10n.text(.resetWindowMessage),
+                    background: Color(hex: TerminalThemes.colors(for: settings.appearance).background),
+                    warning: prompt.stopsCommands ? L10n.text(.resetWindowRunning) : nil,
+                    confirmLabel: L10n.text(.reset),
+                    onConfirm: workspace.reset,
+                    onCancel: workspace.cancelReset
+                )
+            }
         }
         .animation(Ink.motion(.easeOut(duration: 0.18)), value: workspace.settingsSection)
         .ignoresSafeArea(.container, edges: .top)

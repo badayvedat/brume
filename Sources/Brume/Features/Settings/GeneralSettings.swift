@@ -2,6 +2,8 @@ import BrumeCore
 import SwiftUI
 
 struct GeneralSettings: View {
+    let workspace: TerminalWorkspace
+
     @Environment(SettingsStore.self) private var settings
     @Environment(UpdaterStore.self) private var updater
 
@@ -10,8 +12,12 @@ struct GeneralSettings: View {
         @Bindable var updater = updater
         VStack(alignment: .leading, spacing: 32) {
             SettingsGroup(title: L10n.text(.startup)) {
-                SettingsRow(title: L10n.text(.restoreTabs), hint: L10n.text(.restoreTabsHint), isLast: true) {
+                SettingsRow(title: L10n.text(.restoreTabs), hint: L10n.text(.restoreTabsHint)) {
                     Switch(label: L10n.text(.restoreTabs), isOn: $settings.restoresSession)
+                }
+                SettingsRow(title: L10n.text(.resetWindow), hint: hint(.resetWindowHint, shortcut: .resetWindow), isLast: true) {
+                    Button("\(L10n.text(.reset))…", action: workspace.askReset)
+                        .buttonStyle(.secondary)
                 }
             }
             SettingsGroup(title: L10n.text(.input)) {
@@ -23,7 +29,7 @@ struct GeneralSettings: View {
                 }
             }
             SettingsGroup(title: L10n.text(.interface)) {
-                SettingsRow(title: L10n.text(.verticalTabs), hint: verticalTabsHint) {
+                SettingsRow(title: L10n.text(.verticalTabs), hint: hint(.verticalTabsHint, shortcut: .verticalTabs)) {
                     Switch(label: L10n.text(.verticalTabs), isOn: $settings.verticalTabs.isOn)
                 }
                 SettingsRow(title: L10n.text(.language), hint: L10n.text(.languageHint), isLast: true) {
@@ -49,9 +55,9 @@ struct GeneralSettings: View {
         }
     }
 
-    private var verticalTabsHint: String {
-        let hint = L10n.text(.verticalTabsHint)
-        guard let shortcut = settings.shortcutLabel(.verticalTabs) else { return hint }
+    private func hint(_ key: TextKey, shortcut action: ShortcutAction) -> String {
+        let hint = L10n.text(key)
+        guard let shortcut = settings.shortcutLabel(action) else { return hint }
         return "\(hint) \(L10n.text(.shortcutHint, shortcut))"
     }
 }

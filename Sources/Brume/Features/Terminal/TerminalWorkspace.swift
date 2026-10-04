@@ -89,6 +89,8 @@ final class TerminalWorkspace {
     var drop: WindowLayout<UUID, UUID>.Drop?
     /// La page de réglages affichée à la place des terminaux, qui restent ouverts dessous.
     private(set) var settingsSection: SettingsSection?
+    /// La carte qui demande avant de réinitialiser la fenêtre.
+    var resetPrompt: ResetPrompt?
     /// Pour les raccourcis du clic droit.
     @ObservationIgnored weak var settings: SettingsStore?
     /// La place des splits, posée par `TerminalSplitView` pour calculer les dépôts.
@@ -323,8 +325,13 @@ final class TerminalWorkspace {
         updateSurfaces()
         if new.focusedPane != previous {
             lastFocused = states[new.focusedPane]
-            if settingsSection == nil { states[new.focusedPane]?.requestFocus() }
+            if isKeyboardFree { states[new.focusedPane]?.requestFocus() }
         }
+    }
+
+    /// Ni réglages ni carte par-dessus : un terminal peut reprendre le clavier.
+    var isKeyboardFree: Bool {
+        settingsSection == nil && resetPrompt == nil
     }
 
     /// Les splits de l'onglet affiché, ou seulement celui agrandi.

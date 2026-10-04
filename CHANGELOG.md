@@ -13,6 +13,7 @@ What changes in each version of Brume. The newest version comes first.
 - A welcome screen in every new terminal: a pixel-art visual tinted with your accent color, a word in large letters, and your Mac's information.
 - Keyboard shortcuts you can change in Settings › Shortcuts, for tabs, splits and vertical tabs, with a warning when a combination is already taken.
 - A confirmation before closing a terminal where a command is still running.
+- Reset Window (⌥⌘R, or Settings › General) brings a window back to a single tab with default names, colors and size, after a confirmation. Your settings are kept.
 - SSH sessions keep working with servers that don't know Ghostty's terminal type.
 - An app icon and a DMG to install Brume by dragging it to Applications.
 - Automatic updates, and a button to check for updates in Settings › General.
