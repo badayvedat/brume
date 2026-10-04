@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 #   bash scripts/build-app.sh --no-install  # .build/app/Brume.app seulement, le Brume ouvert reste
 
 APP_NAME="Brume"
-BUNDLE_ID="com.jeremy.brume"
+BUNDLE_ID="app.brume.Brume"
 CERT_NAME="Brume Dev"
 VERSION="0.1.0"
 BUILD_DIR=".build/app"
@@ -54,6 +54,9 @@ cp Vendor/fastfetch/usr/share/licenses/fastfetch/LICENSE "$APP_BUNDLE/Contents/R
 
 # Déclarées par ATSApplicationFontsPath : macOS les charge pour l'app seule, le moteur les trouve.
 cp -R Resources/Fonts "$APP_BUNDLE/Contents/Resources/Fonts"
+
+# La licence de Brume et celles des composants embarqués voyagent avec l'app.
+cp LICENSE THIRD_PARTY_LICENSES.md "$APP_BUNDLE/Contents/Resources/"
 
 if [ -f "Resources/AppIcon.icns" ]; then
     cp Resources/AppIcon.icns "$APP_BUNDLE/Contents/Resources/AppIcon.icns"

@@ -1,23 +1,32 @@
 # Brume
 
-Brume est un terminal pour macOS, simple et beau, bâti sur le moteur de [Ghostty](https://ghostty.org) grâce au paquet [libghostty-spm](https://github.com/Lakr233/libghostty-spm). Il y ajoute l'essentiel et rien de plus : onglets en haut ou en barre latérale, splits, fenêtre transparente sur le bureau flouté, interface en français et en anglais.
+Brume is a simple, beautiful terminal for macOS, built on the [Ghostty](https://ghostty.org) engine through the [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package. It adds only the essentials: tabs at the top or in a sidebar, splits, a translucent window over the blurred desktop, and an interface in English and French.
 
-## Compiler
+## Install
 
-Il faut macOS 26 et les Command Line Tools (Swift 6.2). Xcode n'est pas nécessaire : tout passe par SwiftPM.
+Download `Brume.dmg` from the [latest release](../../releases/latest), open it and drag Brume to Applications.
+
+Brume is not notarized by Apple yet. The first time you open it, macOS blocks it: go to **System Settings › Privacy & Security** and click **Open Anyway**. This is only needed once.
+
+## Build from source
+
+Requires macOS 26 and the Command Line Tools (Swift 6.2). Xcode is not needed: everything goes through SwiftPM.
 
 ```bash
-bash scripts/create-dev-cert.sh                  # une fois par machine : certificat de signature local
-bash scripts/build-app.sh                        # release, installe dans /Applications et lance Brume
-bash scripts/build-app.sh --debug                # build rapide
-bash scripts/build-app.sh --debug --no-install   # fabrique .build/app/Brume.app sans l'installer
+bash scripts/create-dev-cert.sh                  # once per machine: local signing certificate
+bash scripts/build-app.sh                        # release build, installs to /Applications and launches Brume
+bash scripts/build-app.sh --debug                # faster debug build
+bash scripts/build-app.sh --debug --no-install   # builds .build/app/Brume.app without installing it
 bash scripts/run-tests.sh                        # tests
+bash scripts/make-dmg.sh                         # release build packaged as .build/Brume.dmg
 ```
 
-`scripts/setup.sh` télécharge les dépendances à des versions figées dans `Vendor/` (moteur, greffons zsh, fastfetch) et applique `Patches/`. Les autres scripts le lancent d'eux-mêmes : il ne sert à la main qu'avant un `swift build` nu.
+`scripts/setup.sh` downloads pinned dependencies into `Vendor/` (engine, zsh plugins, fastfetch) and applies `Patches/`. The other scripts run it on their own.
 
-Sans le certificat, l'app est signée en ad-hoc et macOS redemande ses autorisations (Documents, Bureau...) à chaque build.
+Without the certificate, the app is signed ad hoc and macOS asks for its permissions (Documents, Desktop...) again after every build.
 
-## Licences
+The app icon and the DMG background are generated from SVG with `rsvg-convert` (`brew install librsvg`): `bash scripts/make-icon.sh`.
 
-Code repris et composants tiers : [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+## License
+
+Brume is released under the [MIT License](LICENSE). Third-party code and components: [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

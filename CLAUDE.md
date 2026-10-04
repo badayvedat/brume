@@ -1,6 +1,6 @@
 # Brume
 
-Terminal macOS perso, simple et beau, qui remplace Ghostty. Étapes et avancement dans `suivi.md`, local et gitignoré : cocher en fin de tâche.
+Terminal macOS simple et beau, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
 
 Avant de toucher à l'icône de l'app ou aux visuels de la page Démarrage : lire `docs/icone.md` ou `docs/visuels-demarrage.md`.
 
@@ -12,17 +12,18 @@ bash scripts/setup.sh                # avant un `swift build` nu (le script de b
 bash scripts/build-app.sh --debug    # build rapide, installe dans /Applications, relance
 bash scripts/build-app.sh            # release
 bash scripts/build-app.sh --debug --no-install   # fabrique le .app sans toucher au Brume ouvert
+bash scripts/make-icon.sh            # Resources/AppIcon.icns depuis Resources/AppIcon.svg
+bash scripts/make-dmg.sh             # .build/Brume.dmg, fond dans Resources/dmg/
 ```
 
-- Après chaque changement, lancer soi-même `bash scripts/build-app.sh --debug` pour que Jérémy teste, même si Brume est ouvert (le script le ferme et le relance) : ne pas lui demander de taper la commande.
-- Seulement les Command Line Tools sur la machine, pas de Xcode : tout passe par SwiftPM et `scripts/build-app.sh`. Jamais de `.xcodeproj` ni de `xcodebuild`. Pas de macros SwiftUI (`@Entry`, `#Preview`) : leur plugin n'existe qu'avec Xcode.
+- Seulement les Command Line Tools, pas de Xcode : tout passe par SwiftPM et `scripts/build-app.sh`. Jamais de `.xcodeproj` ni de `xcodebuild`. Pas de macros SwiftUI (`@Entry`, `#Preview`) : leur plugin n'existe qu'avec Xcode.
 - Signer avec le certificat stable « Brume Dev ». En ad-hoc, macOS redemande les permissions (Documents, Bureau...) à chaque build.
-- Vérifier un rendu : `bash scripts/capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran. Elle ne montre pas le bureau flouté du style Verre : pour le voir, `screencapture -R` sur les bornes de la fenêtre. Claude a l'Accessibilité : raccourcis et frappe via `osascript` (System Events), clics et glisser via des `CGEvent` postés aux coordonnées de la fenêtre.
-- Vérifier une page des réglages : lancer la copie avec `--args -BrumeSettings welcome` (`general`, `appearance`), plus `-BrumePreview YES` pour l'aperçu de la page Démarrage. Pendant que Jérémy utilise Brume, macOS refuse de passer une copie au premier plan : un raccourci `osascript` partirait dans sa fenêtre.
-- Capturer sans toucher à la fenêtre de Jérémy : une copie du `.app` lancée par `open -n --env CFFIXED_USER_HOME=<dossier>` prend session et réglages dans `<dossier>/Library/Application Support/Brume/`. Avec `open -g`, aucune fenêtre ne s'ouvre ; `screencapture -l` échoue si la fenêtre est sur un autre bureau. Raccourcis et frappe vers la copie seule : `CGEvent.postToPid`. `--no-install` fabrique cette copie sans fermer le Brume ouvert.
-- Le `.zshrc` de Jérémy charge déjà ses greffons brew, qui masquent ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
-- Tester un comportement de zsh (complétion, greffons) sans fenêtre : sourcer le bloc voulu de `Vendor/.../shell-integration/zsh/ghostty-integration` dans un `zsh -f -i` piloté par `expect` (fourni par macOS). `zpty` ne rend pas la sortie de façon fiable.
 - Tests : `bash scripts/run-tests.sh`. `swift test` nu ne trouve pas Swift Testing avec les CLT.
+- Vérifier un rendu : `bash scripts/capture.sh` capture la seule fenêtre Brume, puis lire l'image. Pas de capture plein écran. Elle ne montre pas le bureau flouté du style Verre : pour le voir, `screencapture -R` sur les bornes de la fenêtre.
+- Vérifier une page des réglages : lancer l'app avec `--args -BrumeSettings welcome` (`general`, `appearance`), plus `-BrumePreview YES` pour l'aperçu de la page Démarrage.
+- Une copie du `.app` lancée par `open -n --env CFFIXED_USER_HOME=<dossier>` prend session et réglages dans `<dossier>/Library/Application Support/Brume/`, sans toucher à ceux du Brume ouvert. Avec `open -g`, aucune fenêtre ne s'ouvre ; `screencapture -l` échoue si la fenêtre est sur un autre bureau.
+- Un `.zshrc` qui charge déjà des greffons brew masque ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
+- Tester un comportement de zsh (complétion, greffons) sans fenêtre : sourcer le bloc voulu de `Vendor/.../shell-integration/zsh/ghostty-integration` dans un `zsh -f -i` piloté par `expect` (fourni par macOS). `zpty` ne rend pas la sortie de façon fiable.
 - Brume rouvre au lancement (réglage « Restaurer la session ») les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. `killall` et la relance par `scripts/build-app.sh` (SIGTERM) enregistrent aussi ; `kill -9` non.
 
 ## Contraintes

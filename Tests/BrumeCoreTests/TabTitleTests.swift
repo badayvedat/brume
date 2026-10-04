@@ -19,9 +19,9 @@ struct TabTitleTests {
     }
 
     @Test func homeFolderIsWrittenWithATilde() {
-        #expect(TabTitle.folder("/Users/jeremy", home: "/Users/jeremy") == "~")
-        #expect(TabTitle.folder("/Users/jeremy/code", home: "/Users/jeremy") == "~/code")
-        #expect(TabTitle.folder("/Users/jeremy2/code", home: "/Users/jeremy") == "/Users/jeremy2/code")
+        #expect(TabTitle.folder("/Users/alice", home: "/Users/alice") == "~")
+        #expect(TabTitle.folder("/Users/alice/code", home: "/Users/alice") == "~/code")
+        #expect(TabTitle.folder("/Users/alice2/code", home: "/Users/alice") == "/Users/alice2/code")
     }
 
     @Test func shortTitleKeepsTheLastFolder() {
