@@ -3,7 +3,7 @@
 public struct Welcome: Codable, Hashable, Sendable {
     public var isEnabled = true
     public var content = WelcomeContent.visual
-    public var visual = WelcomeVisual.apple
+    public var visual = WelcomeVisual.breath
     public var text = ""
     public var size = WelcomeSize.medium
     public var info = WelcomeInfo.categories

@@ -14,3 +14,4 @@ What changes in each version of Brume. The newest version comes first.
 - A confirmation before closing a terminal where a command is still running.
 - SSH sessions keep working with servers that don't know Ghostty's terminal type.
 - An app icon and a DMG to install Brume by dragging it to Applications.
+- Automatic updates, and a button to check for updates in Settings › General.
