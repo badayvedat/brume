@@ -86,6 +86,7 @@ Comme Monocode : réglages dans la fenêtre, gris neutres, seule la couleur choi
 - [x] Réglages façon Monocode : rien n'apparaît ni ne disparaît (réglages sans effet estompés), visuels en vignettes, sélecteurs à pastille glissante, aperçu en fondu, menus qui s'ouvrent en fondu
 - [x] Position : gauche, centré, droite
 - [x] Option « aucune » : interrupteur, visuel et informations désactivables
+- [x] Visuels Souffle et Terminal (`>_` sans fenêtre), en pixel art comme les autres
 - [x] Aperçu en direct dans les réglages, rendu par fastfetch
 
 ## 7. Onglets verticaux

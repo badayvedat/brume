@@ -35,6 +35,8 @@ public enum PixelArt {
             case .gem: gemSmall
             case .moon: moonSmall
             case .mushroom: mushroomSmall
+            case .breath: breathSmall
+            case .prompt: promptSmall
             case .apple: nil
             }
         }
@@ -47,6 +49,8 @@ public enum PixelArt {
         case .gem: gem
         case .moon: moon
         case .mushroom: mushroom
+        case .breath: breath
+        case .prompt: prompt
         case .apple: nil
         }
     }
@@ -485,5 +489,119 @@ public enum PixelArt {
         "....OWWWWWWWWGGO....",
         "....OWWWWWWWWGGO....",
         "..GSSGSSGSSGSSGSSG..",
+    ]
+
+    private static let breath = [
+        "......OOOOOOOOOOOO.................",
+        "....OOOHHHHHHHHHHOOO...............",
+        "..OOOHHHHHHHHHHHHHHOO..............",
+        ".OOHHHHHHWWWWWWWWWWWOO.............",
+        "OOHHHHHWWWWWWWWWWWWWWOO....OOOOOOO.",
+        "OHHHHWWWWGGGGGGWAAWWWWOO..OOHHHHWO.",
+        "OHHHWWWGGGGGOOOOAAALLWWO..OHHHHWWOO",
+        "OHHWWGGGGOOOO..OOOALLAAOO.OHHHWWWWO",
+        "OOWWGGGOOO.......OOLLLAAO.OHHHWWWGO",
+        ".OOWGGOO..OOOOOOO.OOLLADO.OHHHWWWGO",
+        "..OOOOO.OOOHHLAAOO.OOLADO.OOHHWWGGO",
+        ".......OOHHHADDDDOO.OLADO.OOHHWWGGO",
+        "......OOHHLAEOOOODO.OLADO.OHHHWWGGO",
+        "......OHHLDEOO..OOO.OAEOO.OHHHWWGGO",
+        ".....OOHHADOO......OOAEO..OHHWWGGOO",
+        ".....OHHLDOO.OOO..OOADOO.OOHHWWGGO.",
+        ".....OHHADO..OLO..OADOO.OOHHHWGGGO.",
+        "....OOHHADO..OLOO.OOOO..OHHHWWGGOO.",
+        "....OHHWADO..OLLOO....OOOHHWWGGOO..",
+        "....OHHWWDO..OLLLOOOOOOHHHWWGGGO...",
+        "....OHHWWAOO.OHLALLOHHHHHWWGGGOO...",
+        "....OHHWWWAO.OOLLLHHHHHLWGGGGOO....",
+        "....OOHHWWWOO.OOAAAAAAAGGGGOOO.....",
+        ".....OHHWWWWOO.OOOADDGGGGOOO.......",
+        ".....OHHWWWWWOO..OOOOOOOOO.........",
+        ".....OOHWWWWWWOOO..................",
+        "......OHWWWWWWHHOOO................",
+        "......OOWWWWWWWHHWOO...............",
+        ".......OOWWWWWWWWWWOO..............",
+        "........OWWWWWWWWWGGO..............",
+        "........OOOWWWWWWGGOO..............",
+        "..........OOWWWWWGGO...............",
+        "...........OOOHWWGOO...............",
+        "...................................",
+    ]
+
+    private static let prompt = [
+        "OOOOOOOOO...............................",
+        "OHLLLLLLOO..............................",
+        "OODAAAAALOO.............................",
+        ".OODAAAAALOO............................",
+        "..OODAAAAALOO...........................",
+        "...OODAAAAALOO..........................",
+        "....OODAAAAALOO.........................",
+        ".....OODAAAAALOO........................",
+        "......OODAAAAALOO.......................",
+        ".......OODAAAAALOO......................",
+        "........OODAAAAALOO.....................",
+        ".........OODAAAAALOO....................",
+        "..........OODAAAAALOO...................",
+        "...........OOAAAAAALO...................",
+        "..........OOLAAAAADOO...................",
+        ".........OOLAAAAADOO....................",
+        "........OOLAAAAADOO.....................",
+        ".......OOLAAAAADOO......................",
+        "......OOLAAAAADOO.......................",
+        ".....OOLAAAAADOO........................",
+        "....OOLAAAAADOO........OOOOOOOOOOOOOOOOO",
+        "...OOLAAAAADOO.........OHLLLLLLLLLLLLLLO",
+        "..OOLAAAAADOO..........OAAAAAAAAAAAAAAAO",
+        ".OOLAAAAADOO...........OAAAAAAAAAAAAAAAO",
+        "OOLAAAAADOO............OAAAAAAAAAAAAAAAO",
+        "OLDDDDDDOO.............ODDDDDDDDDDDDDDDO",
+        "OOOOOOOOO..............OOOOOOOOOOOOOOOOO",
+        "........................................",
+    ]
+
+    private static let breathSmall = [
+        ".....OOOOOO...........",
+        "..OOOOHHHHOOO.........",
+        ".OOHHHHHHWWWOOO.......",
+        "OOHHHWWWWWWWWWO..OOOOO",
+        "OHHWWGGGGDAAAWOOOOHHWO",
+        "OHWWGGOOOOOOAAAOOHHHWO",
+        "OOWGOOOOOOOOOAAOOHHWGO",
+        ".OOOOOOHADDOOAAOOOHWGO",
+        "....OOHLDOOOOOAOOHHWGO",
+        "...OOHLOOO..OAAOOHHWGO",
+        "...OHHAOOOO.OAOOOHWGGO",
+        "...OHHAOOAO.OOOOHHWGOO",
+        "...OHWAOOLOOOOOHHWGGO.",
+        "...OHWAOOOLLHHHLWGGOO.",
+        "...OHWWOOOHHLLAGGGOO..",
+        "...OHHWWOOOOAGGOOOO...",
+        "...OOHWWWOOOOOOO......",
+        "....OHWWWWWOO.........",
+        "....OOWWWWWWOO........",
+        ".....OOWWWGGGO........",
+        "......OOWGGGOO........",
+        ".......OOOOOO.........",
+    ]
+
+    private static let promptSmall = [
+        "OOOOOO...................",
+        "OHLLLOO..................",
+        "OODAALOO.................",
+        ".OODAALOO................",
+        "..OODAALOO...............",
+        "...OODAALOO..............",
+        "....OODAALOO.............",
+        ".....OODAALOO............",
+        "......OOAAALO............",
+        ".....OOLAADOO............",
+        "....OOLAADOO.............",
+        "...OOLAADOO..............",
+        "..OOLAADOO....OOOOOOOOOOO",
+        ".OOLAADOO.....OHLLLLLLLLO",
+        "OOLAADOO......OAAAAAAAAAO",
+        "OLDDDOO.......ODDDDDDDDDO",
+        "OOOOOO........OOOOOOOOOOO",
+        ".........................",
     ]
 }

@@ -47,7 +47,7 @@ public enum TextKey: CaseIterable, Sendable {
     case welcome, welcomeHint, welcomePage, showWelcome, welcomePageHint, visual, visualHint, visualGhost
     case visualSaucer, visualApple, welcomeText, welcomeTextHint, information
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
-    case visualSlime, visualGem, visualMoon, visualMushroom
+    case visualSlime, visualGem, visualMoon, visualMushroom, visualBreath, visualPrompt
     case visualSaturn, visualCloud, content, contentHint, contentVisual, contentText, contentBoth, welcomeSize, welcomeSizeHint, sizeSmall, sizeMedium, sizeLarge, informationGroup, informationGroupHint, showContent, showContentHint, characters, welcomeTextPlaceholder
     case tabs, verticalTabs, verticalTabsHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
@@ -207,6 +207,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .visualGem: "Diamant"
         case .visualMoon: "Lune"
         case .visualMushroom: "Champignon"
+        case .visualBreath: "Souffle"
+        case .visualPrompt: "Terminal"
         case .visualCloud: "Nuage"
         case .content: "Contenu"
         case .contentHint: "Un visuel, un mot, ou les deux."
@@ -420,6 +422,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .visualGem: "Diamond"
         case .visualMoon: "Moon"
         case .visualMushroom: "Mushroom"
+        case .visualBreath: "Breath"
+        case .visualPrompt: "Terminal"
         case .visualCloud: "Cloud"
         case .content: "Content"
         case .contentHint: "A visual, a word, or both."
