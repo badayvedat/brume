@@ -42,7 +42,7 @@ struct TabCell: View {
     }
 }
 
-/// L'icône de l'onglet, et à sa place le numéro de son raccourci tant que Cmd est tenu, comme Muxy.
+/// L'icône de l'onglet, et à sa place le numéro de son raccourci tant que Cmd est tenu.
 struct TabIconView: View {
     let symbol: String
     let number: Int?

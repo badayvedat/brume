@@ -89,7 +89,7 @@ struct TabBar: View {
         }
     }
 
-    /// Dans la barre, comme Muxy : l'onglet tenu prend la place de celui que survole la souris
+    /// Dans la barre, l'onglet tenu prend la place de celui que survole la souris
     /// (toutes les cases ont la même largeur). Sur les terminaux, il rejoint l'onglet affiché.
     private func drag(_ tab: UUID, step: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 4, coordinateSpace: .named(TerminalScreen.space))
