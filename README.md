@@ -25,8 +25,6 @@ bash scripts/make-dmg.sh                         # release build packaged as .bu
 
 Without the certificate, the app is signed ad hoc and macOS asks for its permissions (Documents, Desktop...) again after every build.
 
-The app icon and the DMG background are generated from SVG with `rsvg-convert` (`brew install librsvg`): `bash scripts/make-icon.sh`.
-
 ## License
 
 Brume is released under the [MIT License](LICENSE). Third-party code and components: [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
