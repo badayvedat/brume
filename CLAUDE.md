@@ -2,7 +2,7 @@
 
 Terminal macOS simple et beau, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
 
-Avant de toucher à l'icône de l'app, aux visuels de la page Démarrage ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md` ou `docs/distribution.md`.
+Avant de toucher à l'icône de l'app, aux visuels de la page Démarrage, de tester ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md`, `docs/tester-une-version.md` ou `docs/distribution.md`.
 
 ## Build
 
@@ -33,8 +33,8 @@ bash scripts/make-dmg.sh             # .build/Brume.dmg, fond dans Resources/dmg
 - L'intégration shell du paquet est une réécriture qui ignore `sudo` et `path` de Ghostty : activer une option dans la config ne suffit pas, vérifier `shell-integration/zsh/ghostty-integration`. `ssh-*` y est ajouté par `Patches/`.
 - Un raccourci de l'app se déclare dans le menu (`App/*Commands.swift`) : le patch `menu-keys` lui donne la priorité sur ceux du moteur, dont le paquet ne transmet pas les actions. Pas de `keybind = ...=unbind`.
 - Une vue terminal recréée par SwiftUI tue son shell : garder son identité (terminaux de tous les onglets à plat dans un `ForEach` par identifiant, jamais déplacés d'un conteneur à l'autre). Les onglets cachés restent montés, transparents, avec `isSurfaceVisible = false`.
-- Onglets maison, pas d'onglets natifs (`tabbingMode = .disallowed`). Pas de `isMovable = false` comme Muxy : `performDrag` de `WindowDragArea` ne déplace plus rien.
-- Tout code repris d'un projet tiers (Muxy, MIT) garde sa mention de copyright en tête de fichier et s'ajoute à `THIRD_PARTY_LICENSES.md`, comme tout composant embarqué dans l'app.
+- Onglets maison, pas d'onglets natifs (`tabbingMode = .disallowed`). Pas de `isMovable = false` : `performDrag` de `WindowDragArea` ne déplace plus rien.
+- Tout code repris d'un projet tiers garde sa mention de copyright en tête de fichier et s'ajoute à `THIRD_PARTY_LICENSES.md`, comme tout composant embarqué dans l'app.
 - Pas de `Image(systemName:)` : passer par `SystemSymbol` (`DesignSystem/`). Chargés après le moteur, des symboles sortent vides, au hasard du lancement.
 - Pas de `NSAlert.runModal()` : sur macOS 27, l'alerte modale plante en dessinant un symbole système. Toujours en feuille (`beginSheetModal`), comme `CloseConfirmation`.
 - Brume est toujours sombre (`AppDelegate`), le thème du moteur aussi : ne jamais régler l'apparence d'une fenêtre d'après la couleur du terminal, ça boucle et la fenêtre clignote.
