@@ -20,6 +20,7 @@ struct TabSidebar: View {
     /// Le dernier onglet ou split survolé au glisser : un groupe plus haut que l'onglet tenu ne
     /// le renvoie pas aussitôt d'où il vient.
     @State private var lastTarget: UUID?
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         let layout = workspace.layout
@@ -51,7 +52,7 @@ struct TabSidebar: View {
                             }
                             .transition(.accordion(.vertical))
                         }
-                        NewTabRow { workspace.newTab(atEnd: true) }
+                        NewTabRow(shortcut: settings.shortcutLabel(.newTab)) { workspace.newTab(atEnd: true) }
                     }
                     // Un onglet ou un split s'ouvre en accordéon, ses voisins et « Nouvel onglet »
                     // glissent avec lui.
@@ -134,6 +135,7 @@ struct TabSidebar: View {
 
 /// Au bout de la liste, comme le + au bout de la barre du haut.
 private struct NewTabRow: View {
+    let shortcut: String?
     let action: () -> Void
 
     @State private var isHovered = false
@@ -146,10 +148,12 @@ private struct NewTabRow: View {
                 Text(L10n.text(.newTab))
                     .font(.system(size: 13))
                 Spacer(minLength: 0)
-                Text("⌘T")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Ink.meta)
-                    .opacity(isHovered ? 1 : 0)
+                if let shortcut {
+                    Text(shortcut)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Ink.meta)
+                        .opacity(isHovered ? 1 : 0)
+                }
             }
             .foregroundStyle(isHovered ? Ink.text : Ink.muted)
             .padding(.horizontal, 8)

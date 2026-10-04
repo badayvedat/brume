@@ -110,6 +110,7 @@ private struct TerminalWindow: View {
         .onChange(of: settings.appearance.translucency) { translucency.animate(to: $1) }
         .onChange(of: TerminalThemes.colors(for: settings.appearance)) { ThemeFade.run(to: $1) }
         .onChange(of: settings.font) { TerminalWorkspace.setFont($1) }
+        .task(id: settings.shortcuts[.selectTab]) { commandKey.modifiers = settings.tabNumberModifiers }
         .onChange(of: settings.verticalTabs.isOn) { _, isOn in
             withAnimation(Ink.motion(.easeIn(duration: 0.1))) { isSwitchingTabs = true } completion: {
                 showsSidebar = isOn

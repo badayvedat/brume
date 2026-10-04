@@ -17,6 +17,7 @@ struct TabBar: View {
     /// Après une fermeture à la croix, la largeur des onglets reste la même tant que la souris
     /// est sur la barre, comme Chrome : le suivant vient sous elle, sa croix au même endroit.
     @State private var frozenWidth: CGFloat?
+    @Environment(SettingsStore.self) private var settings
 
     private let spacing: CGFloat = 2
     private let tabWidth: ClosedRange<CGFloat> = 112 ... 224
@@ -84,7 +85,7 @@ struct TabBar: View {
     }
 
     private var newTabButton: some View {
-        BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: "⌘T") {
+        BarButton(icon: "plus", label: L10n.text(.newTab), shortcut: settings.shortcutLabel(.newTab)) {
             workspace.newTab(atEnd: true)
         }
     }
@@ -125,19 +126,20 @@ struct BarButtons: View {
     let workspace: TerminalWorkspace
 
     @Environment(\.openWindow) private var openWindow
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         HStack(spacing: 2) {
             // Seulement le temps de l'agrandissement : on voit où sont passés les autres splits.
             if workspace.zoomedPane != nil {
-                BarButton(icon: "arrow.down.right.and.arrow.up.left", label: L10n.text(.zoomSplit), shortcut: "⇧⌘↩", isOn: true) {
+                BarButton(icon: "arrow.down.right.and.arrow.up.left", label: L10n.text(.zoomSplit), shortcut: settings.shortcutLabel(.zoomSplit), isOn: true) {
                     workspace.toggleZoom()
                 }
             }
-            BarButton(icon: "square.split.2x1", label: L10n.text(.splitRight), shortcut: "⌘D") {
+            BarButton(icon: "square.split.2x1", label: L10n.text(.splitRight), shortcut: settings.shortcutLabel(.splitRight)) {
                 workspace.split(.horizontal)
             }
-            BarButton(icon: "square.split.1x2", label: L10n.text(.splitDown), shortcut: "⇧⌘D") {
+            BarButton(icon: "square.split.1x2", label: L10n.text(.splitDown), shortcut: settings.shortcutLabel(.splitDown)) {
                 workspace.split(.vertical)
             }
             BarButton(icon: "macwindow.badge.plus", label: L10n.text(.newWindow), shortcut: "⌘N") {
@@ -153,7 +155,7 @@ struct BarButton: View {
 
     let icon: String
     let label: String
-    let shortcut: String
+    let shortcut: String?
     /// Un mode en cours, que le bouton arrête : à la couleur d'accent.
     var isOn = false
     let action: () -> Void

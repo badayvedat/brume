@@ -2,13 +2,14 @@ import BrumeCore
 
 /// Les pages des réglages, dans l'ordre de la barre latérale.
 enum SettingsSection: String, CaseIterable {
-    case general, appearance, welcome
+    case general, appearance, welcome, shortcuts
 
     var title: TextKey {
         switch self {
         case .general: .general
         case .appearance: .appearance
         case .welcome: .welcome
+        case .shortcuts: .shortcuts
         }
     }
 
@@ -17,6 +18,7 @@ enum SettingsSection: String, CaseIterable {
         case .general: .generalHint
         case .appearance: .appearanceHint
         case .welcome: .welcomeHint
+        case .shortcuts: .shortcutsHint
         }
     }
 
@@ -25,6 +27,7 @@ enum SettingsSection: String, CaseIterable {
         case .general: "gearshape"
         case .appearance: "paintpalette"
         case .welcome: "text.below.photo"
+        case .shortcuts: "keyboard"
         }
     }
 }

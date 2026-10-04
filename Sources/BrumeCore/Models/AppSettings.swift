@@ -13,6 +13,7 @@ public struct AppSettings: Codable, Hashable, Sendable {
     public var completesCommands = true
     public var welcome = Welcome()
     public var verticalTabs = VerticalTabs()
+    public var shortcuts = Shortcuts()
 
     public init() {}
 
@@ -28,6 +29,7 @@ public struct AppSettings: Codable, Hashable, Sendable {
         if let value = try? container.decode(Bool.self, forKey: .completesCommands) { completesCommands = value }
         if let value = try? container.decode(Welcome.self, forKey: .welcome) { welcome = value }
         if let value = try? container.decode(VerticalTabs.self, forKey: .verticalTabs) { verticalTabs = value }
+        if let value = try? container.decode(Shortcuts.self, forKey: .shortcuts) { shortcuts = value }
     }
 
     public func encoded() throws -> Data {

@@ -9,9 +9,9 @@ struct SplitCommands: Commands {
         CommandGroup(after: .newItem) {
             Divider()
             Button(L10n.text(.splitRight)) { workspace?.split(.horizontal) }
-                .keyboardShortcut("d")
+                .keyboardShortcut(settings.keyboardShortcut(.splitRight))
             Button(L10n.text(.splitDown)) { workspace?.split(.vertical) }
-                .keyboardShortcut("d", modifiers: [.command, .shift])
+                .keyboardShortcut(settings.keyboardShortcut(.splitDown))
             Button(L10n.text(.leaveGroup)) { workspace.map { $0.detach($0.focusedID) } }
                 .disabled(workspace?.isSplit != true)
             Button(L10n.text(.ungroup)) { workspace.map { $0.separate($0.layout.selectedTab) } }
@@ -19,9 +19,9 @@ struct SplitCommands: Commands {
         }
         CommandGroup(before: .windowArrangement) {
             Button(L10n.text(.focusPreviousSplit)) { workspace?.focusPrevious() }
-                .keyboardShortcut("[")
+                .keyboardShortcut(settings.keyboardShortcut(.focusPreviousSplit))
             Button(L10n.text(.focusNextSplit)) { workspace?.focusNext() }
-                .keyboardShortcut("]")
+                .keyboardShortcut(settings.keyboardShortcut(.focusNextSplit))
             Button(L10n.text(.focusSplitLeft)) { workspace?.focus(toward: .left) }
                 .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
             Button(L10n.text(.focusSplitRight)) { workspace?.focus(toward: .right) }
@@ -31,13 +31,12 @@ struct SplitCommands: Commands {
             Button(L10n.text(.focusSplitDown)) { workspace?.focus(toward: .down) }
                 .keyboardShortcut(.downArrow, modifiers: [.command, .option])
             Button(L10n.text(.equalizeSplits)) { workspace?.equalizeSplits() }
-                .keyboardShortcut("=", modifiers: [.command, .control])
-            // ⇧⌘↩ comme Ghostty.
+                .keyboardShortcut(settings.keyboardShortcut(.equalizeSplits))
             Toggle(L10n.text(.zoomSplit), isOn: Binding(
                 get: { workspace?.zoomedPane != nil },
                 set: { _ in workspace?.toggleZoom() }
             ))
-            .keyboardShortcut(.return, modifiers: [.command, .shift])
+            .keyboardShortcut(settings.keyboardShortcut(.zoomSplit))
             .disabled(workspace?.isSplit != true)
             Divider()
             // Les flèches suivent la barre d'onglets : gauche et droite en haut, haut et bas sur le côté.

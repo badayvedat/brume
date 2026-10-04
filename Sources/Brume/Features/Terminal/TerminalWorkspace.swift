@@ -89,6 +89,8 @@ final class TerminalWorkspace {
     var drop: WindowLayout<UUID, UUID>.Drop?
     /// La page de réglages affichée à la place des terminaux, qui restent ouverts dessous.
     private(set) var settingsSection: SettingsSection?
+    /// Pour les raccourcis du clic droit.
+    @ObservationIgnored weak var settings: SettingsStore?
     /// La place des splits, posée par `TerminalSplitView` pour calculer les dépôts.
     @ObservationIgnored var bounds: CGRect = .zero
     @ObservationIgnored private(set) weak var window: NSWindow?

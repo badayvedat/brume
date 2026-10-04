@@ -23,7 +23,7 @@ struct GeneralSettings: View {
                 }
             }
             SettingsGroup(title: L10n.text(.interface)) {
-                SettingsRow(title: L10n.text(.verticalTabs), hint: L10n.text(.verticalTabsHint)) {
+                SettingsRow(title: L10n.text(.verticalTabs), hint: verticalTabsHint) {
                     Switch(label: L10n.text(.verticalTabs), isOn: $settings.verticalTabs.isOn)
                 }
                 SettingsRow(title: L10n.text(.language), hint: L10n.text(.languageHint), isLast: true) {
@@ -47,5 +47,11 @@ struct GeneralSettings: View {
                 .animation(Ink.feedback, value: updater.allowsAutomaticInstall)
             }
         }
+    }
+
+    private var verticalTabsHint: String {
+        let hint = L10n.text(.verticalTabsHint)
+        guard let shortcut = settings.shortcutLabel(.verticalTabs) else { return hint }
+        return "\(hint) \(L10n.text(.shortcutHint, shortcut))"
     }
 }

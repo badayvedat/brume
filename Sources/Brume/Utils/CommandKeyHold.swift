@@ -1,12 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Cmd tenu seul : de quoi montrer les numéros des onglets. Le délai évite qu'ils
-/// clignotent à chaque Cmd+C ; une fois affichés, ils restent jusqu'au relâchement de Cmd,
-/// même en enchaînant Cmd+1, Cmd+2...
+/// Les touches de ⌘1–9 (⌘ par défaut) tenues seules : de quoi montrer les numéros des onglets.
+/// Le délai évite qu'ils clignotent à chaque Cmd+C ; une fois affichés, ils restent jusqu'au
+/// relâchement, même en enchaînant Cmd+1, Cmd+2...
 @MainActor @Observable
 final class CommandKeyHold {
     private(set) var isHeld = false
+    /// Nil : aucun raccourci pour aller à un onglet, pas de numéros.
+    @ObservationIgnored var modifiers: NSEvent.ModifierFlags? = .command
     @ObservationIgnored nonisolated(unsafe) private var monitor: Any?
     @ObservationIgnored nonisolated(unsafe) private var resignObserver: NSObjectProtocol?
     @ObservationIgnored private var pending: DispatchWorkItem?
@@ -18,7 +20,7 @@ final class CommandKeyHold {
                 if event.type == .keyDown {
                     self.pending?.cancel()
                 } else {
-                    self.update(held: event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command)
+                    self.update(held: event.modifierFlags.intersection(.deviceIndependentFlagsMask) == self.modifiers)
                 }
             }
             return event

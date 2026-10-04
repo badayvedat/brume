@@ -54,6 +54,10 @@ public enum TextKey: CaseIterable, Sendable {
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
     case upToDate, upToDateMessage, updateError, updateInstalled, ok
+    case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace
+    case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
+    case pressShortcut, noShortcut, changeShortcut, restoreDefault, restoreAllShortcuts, replace, useAnyway, shortcutHint
+    case shortcutNeedsModifier, shortcutNeedsDigit, shortcutInUse, shortcutInTerminal, shortcutWithoutCommand
     case welcomeHardware, welcomeSoftware, welcomeSession, welcomeOS, welcomeHost, welcomeCPU, welcomeGPU, welcomeMemory, welcomeDisk, welcomePackages, welcomeShell, welcomeTerminal, welcomeUser, welcomeUptime, welcomeLocalIP
 
     public func text(in language: Language) -> String {
@@ -230,7 +234,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .sizeLarge: "Grande"
         case .tabs: "Onglets"
         case .verticalTabs: "Onglets verticaux"
-        case .verticalTabsHint: "Liste les onglets dans une barre latérale à gauche plutôt qu'en haut de la fenêtre. Raccourci : ⌃⌘S."
+        case .verticalTabsHint: "Liste les onglets dans une barre latérale à gauche plutôt qu'en haut de la fenêtre."
         case .closeTabsBelow: "Fermer les onglets en dessous"
         case .tabIcon: "Icône"
         case .sidebarWidth: "Largeur de la barre latérale"
@@ -272,6 +276,38 @@ public enum TextKey: CaseIterable, Sendable {
         case .updateError: "Erreur de mise à jour"
         case .updateInstalled: "Mise à jour installée"
         case .ok: "OK"
+        case .shortcuts: "Raccourcis"
+        case .shortcutsHint: "Les raccourcis clavier principaux de Brume. Cliquez sur un raccourci, puis tapez la nouvelle combinaison : Échap annule, ⌫ le retire."
+        case .splits: "Splits"
+        case .selectTab: "Aller à un onglet"
+        case .selectTabHint: "Avec un chiffre : 1 à 8 dans l'ordre, 9 pour le dernier."
+        case .closeTerminalHint: "Le terminal actif, ou l'onglet s'il n'est pas divisé."
+        case .keySpace: "Espace"
+        case .hideApp: "Masquer Brume"
+        case .hideOthers: "Masquer les autres"
+        case .minimize: "Minimiser"
+        case .undo: "Annuler"
+        case .redo: "Rétablir"
+        case .cut: "Couper"
+        case .selectAll: "Tout sélectionner"
+        case .fullScreen: "Plein écran"
+        case .clearScreen: "Effacer l'écran"
+        case .lineStart: "Aller au début de la ligne"
+        case .lineEnd: "Aller à la fin de la ligne"
+        case .deleteLine: "Effacer la ligne"
+        case .pressShortcut: "Tapez le raccourci"
+        case .noShortcut: "Aucun"
+        case .changeShortcut: "Modifier le raccourci"
+        case .restoreDefault: "Rétablir le raccourci par défaut"
+        case .restoreAllShortcuts: "Rétablir les raccourcis par défaut"
+        case .replace: "Remplacer"
+        case .useAnyway: "Utiliser quand même"
+        case .shortcutHint: "Raccourci : %@."
+        case .shortcutNeedsModifier: "Ajoutez ⌘, ⌃ ou ⌥ : seule, la touche part dans le terminal."
+        case .shortcutNeedsDigit: "Tapez un chiffre avec les touches de modification voulues, par exemple ⌃1."
+        case .shortcutInUse: "%@ sert déjà à « %@ »."
+        case .shortcutInTerminal: "Dans le terminal, %@ sert à « %@ »."
+        case .shortcutWithoutCommand: "Sans ⌘, %@ n'arrivera plus au terminal."
         case .welcomeHardware: "Matériel"
         case .welcomeSoftware: "Logiciel"
         case .welcomeSession: "Session"
@@ -457,7 +493,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .sizeLarge: "Large"
         case .tabs: "Tabs"
         case .verticalTabs: "Vertical Tabs"
-        case .verticalTabsHint: "Lists tabs in a sidebar on the left instead of across the top of the window. Shortcut: ⌃⌘S."
+        case .verticalTabsHint: "Lists tabs in a sidebar on the left instead of across the top of the window."
         case .closeTabsBelow: "Close Tabs Below"
         case .tabIcon: "Icon"
         case .sidebarWidth: "Sidebar Width"
@@ -499,6 +535,38 @@ public enum TextKey: CaseIterable, Sendable {
         case .updateError: "Update Error"
         case .updateInstalled: "Update Installed"
         case .ok: "OK"
+        case .shortcuts: "Shortcuts"
+        case .shortcutsHint: "Brume's main keyboard shortcuts. Click a shortcut, then type the new combination: Escape cancels, ⌫ removes it."
+        case .splits: "Splits"
+        case .selectTab: "Go to Tab"
+        case .selectTabHint: "With a digit: 1 to 8 in order, 9 for the last one."
+        case .closeTerminalHint: "The active terminal, or the tab when it isn't split."
+        case .keySpace: "Space"
+        case .hideApp: "Hide Brume"
+        case .hideOthers: "Hide Others"
+        case .minimize: "Minimize"
+        case .undo: "Undo"
+        case .redo: "Redo"
+        case .cut: "Cut"
+        case .selectAll: "Select All"
+        case .fullScreen: "Full Screen"
+        case .clearScreen: "Clear Screen"
+        case .lineStart: "Go to Start of Line"
+        case .lineEnd: "Go to End of Line"
+        case .deleteLine: "Delete Line"
+        case .pressShortcut: "Type the shortcut"
+        case .noShortcut: "None"
+        case .changeShortcut: "Change Shortcut"
+        case .restoreDefault: "Restore Default Shortcut"
+        case .restoreAllShortcuts: "Restore Default Shortcuts"
+        case .replace: "Replace"
+        case .useAnyway: "Use Anyway"
+        case .shortcutHint: "Shortcut: %@."
+        case .shortcutNeedsModifier: "Add ⌘, ⌃ or ⌥: on its own, the key goes to the terminal."
+        case .shortcutNeedsDigit: "Type a digit with the modifier keys you want, for example ⌃1."
+        case .shortcutInUse: "%@ is already used for “%@”."
+        case .shortcutInTerminal: "In the terminal, %@ is used for “%@”."
+        case .shortcutWithoutCommand: "Without ⌘, %@ will no longer reach the terminal."
         case .welcomeHardware: "Hardware"
         case .welcomeSoftware: "Software"
         case .welcomeSession: "Session"
@@ -535,5 +603,13 @@ public enum L10n {
 
     public static func text(_ key: TextKey) -> String {
         key.text(in: language)
+    }
+
+    /// Chaque `%@` du texte, dans l'ordre.
+    public static func text(_ key: TextKey, _ values: String...) -> String {
+        values.reduce(text(key)) { text, value in
+            guard let range = text.range(of: "%@") else { return text }
+            return text.replacingCharacters(in: range, with: value)
+        }
     }
 }

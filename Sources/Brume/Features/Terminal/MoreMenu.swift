@@ -53,7 +53,7 @@ struct MoreMenu: View {
             entries.append(.item(L10n.text(.noFolderYet), enabled: false) {})
         }
         entries.append(.separator)
-        entries.append(.item(L10n.text(.verticalTabs), shortcut: VerticalTabsCommands.shortcut, checked: settings.verticalTabs.isOn) {
+        entries.append(.item(L10n.text(.verticalTabs), shortcut: settings.shortcutLabel(.verticalTabs), checked: settings.verticalTabs.isOn) {
             settings.verticalTabs.isOn.toggle()
         })
         entries.append(.item(L10n.text(.resetTabs), run: workspace.reset))

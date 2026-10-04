@@ -30,7 +30,9 @@ final class SessionStore {
 
     /// La fenêtre suivante de la session, ou une neuve quand il n'en reste plus.
     func makeWorkspace() -> TerminalWorkspace {
-        TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
+        let workspace = TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
+        workspace.settings = settings
+        return workspace
     }
 
     /// Combien d'autres fenêtres la première doit ouvrir. Ne répond qu'une fois : les fenêtres

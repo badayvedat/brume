@@ -88,6 +88,11 @@ final class SettingsStore {
         set { settings.verticalTabs = newValue }
     }
 
+    var shortcuts: Shortcuts {
+        get { settings.shortcuts }
+        set { settings.shortcuts = newValue }
+    }
+
     /// L'écran de démarrage tel que fastfetch le dessinera, aux tailles choisies, pour l'aperçu.
     func welcomePreview() async -> [[AnsiSpan]] {
         guard let config = welcomeConfigs.first, let output = await Fastfetch.output(config: config) else { return [] }

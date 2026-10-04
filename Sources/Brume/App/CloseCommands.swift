@@ -5,13 +5,14 @@ import SwiftUI
 /// le terminal, Option+Cmd+W l'onglet ou le groupe entier.
 struct CloseCommands: Commands {
     @FocusedValue(\.terminalWorkspace) private var workspace
+    let settings: SettingsStore
 
     var body: some Commands {
         CommandGroup(replacing: .saveItem) {
             Button(L10n.text(.close)) { workspace?.closeFocused() }
-                .keyboardShortcut("w")
+                .keyboardShortcut(settings.keyboardShortcut(.closeTerminal))
             Button(L10n.text(workspace?.isSplit == true ? .closeGroup : .closeTab)) { workspace?.closeSelectedTab() }
-                .keyboardShortcut("w", modifiers: [.command, .option])
+                .keyboardShortcut(settings.keyboardShortcut(.closeTab))
             Button(L10n.text(.closeWindow)) { workspace?.closeWindow() }
                 .keyboardShortcut("w", modifiers: [.command, .shift])
         }
