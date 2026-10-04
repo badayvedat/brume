@@ -5,11 +5,13 @@ struct BrumeApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @State private var session: SessionStore
     @State private var settings: SettingsStore
+    @State private var updater: UpdaterStore
 
     init() {
         let settings = SettingsStore()
         _settings = State(initialValue: settings)
         _session = State(initialValue: SessionStore(settings: settings))
+        _updater = State(initialValue: UpdaterStore())
         SystemSymbol.preload()
         InstalledApps.preload()
         // Le shell hérite de cette variable : le patch zsh y trouve les greffons embarqués.
@@ -25,12 +27,14 @@ struct BrumeApp: App {
             TerminalScreen()
                 .environment(session)
                 .environment(settings)
+                .environment(updater)
         }
         // Brume rouvre lui-même ses fenêtres (`SessionStore`) : macOS en rouvrirait en double.
         .restorationBehavior(.disabled)
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 800, height: 500)
         .commands {
+            UpdateCommands(updater: updater)
             TabCommands()
             CloseCommands()
             SplitCommands(settings: settings)

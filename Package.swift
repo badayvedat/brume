@@ -9,7 +9,9 @@ let package = Package(
     ],
     dependencies: [
         // Copie locale corrigée, préparée par scripts/setup.sh (version figée dans le script).
-        .package(path: "Vendor/libghostty-spm")
+        .package(path: "Vendor/libghostty-spm"),
+        // Même version que les outils de publication de scripts/setup.sh.
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0")
     ],
     targets: [
         .target(name: "BrumeCore"),
@@ -18,9 +20,14 @@ let package = Package(
             dependencies: [
                 "BrumeCore",
                 .product(name: "GhosttyTerminal", package: "libghostty-spm"),
-                .product(name: "GhosttyTheme", package: "libghostty-spm")
+                .product(name: "GhosttyTheme", package: "libghostty-spm"),
+                .product(name: "Sparkle", package: "Sparkle")
             ],
-            path: "Sources/Brume"
+            path: "Sources/Brume",
+            // scripts/build-app.sh range Sparkle.framework dans Contents/Frameworks.
+            linkerSettings: [
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])
+            ]
         ),
         .testTarget(name: "BrumeCoreTests", dependencies: ["BrumeCore"])
     ]

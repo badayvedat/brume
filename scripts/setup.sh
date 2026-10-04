@@ -66,3 +66,23 @@ if [ "$(cat Vendor/fastfetch/.version 2>/dev/null)" != "$FASTFETCH_VERSION-$FAST
     echo "$FASTFETCH_VERSION-$FASTFETCH_ARCH" > Vendor/fastfetch/.version
     echo "fastfetch $FASTFETCH_VERSION prêt."
 fi
+
+# Outils de publication de Sparkle (signature du DMG, appcast), tirés de l'archive officielle.
+# Le framework vient du paquet SwiftPM : garder la même version que dans Package.swift.
+SPARKLE_VERSION="2.10.0"
+SPARKLE_SHA="c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c"
+if [ "$(cat Vendor/sparkle/.version 2>/dev/null)" != "$SPARKLE_VERSION" ]; then
+    rm -rf Vendor/sparkle
+    mkdir -p Vendor/sparkle
+    archive="Vendor/sparkle/Sparkle.tar.xz"
+    curl -fsSL -o "$archive" "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+    if [ "$(shasum -a 256 "$archive" | cut -d' ' -f1)" != "$SPARKLE_SHA" ]; then
+        echo "Sparkle $SPARKLE_VERSION : empreinte inattendue, arrêt." >&2
+        rm -rf Vendor/sparkle
+        exit 1
+    fi
+    tar -xJf "$archive" -C Vendor/sparkle ./bin/sign_update ./bin/generate_appcast ./bin/generate_keys
+    rm "$archive"
+    echo "$SPARKLE_VERSION" > Vendor/sparkle/.version
+    echo "Sparkle $SPARKLE_VERSION prêt."
+fi

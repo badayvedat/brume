@@ -13,6 +13,11 @@ APP_NAME="Brume"
 BUNDLE_ID="app.brume.Brume"
 CERT_NAME="Brume Dev"
 VERSION="0.1.0"
+# Monté de 1 par scripts/release.sh : Sparkle le compare au `sparkle:version` de l'appcast.
+BUILD_NUMBER="1"
+FEED_URL="https://raw.githubusercontent.com/jeremy-prt/brume/main/appcast.xml"
+# Clé publique EdDSA, partagée avec Orby : la clé privée est dans le trousseau de Jérémy.
+SPARKLE_PUBLIC_KEY="4NnmxyV0FR0GIFCf0hShB1k4vSkYsl5D55knxLeopgQ="
 BUILD_DIR=".build/app"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
@@ -33,8 +38,10 @@ BIN_PATH="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
 
 echo "Creating app bundle..."
 rm -rf "$BUILD_DIR"
-mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources" "$APP_BUNDLE/Contents/Frameworks"
 cp "$BIN_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+# Posé par SwiftPM à côté du binaire, trouvé par le rpath de Package.swift.
+ditto "$(dirname "$BIN_PATH")/Sparkle.framework" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 # Dans Contents/Resources : codesign refuse tout ajout à la racine de l'app (voir Patches/).
 cp -R "$(dirname "$BIN_PATH")"/*.bundle "$APP_BUNDLE/Contents/Resources/"
 
@@ -122,7 +129,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$BUILD_NUMBER</string>
     <key>CFBundleShortVersionString</key>
     <string>$VERSION</string>
     <key>LSMinimumSystemVersion</key>
@@ -131,6 +138,14 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <true/>
     <key>ATSApplicationFontsPath</key>
     <string>Fonts</string>
+    <key>SUFeedURL</key>
+    <string>$FEED_URL</string>
+    <key>SUPublicEDKey</key>
+    <string>$SPARKLE_PUBLIC_KEY</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
 $PERMISSION_KEYS</dict>
 </plist>
 PLIST
@@ -145,7 +160,15 @@ else
     echo "Certificat \"$CERT_NAME\" absent : signature ad-hoc. Lancer une fois : bash scripts/create-dev-cert.sh"
 fi
 codesign --force -s "$IDENTITY" "$APP_BUNDLE/Contents/MacOS/fastfetch"
-codesign --force --deep -s "$IDENTITY" "$APP_BUNDLE"
+# Sparkle de l'intérieur vers l'extérieur, comme le dit sa doc : `--deep` ne garderait pas
+# les droits du service de téléchargement.
+SPARKLE="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+codesign --force -s "$IDENTITY" "$SPARKLE/Versions/B/XPCServices/Installer.xpc"
+codesign --force -s "$IDENTITY" --preserve-metadata=entitlements "$SPARKLE/Versions/B/XPCServices/Downloader.xpc"
+codesign --force -s "$IDENTITY" "$SPARKLE/Versions/B/Autoupdate"
+codesign --force -s "$IDENTITY" "$SPARKLE/Versions/B/Updater.app"
+codesign --force -s "$IDENTITY" "$SPARKLE"
+codesign --force -s "$IDENTITY" "$APP_BUNDLE"
 
 if [ "$INSTALL" = 0 ]; then
     echo "Done: $APP_BUNDLE"

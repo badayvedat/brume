@@ -52,6 +52,8 @@ public enum TextKey: CaseIterable, Sendable {
     case tabs, verticalTabs, verticalTabsHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
+    case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
+    case upToDate, upToDateMessage, updateError, updateInstalled, ok
     case welcomeHardware, welcomeSoftware, welcomeSession, welcomeOS, welcomeHost, welcomeCPU, welcomeGPU, welcomeMemory, welcomeDisk, welcomePackages, welcomeShell, welcomeTerminal, welcomeUser, welcomeUptime, welcomeLocalIP
 
     public func text(in language: Language) -> String {
@@ -129,7 +131,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .settings: "Réglages"
         case .back: "Retour"
         case .general: "Général"
-        case .generalHint: "Démarrage, langue et comportement de l'application."
+        case .generalHint: "Démarrage, langue, comportement et mises à jour de l'application."
         case .appearance: "Apparence"
         case .appearanceHint: "Style des fenêtres, couleurs et police des terminaux. Les changements s'appliquent immédiatement."
         case .window: "Fenêtre"
@@ -258,6 +260,18 @@ public enum TextKey: CaseIterable, Sendable {
         case .iconTools: "Outils"
         case .iconAI: "IA"
         case .iconProduction: "Production"
+        case .updates: "Mises à jour"
+        case .currentVersion: "Version actuelle"
+        case .checkForUpdates: "Rechercher les mises à jour"
+        case .checkAutomatically: "Rechercher automatiquement"
+        case .checkAutomaticallyHint: "Recherche une nouvelle version de Brume une fois par jour."
+        case .installAutomatically: "Installer automatiquement"
+        case .installAutomaticallyHint: "Télécharge les nouvelles versions en arrière-plan et les installe à la fermeture de Brume."
+        case .upToDate: "Brume est à jour"
+        case .upToDateMessage: "La version installée est la plus récente."
+        case .updateError: "Erreur de mise à jour"
+        case .updateInstalled: "Mise à jour installée"
+        case .ok: "OK"
         case .welcomeHardware: "Matériel"
         case .welcomeSoftware: "Logiciel"
         case .welcomeSession: "Session"
@@ -344,7 +358,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .settings: "Settings"
         case .back: "Back"
         case .general: "General"
-        case .generalHint: "Startup, language and app behavior."
+        case .generalHint: "Startup, language, app behavior and updates."
         case .appearance: "Appearance"
         case .appearanceHint: "Window style, colors and terminal font. Changes apply immediately."
         case .window: "Window"
@@ -473,6 +487,18 @@ public enum TextKey: CaseIterable, Sendable {
         case .iconTools: "Tools"
         case .iconAI: "AI"
         case .iconProduction: "Production"
+        case .updates: "Updates"
+        case .currentVersion: "Current Version"
+        case .checkForUpdates: "Check for Updates"
+        case .checkAutomatically: "Check Automatically"
+        case .checkAutomaticallyHint: "Looks for a new version of Brume once a day."
+        case .installAutomatically: "Install Automatically"
+        case .installAutomaticallyHint: "Downloads new versions in the background and installs them when Brume quits."
+        case .upToDate: "Brume is up to date"
+        case .upToDateMessage: "The installed version is the latest one."
+        case .updateError: "Update Error"
+        case .updateInstalled: "Update Installed"
+        case .ok: "OK"
         case .welcomeHardware: "Hardware"
         case .welcomeSoftware: "Software"
         case .welcomeSession: "Session"
