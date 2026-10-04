@@ -1,7 +1,7 @@
 import Foundation
 
-/// fastfetch, embarqué dans `Contents/MacOS` (`build-app.sh`) : l'écran de démarrage des terminaux et
-/// son aperçu dans les réglages.
+/// fastfetch, embarqué dans `Contents/MacOS` (`scripts/build-app.sh`) : l'écran de démarrage
+/// des terminaux et son aperçu dans les réglages.
 enum Fastfetch {
     static let executable = Bundle.main.url(forAuxiliaryExecutable: "fastfetch")
 

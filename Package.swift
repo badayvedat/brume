@@ -8,7 +8,7 @@ let package = Package(
         .macOS(.v26)
     ],
     dependencies: [
-        // Copie locale corrigée, préparée par setup.sh (version figée dans le script).
+        // Copie locale corrigée, préparée par scripts/setup.sh (version figée dans le script).
         .package(path: "Vendor/libghostty-spm")
     ],
     targets: [

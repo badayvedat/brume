@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Crée le certificat auto-signé « Brume Dev » dans le trousseau login, une fois par
-# machine. build-app.sh signe avec lui pour que macOS garde les permissions entre
+# machine. scripts/build-app.sh signe avec lui pour que macOS garde les permissions entre
 # deux builds.
 
 CERT_NAME="Brume Dev"

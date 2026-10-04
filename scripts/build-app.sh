@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 # Compile Brume, assemble Brume.app, signe, installe dans /Applications et relance.
 #
 # Usage :
-#   bash build-app.sh               # release
-#   bash build-app.sh --debug       # build rapide
-#   bash build-app.sh --no-install  # .build/app/Brume.app seulement, le Brume ouvert reste
+#   bash scripts/build-app.sh               # release
+#   bash scripts/build-app.sh --debug       # build rapide
+#   bash scripts/build-app.sh --no-install  # .build/app/Brume.app seulement, le Brume ouvert reste
 
 APP_NAME="Brume"
 BUNDLE_ID="com.jeremy.brume"
@@ -25,7 +25,7 @@ for arg in "$@"; do
     esac
 done
 
-bash setup.sh
+bash scripts/setup.sh
 
 echo "Building ($CONFIG)..."
 swift build -c "$CONFIG"
@@ -139,7 +139,7 @@ if security find-identity -v -p codesigning 2>/dev/null | grep -q "\"$CERT_NAME\
     echo "Signing with \"$CERT_NAME\"..."
     IDENTITY="$CERT_NAME"
 else
-    echo "Certificat \"$CERT_NAME\" absent : signature ad-hoc. Lancer une fois : bash create-dev-cert.sh"
+    echo "Certificat \"$CERT_NAME\" absent : signature ad-hoc. Lancer une fois : bash scripts/create-dev-cert.sh"
 fi
 codesign --force -s "$IDENTITY" "$APP_BUNDLE/Contents/MacOS/fastfetch"
 codesign --force --deep -s "$IDENTITY" "$APP_BUNDLE"

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 # Récupère les dépendances à des versions figées dans Vendor/ et applique Patches/.
 # Pour monter de version : changer le tag et le commit, relancer.

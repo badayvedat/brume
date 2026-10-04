@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Capture la fenêtre Brume seule. Usage : bash capture.sh [fichier.png]
+# Capture la fenêtre Brume seule. Usage : bash scripts/capture.sh [fichier.png]
 
 OUT="${1:-${TMPDIR:-/tmp}/brume.png}"
 
