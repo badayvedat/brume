@@ -2,7 +2,7 @@
 
 Terminal macOS simple et beau, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
 
-Avant de toucher à l'icône de l'app ou aux visuels de la page Démarrage : lire `docs/icone.md` ou `docs/visuels-demarrage.md`.
+Avant de toucher à l'icône de l'app, aux visuels de la page Démarrage ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md` ou `docs/distribution.md`.
 
 ## Build
 
