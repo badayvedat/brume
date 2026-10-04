@@ -4,19 +4,29 @@
       <stop offset="0" stop-color="#2c3547"/>
       <stop offset="1" stop-color="#12161e"/>
     </linearGradient>
-    <radialGradient id="lueur" cx="330" cy="40" r="420" gradientUnits="userSpaceOnUse">
+    <radialGradient id="lueur" cx="330" cy="30" r="430" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#dfe6f4" stop-opacity=".14"/>
       <stop offset="1" stop-color="#dfe6f4" stop-opacity="0"/>
     </radialGradient>
-    <!-- Bande de brume derrière les noms des icônes : un ton moyen, lisible en noir (mode clair) comme en blanc (mode sombre). -->
-    <linearGradient id="bande" x1="0" y1="0" x2="660" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6e788e" stop-opacity="0"/>
-      <stop offset=".14" stop-color="#6e788e"/>
-      <stop offset=".86" stop-color="#6e788e"/>
-      <stop offset="1" stop-color="#6e788e" stop-opacity="0"/>
-    </linearGradient>
+    <!-- Banc de brume sous les icônes : assez clair derrière leurs noms pour qu'ils se lisent en noir
+         (mode clair) comme en blanc (mode sombre), fondu partout ailleurs. -->
+    <radialGradient id="banc" cx="330" cy="280" r="330" gradientTransform="translate(0 280) scale(1 .2) translate(0 -280)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6e788e"/>
+      <stop offset=".7" stop-color="#6a748a"/>
+      <stop offset="1" stop-color="#6a748a" stop-opacity="0"/>
+    </radialGradient>
     <filter id="flou" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
-      <feGaussianBlur stdDeviation="9"/>
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="voile" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
+      <feTurbulence type="fractalNoise" baseFrequency=".008 .03" numOctaves="4" seed="21" result="t"/>
+      <feColorMatrix in="t" values="0 0 0 0 .87  0 0 0 0 .9  0 0 0 0 .96  1.6 0 0 0 -.7" result="v"/>
+      <feGaussianBlur in="v" stdDeviation="4" result="d"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="28" result="masque"/>
+      <feComposite in="d" in2="masque" operator="in"/>
+    </filter>
+    <filter id="halo" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
+      <feGaussianBlur stdDeviation="6"/>
     </filter>
     <filter id="grain" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
       <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="5"/>
@@ -24,13 +34,22 @@
       <feComposite in2="SourceGraphic" operator="in"/>
     </filter>
   </defs>
+
   <rect width="660" height="420" fill="url(#nuit)"/>
   <rect width="660" height="420" fill="url(#lueur)"/>
-  <rect x="-20" y="262" width="700" height="40" rx="20" fill="url(#bande)" filter="url(#flou)"/>
-  <rect x="60" y="268" width="540" height="28" rx="14" fill="#6e788e"/>
-  <g fill="none" stroke="#eef2f9" stroke-linecap="round" stroke-linejoin="round" opacity=".6">
-    <path d="M262 200 C300 176 360 176 398 200" stroke-width="3"/>
-    <path d="M384 186 L399 201 L380 207" stroke-width="3"/>
+
+  <ellipse cx="330" cy="280" rx="340" ry="62" fill="url(#banc)" filter="url(#flou)"/>
+  <ellipse cx="330" cy="276" rx="300" ry="62" fill="#fff" filter="url(#voile)" opacity=".28"/>
+
+  <!-- Flèche nette, et deux échos de sa pointe qui s'estompent dans la brume. -->
+  <g fill="none" stroke="#eef2f9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M393 185 L406 198 L393 211" stroke-width="2" opacity=".2"/>
+    <path d="M404 185 L417 198 L404 211" stroke-width="1.5" opacity=".09"/>
+    <path d="M262 198 H396 M382 184 L396 198 L382 212" stroke-width="7" opacity=".25" filter="url(#halo)"/>
+    <path d="M262 198 H396 M382 184 L396 198 L382 212" stroke-width="3" opacity=".85"/>
   </g>
-  <rect width="660" height="420" fill="#fff" opacity=".12" filter="url(#grain)"/>
+
+  <text x="330" y="372" text-anchor="middle" font-family="SF Pro Text, Helvetica Neue, sans-serif" font-size="13" letter-spacing=".3" fill="#eef2f9" fill-opacity=".62">Drag Brume to Applications to install</text>
+
+  <rect width="660" height="420" fill="#fff" opacity=".1" filter="url(#grain)"/>
 </svg>
