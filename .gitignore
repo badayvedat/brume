@@ -5,7 +5,7 @@ Vendor/
 
 # Personnel, hors dépôt
 suivi.md
-CLAUDE.local.md
+*.local.md
 .claude/launch.json
 .claude/settings.local.json
 .claude/worktrees/
