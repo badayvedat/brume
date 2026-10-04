@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="420" viewBox="0 0 660 420">
+  <defs>
+    <linearGradient id="nuit" x1="0" y1="0" x2="0" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2c3547"/>
+      <stop offset="1" stop-color="#12161e"/>
+    </linearGradient>
+    <radialGradient id="lueur" cx="330" cy="40" r="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#dfe6f4" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#dfe6f4" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Bande de brume derrière les noms des icônes : un ton moyen, lisible en noir (mode clair) comme en blanc (mode sombre). -->
+    <linearGradient id="bande" x1="0" y1="0" x2="660" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6e788e" stop-opacity="0"/>
+      <stop offset=".14" stop-color="#6e788e"/>
+      <stop offset=".86" stop-color="#6e788e"/>
+      <stop offset="1" stop-color="#6e788e" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="flou" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="grain" filterUnits="userSpaceOnUse" x="0" y="0" width="660" height="420">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="5"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 -.28"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+  <rect width="660" height="420" fill="url(#nuit)"/>
+  <rect width="660" height="420" fill="url(#lueur)"/>
+  <rect x="-20" y="262" width="700" height="40" rx="20" fill="url(#bande)" filter="url(#flou)"/>
+  <rect x="60" y="268" width="540" height="28" rx="14" fill="#6e788e"/>
+  <g fill="none" stroke="#eef2f9" stroke-linecap="round" stroke-linejoin="round" opacity=".6">
+    <path d="M262 200 C300 176 360 176 398 200" stroke-width="3"/>
+    <path d="M384 186 L399 201 L380 207" stroke-width="3"/>
+  </g>
+  <rect width="660" height="420" fill="#fff" opacity=".12" filter="url(#grain)"/>
+</svg>
