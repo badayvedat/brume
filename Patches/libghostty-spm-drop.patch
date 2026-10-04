@@ -1,0 +1,11 @@
+--- a/Sources/GhosttyTerminal/Platform/Shared/TerminalPasteboardContent.swift
++++ b/Sources/GhosttyTerminal/Platform/Shared/TerminalPasteboardContent.swift
+@@ -142,7 +142,7 @@
+ 
+     #elseif canImport(AppKit)
+         /// The pasteboard as text — see ``text(string:urls:)``.
+-        static func text(from pasteboard: NSPasteboard = .general) -> String? {
++        public static func text(from pasteboard: NSPasteboard = .general) -> String? {
+             text(
+                 string: pasteboard.string(forType: .string),
+                 urls: (pasteboard.readObjects(forClasses: [NSURL.self]) as? [URL]) ?? []
