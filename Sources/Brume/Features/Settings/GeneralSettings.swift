@@ -39,6 +39,14 @@ struct GeneralSettings: View {
                     Segmented(label: L10n.text(.language), options: Language.allCases.map { ($0, $0.name) }, selection: $settings.language)
                 }
             }
+            SettingsGroup(title: L10n.text(.notifications)) {
+                SettingsRow(title: L10n.text(.notifications), hint: L10n.text(.notificationsHint)) {
+                    Switch(label: L10n.text(.notifications), isOn: $settings.sendsNotifications)
+                }
+                SettingsRow(title: L10n.text(.dockBadge), hint: L10n.text(.dockBadgeHint), isLast: true) {
+                    Switch(label: L10n.text(.dockBadge), isOn: $settings.showsDockBadge)
+                }
+            }
             SettingsGroup(title: L10n.text(.updates)) {
                 SettingsRow(title: L10n.text(.currentVersion), hint: "Brume \(updater.version)") {
                     Button(L10n.text(.checkForUpdates), action: updater.checkForUpdates)

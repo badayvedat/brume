@@ -7,7 +7,8 @@ What changes in each version of Brume. The newest version comes first.
 ### Added
 - A terminal built on the Ghostty engine: tabs in the top bar or in a vertical sidebar, split terminals grouped inside a tab, search, text zoom, and your windows and tabs restored on relaunch.
 - Tabs with a name, a color and an icon, reordered by dragging, with ⌘1 to ⌘9 shown while ⌘ is held.
-- A badge on each tab that follows Claude Code and long commands: progress, finished, bell.
+- A badge on each tab that follows Claude Code and long commands: progress, finished, bell, and red when a command failed.
+- When Brume is in the background, a notification tells you when Claude Code is waiting or a long command finishes; click it to jump to the terminal. The Dock icon shows how many terminals need a look. Both can be turned off in Settings › General.
 - Command highlighting, suggestions from history and a Tab completion menu, on by default.
 - Settings inside the window: glass effect, 10 accent colors, 12 fonts, 16 command color palettes, English and French (Brume follows your Mac's language on first launch).
 - A welcome screen in every new terminal: a pixel-art visual tinted with your accent color, a word in large letters, and your Mac's information.

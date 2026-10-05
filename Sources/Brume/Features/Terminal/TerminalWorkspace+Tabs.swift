@@ -151,8 +151,9 @@ extension TerminalWorkspace {
         layout.panes(of: tab).lazy.compactMap { self.paneProgress[$0] }.first
     }
 
-    func hasActivity(_ tab: UUID) -> Bool {
-        layout.panes(of: tab).contains(where: activity.contains)
+    /// La plus grave de ses splits : un échec dans l'un rougit tout le groupe.
+    func activity(of tab: UUID) -> TerminalActivity? {
+        layout.panes(of: tab).compactMap { paneActivity[$0] }.max()
     }
 
     /// Nil : l'onglet affiché.

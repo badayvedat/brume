@@ -1,5 +1,6 @@
 import AppKit
 import BrumeCore
+import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminationSignal: DispatchSourceSignal?
@@ -12,6 +13,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Brume a ses propres onglets : sans ça, macOS ajoute ses articles d'onglets (« Fusionner
         // toutes les fenêtres »...) aux menus Présentation et Fenêtre.
         NSWindow.allowsAutomaticWindowTabbing = false
+        // Avant la fin du lancement : un clic sur une notification peut avoir lancé Brume.
+        UNUserNotificationCenter.current().delegate = self
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        TerminalWorkspace.didBecomeActive()
     }
 
     /// `kill` et `scripts/build-app.sh` envoient SIGTERM, qui saute la fin normale de l'app : la
@@ -58,5 +65,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         return .terminateLater
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard let pane = UUID(uuidString: response.notification.request.identifier) else { return }
+        await TerminalWorkspace.reveal(pane)
     }
 }

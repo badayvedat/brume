@@ -16,6 +16,11 @@ public struct AppSettings: Codable, Hashable, Sendable {
     /// L'onglet affiche le chemin de son dossier depuis `~` plutôt que son seul nom.
     public var showsFullPath = false
     public var shortcuts = Shortcuts()
+    /// Brume en arrière-plan : une notification de macOS quand Claude Code attend ou qu'une longue
+    /// commande finit.
+    public var sendsNotifications = true
+    /// Le nombre de terminaux à regarder, sur l'icône du Dock.
+    public var showsDockBadge = true
 
     public init() {}
 
@@ -33,6 +38,8 @@ public struct AppSettings: Codable, Hashable, Sendable {
         if let value = try? container.decode(VerticalTabs.self, forKey: .verticalTabs) { verticalTabs = value }
         if let value = try? container.decode(Bool.self, forKey: .showsFullPath) { showsFullPath = value }
         if let value = try? container.decode(Shortcuts.self, forKey: .shortcuts) { shortcuts = value }
+        if let value = try? container.decode(Bool.self, forKey: .sendsNotifications) { sendsNotifications = value }
+        if let value = try? container.decode(Bool.self, forKey: .showsDockBadge) { showsDockBadge = value }
     }
 
     public func encoded() throws -> Data {

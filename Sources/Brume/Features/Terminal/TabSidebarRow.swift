@@ -34,7 +34,7 @@ struct TabSidebarRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .tabTooltip(.tab(tab), in: workspace, isDragging: isDragging)
             TabStatus(
-                isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),
+                isHovered: isHovered, progress: workspace.progress(of: tab), activity: workspace.activity(of: tab),
                 // Ni sur un groupe, où elle fermerait tous ses terminaux, ni sur le seul onglet, qui
                 // se ferme avec la fenêtre par le bouton rouge.
                 onClose: isGroup || layout.tabs.count == 1 ? nil : { workspace.close(tab) }

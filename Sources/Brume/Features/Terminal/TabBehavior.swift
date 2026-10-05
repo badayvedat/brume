@@ -32,8 +32,8 @@ extension TerminalWorkspace {
     /// Ce que dit la pastille d'un onglet, d'un groupe ou d'un terminal d'un groupe.
     func statusText(of item: TabItem) -> String? {
         switch item {
-        case let .tab(tab): TabStatus.text(progress: progress(of: tab), hasActivity: hasActivity(tab))
-        case let .pane(pane): TabStatus.text(progress: paneProgress[pane], hasActivity: activity.contains(pane))
+        case let .tab(tab): TabStatus.text(progress: progress(of: tab), activity: activity(of: tab))
+        case let .pane(pane): TabStatus.text(progress: paneProgress[pane], activity: paneActivity[pane])
         }
     }
 }

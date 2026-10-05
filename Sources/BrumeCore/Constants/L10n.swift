@@ -66,6 +66,7 @@ public enum TextKey: CaseIterable, Sendable {
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
     case upToDate, upToDateMessage, updateError, updateInstalled, ok
     case brumeOnGitHub, reportIssue
+    case notifications, notificationsHint, dockBadge, dockBadgeHint, commandFinished, commandFailed, commandFailedWithCode
     case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace, keyEscape
     case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
     case pressShortcut, noShortcut, changeShortcut, restoreDefault, restoreAllShortcuts, replace, useAnyway, shortcutHint
@@ -264,6 +265,13 @@ public enum TextKey: CaseIterable, Sendable {
         case .inProgressPercent: "En cours : %@"
         case .progressError: "Erreur"
         case .progressPaused: "En pause"
+        case .notifications: "Notifications"
+        case .notificationsHint: "Quand Brume est en arrière-plan, prévient quand Claude Code attend ou qu'une longue commande se termine."
+        case .dockBadge: "Pastille sur l'icône du Dock"
+        case .dockBadgeHint: "Le nombre de terminaux qui ont une activité non vue."
+        case .commandFinished: "Commande terminée"
+        case .commandFailed: "Échec"
+        case .commandFailedWithCode: "Échec (code %@)"
         case .ungroup: "Dissocier le groupe"
         case .leaveGroup: "Sortir du groupe"
         case .closeTerminal: "Fermer le terminal"
@@ -537,6 +545,13 @@ public enum TextKey: CaseIterable, Sendable {
         case .inProgressPercent: "In progress: %@"
         case .progressError: "Error"
         case .progressPaused: "Paused"
+        case .notifications: "Notifications"
+        case .notificationsHint: "When Brume is in the background, lets you know when Claude Code is waiting or a long command finishes."
+        case .dockBadge: "Badge on Dock Icon"
+        case .dockBadgeHint: "The number of terminals with activity you haven't seen."
+        case .commandFinished: "Command finished"
+        case .commandFailed: "Failed"
+        case .commandFailedWithCode: "Failed (exit %@)"
         case .ungroup: "Ungroup"
         case .leaveGroup: "Move Out of Group"
         case .closeTerminal: "Close Terminal"

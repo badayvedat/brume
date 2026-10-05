@@ -17,6 +17,12 @@ final class SettingsStore {
             if (settings.suggestsHistory, settings.completesCommands) != (oldValue.suggestsHistory, oldValue.completesCommands) {
                 applyShellOptions()
             }
+            if settings.showsDockBadge != oldValue.showsDockBadge {
+                TerminalWorkspace.updateDockBadge(isOn: settings.showsDockBadge)
+            }
+            if oldValue.sendsNotifications, !settings.sendsNotifications {
+                TerminalWorkspace.withdrawAllNotifications()
+            }
             scheduleSave()
         }
     }
@@ -98,6 +104,16 @@ final class SettingsStore {
     var shortcuts: Shortcuts {
         get { settings.shortcuts }
         set { settings.shortcuts = newValue }
+    }
+
+    var sendsNotifications: Bool {
+        get { settings.sendsNotifications }
+        set { settings.sendsNotifications = newValue }
+    }
+
+    var showsDockBadge: Bool {
+        get { settings.showsDockBadge }
+        set { settings.showsDockBadge = newValue }
     }
 
     /// L'écran de démarrage tel que fastfetch le dessinera, aux tailles choisies, pour l'aperçu.

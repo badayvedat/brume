@@ -15,15 +15,20 @@ extension TerminalWorkspace {
         PopupMenu.close()
         let opened = all.compactMap { workspace in workspace.window.map { (workspace, $0) } }
         guard let last = opened.last else { return nil }
-        // macOS peut refuser d'activer Brume (quitter depuis le Dock) : sans `WithoutActivation` ni
-        // `Regardless`, la fenêtre resterait cachée et la question invisible.
         if NSApp.isHidden { NSApp.unhideWithoutActivation() }
         let (front, window) = NSApp.orderedWindows.lazy.compactMap { window in opened.first { $0.1 === window } }.first ?? last
+        bringToFront(window)
+        return front
+    }
+
+    /// macOS peut refuser d'activer Brume (quitter depuis le Dock) : sans `WithoutActivation` ni
+    /// `Regardless`, la fenêtre resterait cachée et la question invisible.
+    static func bringToFront(_ window: NSWindow) {
+        if NSApp.isHidden { NSApp.unhideWithoutActivation() }
         if window.isMiniaturized { window.deminiaturize(nil) }
         window.orderFrontRegardless()
         window.makeKey()
         NSApp.activate()
-        return front
     }
 
     /// `front()` sans feuille ouverte. Sinon `action` attend que la feuille se ferme, plutôt que la

@@ -20,6 +20,8 @@ struct SettingsFileTests {
         settings.suggestsHistory = false
         settings.completesCommands = false
         settings.verticalTabs = VerticalTabs(isOn: true, width: 260)
+        settings.sendsNotifications = false
+        settings.showsDockBadge = false
         try file.save(settings)
         #expect(file.load() == settings)
         try FileManager.default.removeItem(at: file.url.deletingLastPathComponent())
@@ -29,6 +31,15 @@ struct SettingsFileTests {
         let settings = AppSettings.decoded(from: Data(#"{"restoresSession": false}"#.utf8))
         #expect(settings?.suggestsHistory == true)
         #expect(settings?.completesCommands == true)
+    }
+
+    @Test func settingsFromBeforeTheNotificationsKeepThemOn() {
+        let settings = AppSettings.decoded(from: Data(#"{"restoresSession": false}"#.utf8))
+        #expect(settings?.sendsNotifications == true)
+        #expect(settings?.showsDockBadge == true)
+        let off = AppSettings.decoded(from: Data(#"{"sendsNotifications": false, "showsDockBadge": false}"#.utf8))
+        #expect(off?.sendsNotifications == false)
+        #expect(off?.showsDockBadge == false)
     }
 
     @Test func savedLanguageIsKeptAndAMissingOneFollowsTheMac() {

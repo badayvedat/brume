@@ -86,9 +86,11 @@ final class TerminalWorkspace {
         didSet { onSnapshotChange?() }
     }
     var renaming: TabItem?
-    /// Les splits cachés où une commande ou une progression a fini, où ça a sonné ou notifié
-    /// (Claude Code qui attend une réponse) depuis qu'on les a quittés.
-    private(set) var activity: Set<UUID> = []
+    /// Les splits où une commande ou une progression a fini, où ça a sonné ou notifié (Claude Code
+    /// qui attend une réponse) depuis qu'on les a regardés.
+    private(set) var paneActivity: [UUID: TerminalActivity] = [:] {
+        didSet { if paneActivity.count != oldValue.count { updateDockBadge() } }
+    }
     /// Le split agrandi à tout l'onglet le temps de lire, comme `toggle_split_zoom` de Ghostty.
     var zoomedPane: UUID?
     var drop: WindowLayout<UUID, UUID>.Drop?
@@ -236,6 +238,8 @@ final class TerminalWorkspace {
     private func windowWillClose() {
         openWorkspaces.removeAll { $0.value == nil || $0.value === self }
         onSnapshotChange?()
+        updateDockBadge()
+        Self.withdrawNotifications(of: states.keys)
     }
 
     /// Aucun terminal ne reprend le clavier avant le retour : la frappe irait dans un terminal qu'on
@@ -343,7 +347,8 @@ final class TerminalWorkspace {
         watchers[pane] = nil
         terminalTitles[pane] = nil
         paneProgress[pane] = nil
-        activity.remove(pane)
+        paneActivity[pane] = nil
+        Self.withdrawNotifications(of: [pane])
     }
 
     /// Seul l'onglet affiché dessine ; les autres gardent leurs shells. Le focus suit le split actif.
@@ -368,7 +373,7 @@ final class TerminalWorkspace {
     }
 
     /// Les splits de l'onglet affiché, ou seulement celui agrandi.
-    private var shownPanes: Set<UUID> {
+    var shownPanes: Set<UUID> {
         if let zoomedPane { return [zoomedPane] }
         return Set(layout.panes(of: layout.selectedTab))
     }
@@ -376,16 +381,30 @@ final class TerminalWorkspace {
     /// Seuls les terminaux affichés se dessinent : ni les autres onglets, ni rien sous les réglages.
     func updateSurfaces() {
         let shown = shownPanes
-        if !activity.isDisjoint(with: shown) { activity.subtract(shown) }
+        markSeen(shown)
         let drawn = settingsSection == nil ? shown : []
         for (pane, state) in states {
             state.isSurfaceVisible = drawn.contains(pane)
         }
     }
 
-    private func noteActivity(in pane: UUID) {
-        guard !shownPanes.contains(pane) else { return }
-        activity.insert(pane)
+    /// Brume en arrière-plan, même le terminal affiché n'est pas vu.
+    private func note(_ event: TerminalEvent, in pane: UUID) {
+        notify(event, in: pane)
+        guard !NSApp.isActive || !shownPanes.contains(pane) else { return }
+        let activity = TerminalActivity.after(event, from: paneActivity[pane])
+        if paneActivity[pane] != activity { paneActivity[pane] = activity }
+    }
+
+    /// Ce qui est à l'écran quand Brume est au premier plan : sa pastille et ses notifications partent.
+    func markSeen(_ panes: Set<UUID>) {
+        guard NSApp.isActive else { return }
+        let seen = panes.filter { paneActivity[$0] != nil }
+        guard !seen.isEmpty else { return }
+        for pane in seen {
+            paneActivity[pane] = nil
+        }
+        Self.withdrawNotifications(of: seen)
     }
 
     /// `folder` : le dossier où part le terminal, à la place de celui hérité.
@@ -412,14 +431,7 @@ final class TerminalWorkspace {
             state.$title.removeDuplicates().sink { [weak self] in self?.terminalTitles[pane] = $0 },
             state.$workingDirectory.removeDuplicates().dropFirst().sink { [weak self] _ in self?.onSnapshotChange?() },
             state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
-            Publishers.Merge4(
-                state.$lastCommandExitCode.dropFirst().map { _ in },
-                state.$bellCount.dropFirst().map { _ in },
-                state.$lastDesktopNotificationAt.dropFirst().map { _ in },
-                // Une progression qui s'arrête : Claude Code a fini son tour.
-                state.$progress.map { $0 != nil }.removeDuplicates().dropFirst().filter { !$0 }.map { _ in }
-            )
-            .sink { [weak self] in self?.noteActivity(in: pane) },
+            Self.events(of: state).sink { [weak self] in self?.note($0, in: pane) },
         ]
         state.makePlatformView = { [weak self] in
             let view = BrumeTerminalView(frame: .zero)
@@ -435,6 +447,21 @@ final class TerminalWorkspace {
         state.onStartSearch = { [weak self] in self?.openSearch(in: pane, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: pane) }
         return state
+    }
+
+    /// Un `@Published` prévient avant de changer : le paquet pose le code de sortie avant la durée,
+    /// le titre et le texte d'une notification avant son heure, qu'on lit donc déjà à jour.
+    private static func events(of state: TerminalViewState) -> some Publisher<TerminalEvent, Never> {
+        Publishers.Merge4(
+            state.$lastCommandDurationNanos.dropFirst().map { [weak state] duration in
+                TerminalEvent.commandFinished(exitCode: state?.lastCommandExitCode, duration: .nanoseconds(duration ?? 0))
+            },
+            state.$bellCount.dropFirst().map { _ in TerminalEvent.bell },
+            state.$lastDesktopNotificationAt.dropFirst().map { [weak state] _ in
+                TerminalEvent.notification(title: state?.lastDesktopNotificationTitle ?? "", body: state?.lastDesktopNotificationBody ?? "")
+            },
+            state.$progress.map { $0 != nil }.removeDuplicates().dropFirst().filter { !$0 }.map { _ in TerminalEvent.progressEnded }
+        )
     }
 }
 

@@ -4,11 +4,12 @@ import SwiftUI
 
 /// À droite d'un onglet : la croix au survol, sinon une pastille. Elle respire tant que le
 /// programme annonce une progression (Claude Code qui travaille), se remplit en anneau s'il donne
-/// un pourcentage, et reste pleine quand il s'est passé quelque chose dans l'onglet caché.
+/// un pourcentage, et reste pleine quand il s'est passé quelque chose qu'on n'a pas vu, rouge si
+/// la dernière commande a échoué.
 struct TabStatus: View {
     let isHovered: Bool
     let progress: TerminalProgress?
-    let hasActivity: Bool
+    let activity: TerminalActivity?
     /// Ce que ferme la croix, dit à VoiceOver et dans l'infobulle.
     var closeLabel = L10n.text(.closeTab)
     /// Nil : pas de croix.
@@ -20,19 +21,21 @@ struct TabStatus: View {
                 CloseButton(label: closeLabel, action: onClose)
             } else if let progress {
                 ProgressDot(progress: progress)
-            } else if hasActivity {
-                Dot(color: nil)
+            } else if let activity {
+                Dot(color: activity == .failed ? Ink.warning : nil)
             }
         }
         .frame(width: 20, height: 20)
         // Seule la pastille s'anime. La croix paraît d'un coup au survol, comme dans un
         // navigateur : en fondu, elle se mêlait à la pastille et traînait sous un onglet qui glisse.
-        .animation(Ink.feedback, value: hasActivity)
+        .animation(Ink.feedback, value: activity)
     }
 
     /// Ce que montre la pastille, en mots : pour l'infobulle de l'onglet et VoiceOver.
-    static func text(progress: TerminalProgress?, hasActivity: Bool) -> String? {
-        guard let progress else { return hasActivity ? L10n.text(.newActivity) : nil }
+    static func text(progress: TerminalProgress?, activity: TerminalActivity?) -> String? {
+        guard let progress else {
+            return activity.map { L10n.text($0 == .failed ? .commandFailed : .newActivity) }
+        }
         switch progress.state {
         case .error: return L10n.text(.progressError)
         case .pause: return L10n.text(.progressPaused)
