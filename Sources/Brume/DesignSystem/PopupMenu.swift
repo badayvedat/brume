@@ -168,9 +168,6 @@ private final class MenuPanel: NSPanel {
         backgroundColor = .clear
         isOpaque = false
         hasShadow = true
-        // Comme Monocode : une ligne est déjà active, Entrée la lance. Celle cochée d'abord : dans
-        // une liste de choix, Entrée garde la valeur.
-        model.highlighted = actionable.first { action(at: $0)?.isChecked == true } ?? actionable.first
         let view = NSHostingView(rootView: PopupMenuView(entries: entries, model: model, width: width, anchor: anchor) { [weak self] index, clicked in
             self?.highlight(index, run: clicked)
         })
@@ -201,9 +198,15 @@ private final class MenuPanel: NSPanel {
         case 125, 126:
             let items = actionable
             guard !items.isEmpty else { return true }
-            let position = model.highlighted.flatMap(items.firstIndex(of:))
             let step = event.keyCode == 125 ? 1 : -1
-            let next = position.map { ($0 + step + items.count) % items.count } ?? (step == 1 ? 0 : items.count - 1)
+            // Comme les menus de macOS, rien n'est actif à l'ouverture : la première flèche part de
+            // la ligne cochée, pour qu'Entrée garde la valeur d'une liste de choix.
+            let next: Int
+            if let position = model.highlighted.flatMap(items.firstIndex(of:)) {
+                next = (position + step + items.count) % items.count
+            } else {
+                next = items.firstIndex { action(at: $0)?.isChecked == true } ?? (step == 1 ? 0 : items.count - 1)
+            }
             highlight(items[next], run: false, opensSubmenu: false)
         case 36, 76:
             if let index = model.highlighted { highlight(index, run: true) }
