@@ -67,6 +67,7 @@ final class TerminalWorkspace {
         // Un autre split prend le clavier, ou l'onglet change : fin de l'agrandissement.
         didSet {
             if let zoomedPane, layout.focusedPane != zoomedPane || !isSplit { self.zoomedPane = nil }
+            onSnapshotChange?()
         }
     }
     /// Les terminaux, par split.
@@ -77,9 +78,13 @@ final class TerminalWorkspace {
     private(set) var terminalTitles: [UUID: String] = [:]
     private(set) var paneProgress: [UUID: TerminalProgress] = [:]
     /// Les noms, couleurs et icônes choisis, des onglets et des splits d'un groupe.
-    var labels = WindowLabels<UUID, UUID>()
+    var labels = WindowLabels<UUID, UUID>() {
+        didSet { onSnapshotChange?() }
+    }
     /// Les onglets divisés repliés dans la barre latérale.
-    var collapsed: Set<UUID> = []
+    var collapsed: Set<UUID> = [] {
+        didSet { onSnapshotChange?() }
+    }
     var renaming: TabItem?
     /// Les splits cachés où une commande ou une progression a fini, où ça a sonné ou notifié
     /// (Claude Code qui attend une réponse) depuis qu'on les a quittés.
@@ -93,11 +98,14 @@ final class TerminalWorkspace {
     var resetPrompt: ResetPrompt?
     /// Pour les raccourcis du clic droit.
     @ObservationIgnored weak var settings: SettingsStore?
+    /// Ce que `snapshot` enregistre a changé : la session s'enregistrera peu après.
+    @ObservationIgnored var onSnapshotChange: (() -> Void)?
     /// La place des splits, posée par `TerminalSplitView` pour calculer les dépôts.
     @ObservationIgnored var bounds: CGRect = .zero
     @ObservationIgnored private(set) weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
     @ObservationIgnored private var watchers: [UUID: [AnyCancellable]] = [:]
+    @ObservationIgnored private var windowWatchers: [AnyCancellable] = []
     /// La place de la fenêtre restaurée, posée quand elle s'ouvre.
     @ObservationIgnored private var savedFrame: CGRect?
 
@@ -179,7 +187,7 @@ final class TerminalWorkspace {
                 label: labels.panes[pane]
             ))
         })
-        return SavedWindow(layout: layout, tabs: tabs, panes: panes, frame: window?.frame)
+        return SavedWindow(layout: layout, tabs: tabs, panes: panes, frame: window?.frame ?? savedFrame)
     }
 
     /// Le split qui a le clavier, dans l'onglet affiché.
@@ -214,6 +222,19 @@ final class TerminalWorkspace {
             (states.count > 1 ? CloseConfirmation.window : .terminal).ask(in: window) { window.close() }
             return false
         }
+        let center = NotificationCenter.default
+        windowWatchers = [
+            center.publisher(for: NSWindow.willCloseNotification, object: window).sink { [weak self] _ in self?.windowWillClose() },
+            center.publisher(for: NSWindow.didMoveNotification, object: window)
+                .merge(with: center.publisher(for: NSWindow.didResizeNotification, object: window))
+                .sink { [weak self] _ in self?.onSnapshotChange?() },
+        ]
+    }
+
+    /// La fenêtre sort tout de suite de la session : SwiftUI peut libérer l'espace de travail plus tard.
+    private func windowWillClose() {
+        openWorkspaces.removeAll { $0.value == nil || $0.value === self }
+        onSnapshotChange?()
     }
 
     /// Les raccourcis agissent encore sur les terminaux cachés dessous, mais aucun ne reprend le
@@ -374,6 +395,7 @@ final class TerminalWorkspace {
         }
         watchers[pane] = [
             state.$title.removeDuplicates().sink { [weak self] in self?.terminalTitles[pane] = $0 },
+            state.$workingDirectory.removeDuplicates().dropFirst().sink { [weak self] _ in self?.onSnapshotChange?() },
             state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
             Publishers.Merge4(
                 state.$lastCommandExitCode.dropFirst().map { _ in },

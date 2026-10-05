@@ -227,17 +227,18 @@ public struct WindowLayout<Tab: Hashable & Sendable, Pane: Hashable & Sendable>:
     }
 
     /// Lâché à côté du split visé, dans l'onglet affiché : un onglet y apporte tous ses splits,
-    /// un split quitte sa place pour celle-ci.
+    /// un split quitte sa place pour celle-ci. Rien ne bouge si ce qu'on glisse, ou le split visé,
+    /// a disparu ou changé d'onglet pendant le glisser.
     public func dropping(_ drop: Drop) -> WindowLayout {
         switch drop.dragged {
         case let .tab(tab):
             guard tab != selectedTab, let moved = splits[tab], var layout = removingTab(tab),
-                  let target = layout.splits[selectedTab] else { return self }
+                  let target = layout.splits[selectedTab], target.tree.panes.contains(drop.target) else { return self }
             layout.splits[selectedTab] = target.inserting(moved.tree, beside: drop.target, toward: drop.direction, focusing: moved.focused)
             return layout
         case let .pane(pane):
-            guard pane != drop.target, var layout = removing(pane), let target = layout.splits[layout.selectedTab],
-                  target.tree.panes.contains(drop.target) else { return self }
+            guard pane != drop.target, tab(of: pane) != nil, var layout = removing(pane),
+                  let target = layout.splits[layout.selectedTab], target.tree.panes.contains(drop.target) else { return self }
             layout.splits[layout.selectedTab] = target.inserting(.pane(pane), beside: drop.target, toward: drop.direction, focusing: pane)
             return layout
         }

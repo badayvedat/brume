@@ -14,7 +14,7 @@ struct SessionTests {
             frame: CGRect(x: 10, y: 20, width: 800, height: 500)
         )
         let session = Session(windows: [window])
-        #expect(Session.decoded(from: try session.encoded()) == session)
+        #expect(Session.decoded(from: try session.encoded()) == (session, true))
     }
 
     // Une zone (onglets t1, t2, t2 affiché) à gauche d'une autre (t3), comme l'écrivait la version 1.
@@ -31,7 +31,7 @@ struct SessionTests {
           "frame": [[10, 20], [800, 500]]
         }]}
         """
-        let window = try #require(Session.decoded(from: Data(json.utf8))?.windows.first)
+        let window = try #require(Session.decoded(from: Data(json.utf8)).session?.windows.first)
         #expect(window.layout.tabs == [t1, t2, t3])
         #expect(window.layout.selectedTab == t2)
         #expect(window.layout.panes == [t1, t2, t3])
@@ -41,11 +41,26 @@ struct SessionTests {
     }
 
     @Test func unreadableDataGivesNoSession() {
-        #expect(Session.decoded(from: Data("pas du json".utf8)) == nil)
+        #expect(Session.decoded(from: Data("pas du json".utf8)) == (nil, false))
     }
 
     @Test func anotherFormatIsIgnored() {
-        #expect(Session.decoded(from: Data(#"{"version": 99, "windows": []}"#.utf8)) == nil)
+        #expect(Session.decoded(from: Data(#"{"version": 99, "windows": []}"#.utf8)) == (nil, false))
+    }
+
+    @Test func anUnreadableWindowLosesOnlyItself() throws {
+        let plain = SavedWindow(layout: WindowLayout(tab: UUID(), pane: UUID()), tabs: [:], panes: [:], frame: nil)
+        let tab = UUID()
+        let colored = SavedWindow(
+            layout: WindowLayout(tab: tab, pane: UUID()),
+            tabs: [tab: SavedTab(label: TabLabel(color: .red), isCollapsed: false, groupNumber: nil)],
+            panes: [:],
+            frame: nil
+        )
+        // Une couleur que cette version ne connaît pas.
+        let json = String(decoding: try Session(windows: [plain, colored, plain]).encoded(), as: UTF8.self)
+            .replacing(#""red""#, with: #""violet""#)
+        #expect(Session.decoded(from: Data(json.utf8)) == (Session(windows: [plain, plain]), false))
     }
 
     @Test func anInconsistentWindowIsDropped() throws {
@@ -54,6 +69,6 @@ struct SessionTests {
         let json = #"{"tabList": {"tabs": ["\#(UUID())"], "selected": "\#(UUID())"}, "splits": []}"#
         let broken = try JSONDecoder().decode(WindowLayout<UUID, UUID>.self, from: Data(json.utf8))
         let session = Session(windows: [good, SavedWindow(layout: broken, tabs: [:], panes: [:], frame: nil)])
-        #expect(Session.decoded(from: try session.encoded())?.windows == [good])
+        #expect(Session.decoded(from: try session.encoded()) == (Session(windows: [good]), false))
     }
 }

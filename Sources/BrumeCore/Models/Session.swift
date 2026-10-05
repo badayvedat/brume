@@ -65,28 +65,43 @@ public struct Session: Codable, Hashable, Sendable {
         try JSONEncoder().encode(self)
     }
 
-    /// Nil si les données sont illisibles ou d'un format inconnu : Brume part alors d'une fenêtre
-    /// neuve. Une session de la version 1 est convertie.
-    public static func decoded(from data: Data) -> Session? {
+    /// Chaque fenêtre relue à part : une valeur illisible (retour à une version précédente, champ
+    /// ajouté) ne fait perdre que la sienne. Nil si tout est illisible ou d'un format inconnu ; la
+    /// version 1 est convertie. `isComplete` est faux dès que quelque chose est laissé de côté.
+    public static func decoded(from data: Data) -> (session: Session?, isComplete: Bool) {
         let decoder = JSONDecoder()
-        guard let found = try? decoder.decode(Version.self, from: data) else { return nil }
-        var session = switch found.version {
-        case version: try? decoder.decode(Session.self, from: data)
-        case 1: (try? decoder.decode(SessionV1.self, from: data))?.converted
-        default: Session?.none
+        guard let found = try? decoder.decode(Version.self, from: data) else { return (nil, false) }
+        let windows: [SavedWindow?]? = switch found.version {
+        case version: (try? decoder.decode(Windows<SavedWindow>.self, from: data))?.windows.map(\.value)
+        case 1: (try? decoder.decode(Windows<SessionV1.Window>.self, from: data))?.windows.map { $0.value?.converted }
+        default: nil
         }
-        session?.windows.removeAll { !$0.layout.isConsistent }
-        return session
+        guard let windows else { return (nil, false) }
+        let kept = windows.compactMap { $0 }.filter(\.layout.isConsistent)
+        return (Session(windows: kept), kept.count == windows.count)
     }
 
     private struct Version: Decodable {
         let version: Int
     }
+
+    private struct Windows<Window: Decodable>: Decodable {
+        let windows: [Readable<Window>]
+    }
+
+    /// Ne lève jamais : la fenêtre suivante du tableau est relue quand même.
+    private struct Readable<Value: Decodable>: Decodable {
+        let value: Value?
+
+        init(from decoder: any Decoder) throws {
+            value = try? decoder.singleValueContainer().decode(Value.self)
+        }
+    }
 }
 
 /// La version 1, d'avant les onglets à splits : des zones, chacune avec ses onglets. Chaque
 /// onglet y devient un onglet sans split, dans l'ordre de lecture.
-private struct SessionV1: Decodable {
+private enum SessionV1 {
     struct Window: Decodable {
         struct Layout: Decodable {
             let tree: SplitTree<UUID>
@@ -104,26 +119,22 @@ private struct SessionV1: Decodable {
         let layout: Layout
         let tabs: [UUID: Tab]
         let frame: CGRect?
-    }
 
-    let windows: [Window]
-
-    var converted: Session {
-        Session(windows: windows.compactMap { window in
-            let order = window.layout.tree.panes.flatMap { window.layout.areas[$0]?.tabs ?? [] }
+        var converted: SavedWindow? {
+            let order = layout.tree.panes.flatMap { layout.areas[$0]?.tabs ?? [] }
             guard let first = order.first else { return nil }
-            var layout = order.dropFirst().reduce(WindowLayout<UUID, UUID>(tab: first, pane: first)) { $0.addingTab($1, pane: $1) }
-            if let selected = window.layout.areas[window.layout.focusedArea]?.selected {
-                layout = layout.selecting(selected)
+            var newLayout = order.dropFirst().reduce(WindowLayout<UUID, UUID>(tab: first, pane: first)) { $0.addingTab($1, pane: $1) }
+            if let selected = layout.areas[layout.focusedArea]?.selected {
+                newLayout = newLayout.selecting(selected)
             }
-            var tabs: [UUID: SavedTab] = [:]
+            var savedTabs: [UUID: SavedTab] = [:]
             var panes: [UUID: SavedPane] = [:]
             for id in order {
-                let tab = window.tabs[id]
-                tabs[id] = SavedTab(label: TabLabel(title: tab?.customTitle, color: tab?.color, icon: tab?.icon), isCollapsed: false, groupNumber: nil)
+                let tab = tabs[id]
+                savedTabs[id] = SavedTab(label: TabLabel(title: tab?.customTitle, color: tab?.color, icon: tab?.icon), isCollapsed: false, groupNumber: nil)
                 panes[id] = SavedPane(workingDirectory: tab?.workingDirectory, label: nil)
             }
-            return SavedWindow(layout: layout, tabs: tabs, panes: panes, frame: window.frame)
-        })
+            return SavedWindow(layout: newLayout, tabs: savedTabs, panes: panes, frame: frame)
+        }
     }
 }

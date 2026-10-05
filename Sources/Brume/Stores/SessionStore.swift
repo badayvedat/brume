@@ -1,15 +1,18 @@
 import AppKit
 import BrumeCore
 
-/// Les fenêtres de la dernière fois : chaque fenêtre qui s'ouvre en reprend une, et à la sortie
-/// celles encore ouvertes sont enregistrées, comme `window-save-state` de Ghostty. Sauf si le
-/// réglage est éteint : rien n'est relu ni gardé.
+/// Les fenêtres de la dernière fois : chaque fenêtre qui s'ouvre en reprend une, et celles
+/// ouvertes sont enregistrées après chaque changement et à la sortie, comme `window-save-state` de
+/// Ghostty. Sauf si le réglage est éteint : rien n'est relu ni gardé.
 @MainActor @Observable
 final class SessionStore {
     @ObservationIgnored private let file: SessionFile
     @ObservationIgnored private let settings: SettingsStore
     @ObservationIgnored private var pending: [SavedWindow]
     @ObservationIgnored private var windowsToOpen: Int
+    /// Ce qui est sur le disque : une session identique n'est pas réécrite.
+    @ObservationIgnored private var written: Session?
+    @ObservationIgnored private var isSaveScheduled = false
     @ObservationIgnored nonisolated(unsafe) private var terminateObserver: NSObjectProtocol?
 
     init(settings: SettingsStore, file: SessionFile = .standard) {
@@ -32,6 +35,8 @@ final class SessionStore {
     func makeWorkspace() -> TerminalWorkspace {
         let workspace = TerminalWorkspace(restoring: pending.isEmpty ? nil : pending.removeFirst())
         workspace.settings = settings
+        workspace.onSnapshotChange = { [weak self] in self?.scheduleSave() }
+        scheduleSave()
         return workspace
     }
 
@@ -42,9 +47,26 @@ final class SessionStore {
         return windowsToOpen
     }
 
+    /// Un plantage ou une coupure de courant ne perd que les deux dernières secondes. Les
+    /// changements qui suivent (un séparateur qu'on glisse, des `cd`) attendent ce même passage.
+    private func scheduleSave() {
+        guard !isSaveScheduled else { return }
+        isSaveScheduled = true
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            self?.isSaveScheduled = false
+            self?.save()
+        }
+    }
+
+    /// Les fenêtres pas encore rouvertes restent dans la session.
     private func save() {
-        guard settings.settings.restoresSession else { return file.delete() }
-        let windows = TerminalWorkspace.all.map(\.snapshot)
-        try? file.save(Session(windows: windows))
+        guard settings.settings.restoresSession else {
+            written = nil
+            return file.delete()
+        }
+        let session = Session(windows: TerminalWorkspace.all.map(\.snapshot) + pending)
+        guard session != written, (try? file.save(session)) != nil else { return }
+        written = session
     }
 }

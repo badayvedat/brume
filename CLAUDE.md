@@ -24,7 +24,7 @@ bash scripts/make-dmg.sh             # .build/Brume.dmg, fond dans Resources/dmg
 - Une copie du `.app` lancée par `open -n --env CFFIXED_USER_HOME=<dossier>` prend session et réglages dans `<dossier>/Library/Application Support/Brume/`, sans toucher à ceux du Brume ouvert. Les défauts de l'app (préférences de Sparkle), eux, restent partagés. Avec `open -g`, aucune fenêtre ne s'ouvre ; `screencapture -l` échoue si la fenêtre est sur un autre bureau.
 - Un `.zshrc` qui charge déjà des greffons brew masque ceux embarqués : pour tester ceux de Brume, lancer `open --env ZDOTDIR=<dossier vide> /Applications/Brume.app`.
 - Tester un comportement de zsh (complétion, greffons) sans fenêtre : sourcer le bloc voulu de `Vendor/.../shell-integration/zsh/ghostty-integration` dans un `zsh -f -i` piloté par `expect` (fourni par macOS). `zpty` ne rend pas la sortie de façon fiable.
-- Brume rouvre au lancement (réglage « Restaurer la session ») les fenêtres enregistrées en quittant (`~/Library/Application Support/Brume/session.json`) : supprimer ce fichier pour repartir d'une fenêtre neuve. `killall` et la relance par `scripts/build-app.sh` (SIGTERM) enregistrent aussi ; `kill -9` non.
+- Brume rouvre au lancement (réglage « Restaurer la session ») les fenêtres de `~/Library/Application Support/Brume/session.json`, réécrit deux secondes après un changement et à la sortie (`killall`, SIGTERM de `scripts/build-app.sh` compris) : le supprimer, Brume fermé, pour repartir d'une fenêtre neuve. Même `kill -9` ne perd que les deux dernières secondes.
 
 ## Contraintes
 

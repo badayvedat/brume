@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// `kill` et `scripts/build-app.sh` envoient SIGTERM, qui saute la fin normale de l'app : la
     /// session et les réglages s'enregistrent quand même, sans demander pour les commandes en
-    /// cours. Sinon Brume rouvrirait la session du dernier ⌘Q.
+    /// cours. Sinon les tout derniers changements seraient perdus.
     func applicationDidFinishLaunching(_ notification: Notification) {
         signal(SIGTERM, SIG_IGN)
         let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)

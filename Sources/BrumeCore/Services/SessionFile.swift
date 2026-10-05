@@ -1,6 +1,7 @@
 import Foundation
 
-/// Le fichier de la session, dans Application Support : relu au lancement, réécrit en quittant.
+/// Le fichier de la session, dans Application Support : relu au lancement, réécrit après chaque
+/// changement et en quittant.
 public struct SessionFile: Sendable {
     public let url: URL
 
@@ -13,9 +14,17 @@ public struct SessionFile: Sendable {
         return SessionFile(url: support.appending(path: "Brume/session.json"))
     }
 
+    /// La copie d'un fichier refusé, en tout ou en partie, avant que Brume ne le réécrive.
+    public var backupURL: URL {
+        url.appendingPathExtension("bak")
+    }
+
     /// Nil sans fichier, ou s'il est illisible : Brume part alors d'une fenêtre neuve.
     public func load() -> Session? {
-        (try? Data(contentsOf: url)).flatMap(Session.decoded)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let (session, isComplete) = Session.decoded(from: data)
+        if !isComplete { try? data.write(to: backupURL, options: .atomic) }
+        return session
     }
 
     /// Brume repartira d'une fenêtre neuve.

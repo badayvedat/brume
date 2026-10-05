@@ -114,6 +114,21 @@ struct WindowLayoutTests {
         #expect(layout.isConsistent)
     }
 
+    @Test func aTabDroppedOnAPaneNoLongerShownStaysATab() {
+        let threeTabs = twoTabs.addingTab("C", pane: 4).selecting("A")
+        let drop = threeTabs.drop(of: .tab("B"), at: CGPoint(x: 195, y: 50), in: window)!
+        // Pendant le glisser, Cmd+chiffre affiche un autre onglet, ou le split visé se ferme.
+        for layout in [threeTabs.selecting("C"), threeTabs.removing(2)!] {
+            #expect(layout.dropping(drop) == layout)
+        }
+    }
+
+    @Test func aPaneClosedDuringTheDragIsNotDropped() {
+        let drop = twoTabs.drop(of: .pane(3), at: CGPoint(x: 195, y: 50), in: window)!
+        let layout = twoTabs.addingTab("C", pane: 4).removingTab("B")!.selecting("A")
+        #expect(layout.dropping(drop) == layout)
+    }
+
     @Test func aDroppedPaneMovesBesideTheTarget() {
         // 2 lâché au bas de 1 : ils passent l'un sous l'autre.
         let drop = twoTabs.drop(of: .pane(2), at: CGPoint(x: 50, y: 95), in: window)!
