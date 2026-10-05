@@ -440,7 +440,7 @@ final class TerminalWorkspace {
             CloseConfirmation.terminal.ask(in: window) { [weak self] in self?.remove(pane) }
         }
         watchers[pane] = [
-            state.$title.removeDuplicates().sink { [weak self] in self?.terminalTitles[pane] = $0 },
+            Self.steadyTitle(of: state).sink { [weak self] in self?.terminalTitles[pane] = $0 },
             state.$workingDirectory.removeDuplicates().dropFirst().sink { [weak self] _ in self?.onSnapshotChange?() },
             state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
             state.$isPasswordInput.combineLatest(state.$isFocused).map { $0 && $1 }.removeDuplicates()
@@ -464,6 +464,15 @@ final class TerminalWorkspace {
             LinkOpener.open($0, from: state?.workingDirectory ?? state?.configuration.workingDirectory)
         }
         return state
+    }
+
+    /// L'intégration shell titre l'onglet de la commande lancée, puis du dossier au retour du prompt :
+    /// un `ls` le faisait clignoter. Un titre ne s'affiche qu'après 0,4 s, sauf le premier.
+    private static func steadyTitle(of state: TerminalViewState) -> some Publisher<String, Never> {
+        let title = state.$title.removeDuplicates()
+        return title.prefix(1)
+            .merge(with: title.dropFirst().debounce(for: .milliseconds(400), scheduler: DispatchQueue.main))
+            .removeDuplicates()
     }
 
     /// Un `@Published` prévient avant de changer : le paquet pose le code de sortie avant la durée,
