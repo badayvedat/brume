@@ -12,9 +12,10 @@ enum CloseConfirmation {
         ask(in: window) { if $0 { confirm() } }
     }
 
+    /// Sans fenêtre où demander, ou avec une feuille déjà ouverte (une demande en double), la
+    /// réponse est non : rien ne se ferme sans qu'on l'ait vu.
     func ask(in window: NSWindow?, answer: @escaping (Bool) -> Void) {
-        guard let window else { return answer(true) }
-        guard window.attachedSheet == nil else { return answer(false) }
+        guard let window, window.attachedSheet == nil else { return answer(false) }
         makeAlert().beginSheetModal(for: window) { answer($0 == .alertFirstButtonReturn) }
     }
 

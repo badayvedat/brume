@@ -2,8 +2,10 @@ import AppKit
 import BrumeCore
 import GhosttyTerminal
 
-/// `stopsCommands` : une commande tourne dans un des terminaux qui vont se fermer.
+/// `kept` : le terminal actif quand la carte s'ouvre, le seul qui restera. `stopsCommands` : une
+/// commande tourne dans un des terminaux qui vont se fermer.
 struct ResetPrompt: Equatable {
+    let kept: UUID
     let stopsCommands: Bool
 }
 
@@ -69,7 +71,8 @@ extension TerminalWorkspace {
     func askReset() {
         guard resetPrompt == nil else { return }
         renaming = nil
-        resetPrompt = ResetPrompt(stopsCommands: layout.panes.contains { $0 != focusedID && hasRunningCommand($0) })
+        let kept = focusedID
+        resetPrompt = ResetPrompt(kept: kept, stopsCommands: layout.panes.contains { $0 != kept && hasRunningCommand($0) })
         window?.makeFirstResponder(window?.contentView)
     }
 
@@ -78,16 +81,16 @@ extension TerminalWorkspace {
         focus(focusedID)
     }
 
-    /// Retour à une fenêtre neuve : le terminal actif reste, avec son shell, seul dans son onglet ;
-    /// noms, couleurs, icônes et taille du texte reviennent à la normale, la fenêtre à sa taille
-    /// d'ouverture, au centre de l'écran.
+    /// Retour à une fenêtre neuve : le terminal annoncé par la carte reste, avec son shell, seul dans
+    /// son onglet (fermé depuis, rien ne change) ; noms, couleurs, icônes et taille du texte
+    /// reviennent à la normale, la fenêtre à sa taille d'ouverture, au centre de l'écran.
     func reset() {
-        let kept = focusedID
+        guard let kept = resetPrompt?.kept, let tab = layout.tab(of: kept) else { return cancelReset() }
         resetPrompt = nil
         layout.panes.filter { $0 != kept }.forEach(forget)
         labels = WindowLabels()
         collapsed = []
-        apply(WindowLayout(tab: layout.selectedTab, pane: kept))
+        apply(WindowLayout(tab: tab, pane: kept))
         states[kept]?.surface?.performBindingAction("reset_font_size")
         if settingsSection != nil { closeSettings() } else { focus(kept) }
         restoreDefaultFrame()

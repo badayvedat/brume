@@ -32,15 +32,15 @@ final class UpdaterUserDriver: SPUStandardUserDriver {
         // Ferme la fenêtre « Recherche des mises à jour… » : Sparkle la ferme d'ordinaire dans
         // l'alerte remplacée ici, sa méthode n'est pas accessible.
         dismissUpdateInstallation()
-        guard let window = NSApp.mainWindow ?? NSApp.orderedWindows.first(where: { $0.isVisible && $0.canBecomeMain }),
-              window.attachedSheet == nil else {
-            return acknowledgement()
+        // Sans fenêtre, il en ouvre une ; une feuille déjà ouverte fait attendre la sienne.
+        TerminalWorkspace.withFront { workspace in
+            guard let window = workspace.window else { return acknowledgement() }
+            let alert = NSAlert()
+            alert.alertStyle = style
+            alert.messageText = title
+            alert.informativeText = message ?? ""
+            alert.addButton(withTitle: L10n.text(.ok))
+            alert.beginSheetModal(for: window) { _ in acknowledgement() }
         }
-        let alert = NSAlert()
-        alert.alertStyle = style
-        alert.messageText = title
-        alert.informativeText = message ?? ""
-        alert.addButton(withTitle: L10n.text(.ok))
-        alert.beginSheetModal(for: window) { _ in acknowledgement() }
     }
 }

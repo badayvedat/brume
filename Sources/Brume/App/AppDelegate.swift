@@ -2,6 +2,7 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminationSignal: DispatchSourceSignal?
+    private var isConfirmingQuit = false
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Toujours sombre : un terminal clair sous du verre se lit mal. Posé avant les fenêtres,
@@ -32,8 +33,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return .terminateNow
         }
         guard TerminalWorkspace.needsConfirmQuit else { return .terminateNow }
-        CloseConfirmation.quit.ask(in: NSApp.keyWindow ?? NSApp.windows.first(where: \.isVisible)) {
-            sender.reply(toApplicationShouldTerminate: $0)
+        // Un second ⌘Q pendant la question : sa réponse annulerait celle qu'on attend.
+        guard !isConfirmingQuit else { return .terminateCancel }
+        guard let window = TerminalWorkspace.front()?.window else { return .terminateNow }
+        isConfirmingQuit = true
+        CloseConfirmation.quit.ask(in: window) { quits in
+            // Jamais avant le `.terminateLater` rendu plus bas : la réponse serait perdue et Brume
+            // ne quitterait plus. Une feuille déjà ouverte répond non tout de suite.
+            DispatchQueue.main.async { [weak self] in
+                self?.isConfirmingQuit = false
+                sender.reply(toApplicationShouldTerminate: quits)
+            }
         }
         return .terminateLater
     }

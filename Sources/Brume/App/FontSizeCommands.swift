@@ -8,13 +8,13 @@ struct FontSizeCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
-            Button(L10n.text(.increaseFontSize)) { workspace?.changeFontSize(.increase) }
+            Button(L10n.text(.increaseFontSize)) { workspace?.showingTerminals { $0.changeFontSize(.increase) } }
                 .keyboardShortcut("+")
-            Button(L10n.text(.decreaseFontSize)) { workspace?.changeFontSize(.decrease) }
+            Button(L10n.text(.decreaseFontSize)) { workspace?.showingTerminals { $0.changeFontSize(.decrease) } }
                 .keyboardShortcut("-")
-            Button(L10n.text(.resetFontSize)) { workspace?.changeFontSize(.reset) }
+            Button(L10n.text(.resetFontSize)) { workspace?.showingTerminals { $0.changeFontSize(.reset) } }
                 .keyboardShortcut("0")
-            Button(L10n.text(.resetAllSizes)) { workspace?.resetSizes() }
+            Button(L10n.text(.resetAllSizes)) { workspace?.showingTerminals { $0.resetSizes() } }
                 .keyboardShortcut("0", modifiers: [.command, .control])
             Divider()
         }

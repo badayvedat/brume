@@ -229,6 +229,7 @@ final class TerminalWorkspace {
                 .merge(with: center.publisher(for: NSWindow.didResizeNotification, object: window))
                 .sink { [weak self] _ in self?.onSnapshotChange?() },
         ]
+        Self.serveWaitingActions()
     }
 
     /// La fenêtre sort tout de suite de la session : SwiftUI peut libérer l'espace de travail plus tard.
@@ -237,9 +238,9 @@ final class TerminalWorkspace {
         onSnapshotChange?()
     }
 
-    /// Les raccourcis agissent encore sur les terminaux cachés dessous, mais aucun ne reprend le
-    /// clavier avant le retour : la frappe irait dans un terminal qu'on ne voit pas. Le focus va au
-    /// contenu SwiftUI, pas à la fenêtre : Tab mène alors au premier champ des réglages.
+    /// Aucun terminal ne reprend le clavier avant le retour : la frappe irait dans un terminal qu'on
+    /// ne voit pas. Le focus va au contenu SwiftUI, pas à la fenêtre : Tab mène alors au premier
+    /// champ des réglages.
     func showSettings(_ section: SettingsSection? = nil) {
         settingsSection = section ?? settingsSection ?? .general
         window?.makeFirstResponder(window?.contentView)
@@ -252,6 +253,14 @@ final class TerminalWorkspace {
         focus(focusedID)
     }
 
+    /// L'entrée des actions du menu sur les terminaux : la page de réglages ou la carte qui les
+    /// couvre se ferme d'abord, sinon l'action agirait dessous sans qu'on la voie.
+    func showingTerminals(_ action: (TerminalWorkspace) -> Void) {
+        if resetPrompt != nil { cancelReset() }
+        if settingsSection != nil { closeSettings() }
+        action(self)
+    }
+
     /// Comme le bouton rouge : passe par la confirmation de `WindowCloseGuard`.
     func closeWindow() {
         window?.performClose(nil)
@@ -259,9 +268,10 @@ final class TerminalWorkspace {
 
     // MARK: Terminal actif
 
-    /// Passe par le moteur, qui signale une commande en cours à `onClose`.
-    /// Sur la page de réglages, Cmd+W la referme plutôt que le terminal caché dessous.
+    /// Passe par le moteur, qui signale une commande en cours à `onClose`. Sur la carte ou la page
+    /// de réglages, Cmd+W referme celle du dessus plutôt que le terminal caché dessous.
     func closeFocused() {
+        if resetPrompt != nil { return cancelReset() }
         guard settingsSection == nil else { return closeSettings() }
         focused.surface?.performBindingAction("close_surface")
     }
@@ -276,7 +286,6 @@ final class TerminalWorkspace {
     }
 
     func toggleSearch() {
-        guard settingsSection == nil else { return }
         if searches[focusedID] == nil {
             openSearch(in: focusedID, needle: "")
         } else {
@@ -286,7 +295,6 @@ final class TerminalWorkspace {
 
     /// Le moteur répond par `start_search` avec la sélection : voir `makeState`.
     func searchSelection() {
-        guard settingsSection == nil else { return }
         focused.surface?.performBindingAction("search_selection")
     }
 

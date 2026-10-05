@@ -3,25 +3,30 @@ import SwiftUI
 
 struct TabCommands: Commands {
     @FocusedValue(\.terminalWorkspace) private var workspace
+    @Environment(\.openWindow) private var openWindow
     let settings: SettingsStore
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
-            Button(L10n.text(.newTab)) { workspace?.newTab() }
-                .keyboardShortcut(settings.keyboardShortcut(.newTab))
-            Button(L10n.text(workspace?.isSplit == true ? .renameGroup : .renameTab)) { workspace?.startRenaming() }
+            // Sans fenêtre active : dans celle ramenée devant, sinon dans une neuve, comme ⌘N.
+            Button(L10n.text(.newTab)) {
+                guard let target = workspace ?? TerminalWorkspace.front() else { return openWindow(id: BrumeApp.terminalWindowID) }
+                target.showingTerminals { $0.newTab() }
+            }
+            .keyboardShortcut(settings.keyboardShortcut(.newTab))
+            Button(L10n.text(workspace?.isSplit == true ? .renameGroup : .renameTab)) { workspace?.showingTerminals { $0.startRenaming() } }
                 .keyboardShortcut(settings.keyboardShortcut(.renameTab))
         }
         CommandGroup(before: .windowArrangement) {
-            Button(L10n.text(.previousTab)) { workspace?.selectPrevious() }
+            Button(L10n.text(.previousTab)) { workspace?.showingTerminals { $0.selectPrevious() } }
                 .keyboardShortcut(settings.keyboardShortcut(.previousTab))
-            Button(L10n.text(.nextTab)) { workspace?.selectNext() }
+            Button(L10n.text(.nextTab)) { workspace?.showingTerminals { $0.selectNext() } }
                 .keyboardShortcut(settings.keyboardShortcut(.nextTab))
             ForEach(1 ..< 9) { number in
-                Button("\(L10n.text(.tab)) \(number)") { workspace?.select(number: number) }
+                Button("\(L10n.text(.tab)) \(number)") { workspace?.showingTerminals { $0.select(number: number) } }
                     .keyboardShortcut(settings.tabShortcut(number))
             }
-            Button(L10n.text(.lastTab)) { workspace?.select(number: 9) }
+            Button(L10n.text(.lastTab)) { workspace?.showingTerminals { $0.select(number: 9) } }
                 .keyboardShortcut(settings.tabShortcut(9))
             Divider()
             Button(L10n.text(.resetWindow)) { workspace?.askReset() }
