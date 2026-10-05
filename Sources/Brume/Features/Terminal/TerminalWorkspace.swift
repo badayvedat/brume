@@ -148,7 +148,8 @@ final class TerminalWorkspace {
         guard let saved, saved.layout.isConsistent else {
             let pane = UUID()
             layout = WindowLayout(tab: UUID(), pane: pane)
-            states[pane] = makeState(pane, inheriting: lastFocused, as: .window)
+            states[pane] = makeState(pane, inheriting: lastFocused, as: .window, in: Self.folderForNewWindow)
+            Self.folderForNewWindow = nil
             openWorkspaces.append(WeakWorkspace(value: self))
             return
         }
@@ -156,8 +157,7 @@ final class TerminalWorkspace {
         savedFrame = saved.frame
         let shown = Set(saved.layout.panes(of: saved.layout.selectedTab))
         for pane in saved.layout.panes {
-            let state = makeState(pane, inheriting: nil, as: .window)
-            state.configuration.workingDirectory = saved.panes[pane]?.workingDirectory
+            let state = makeState(pane, inheriting: nil, as: .window, in: saved.panes[pane]?.workingDirectory)
             state.isSurfaceVisible = shown.contains(pane)
             states[pane] = state
         }
@@ -388,10 +388,12 @@ final class TerminalWorkspace {
         activity.insert(pane)
     }
 
+    /// `folder` : le dossier où part le terminal, à la place de celui hérité.
     func makeState(
         _ pane: UUID,
         inheriting parent: TerminalViewState?,
-        as context: TerminalSurfaceContext
+        as context: TerminalSurfaceContext,
+        in folder: String? = nil
     ) -> TerminalViewState {
         let state = TerminalViewState(controller: sharedController)
         // Comme Ghostty : un nouveau terminal part du zoom et du dossier de celui qui avait le focus.
@@ -399,6 +401,7 @@ final class TerminalWorkspace {
             if inherited.fontSize > 0 { state.configuration.fontSize = inherited.fontSize }
             state.configuration.workingDirectory = inherited.workingDirectory
         }
+        if let folder { state.configuration.workingDirectory = folder }
         // Cmd+W passe par le moteur, qui signale une commande en cours.
         state.onClose = { [weak self] processAlive in
             guard let self else { return }

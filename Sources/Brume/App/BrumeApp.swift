@@ -38,6 +38,9 @@ struct BrumeApp: App {
         }
         // Brume rouvre lui-même ses fenêtres (`SessionStore`) : macOS en rouvrirait en double.
         .restorationBehavior(.disabled)
+        // Un dossier ouvert dans Brume passe par `AppDelegate`. Sinon, SwiftUI ferme en le recevant la
+        // fenêtre ouverte au lancement, et avec elle la première fenêtre de la session.
+        .handlesExternalEvents(matching: [])
         .windowStyle(.hiddenTitleBar)
         // Lu à chaque nouvelle fenêtre.
         .defaultWindowPlacement { _, _ in

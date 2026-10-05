@@ -104,6 +104,11 @@ for entry in "${PERMISSIONS[@]}"; do
     echo "\"$key\" = \"$english\";" >> "$APP_BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings"
 done
 
+# Le service du Finder sur un dossier. macOS traduit son titre (NSMenuItem plus bas) par ces fichiers.
+SERVICE_TITLE="New Brume Tab Here"
+echo "\"$SERVICE_TITLE\" = \"$SERVICE_TITLE\";" > "$APP_BUNDLE/Contents/Resources/en.lproj/ServicesMenu.strings"
+echo "\"$SERVICE_TITLE\" = \"Nouvel onglet Brume ici\";" > "$APP_BUNDLE/Contents/Resources/fr.lproj/ServicesMenu.strings"
+
 cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -146,6 +151,44 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <true/>
     <key>SUScheduledCheckInterval</key>
     <integer>86400</integer>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Folder</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.folder</string>
+            </array>
+        </dict>
+    </array>
+    <key>NSServices</key>
+    <array>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>$SERVICE_TITLE</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>openTab</string>
+            <key>NSPortName</key>
+            <string>$APP_NAME</string>
+            <key>NSRequiredContext</key>
+            <dict>
+                <key>NSTextContent</key>
+                <string>FilePath</string>
+            </dict>
+            <key>NSSendFileTypes</key>
+            <array>
+                <string>public.folder</string>
+            </array>
+        </dict>
+    </array>
 $PERMISSION_KEYS</dict>
 </plist>
 PLIST

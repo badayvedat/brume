@@ -2,7 +2,8 @@ import AppKit
 import Combine
 
 extension TerminalWorkspace {
-    /// Seul SwiftUI ouvre une fenêtre : chaque fenêtre qui s'ouvre le pose ici pour le code AppKit.
+    /// Seul SwiftUI ouvre une fenêtre : les commandes du menu (`TabCommands`) le posent ici pour le
+    /// code AppKit.
     static var openNewWindow: (@MainActor () -> Void)?
     private static var waiting: [(TerminalWorkspace) -> Void] = []
     private static var sheetEnd: AnyCancellable?
@@ -46,6 +47,31 @@ extension TerminalWorkspace {
     /// Pour la prochaine fenêtre qui s'ouvre, passée par `withFront`.
     static func whenOpened(_ action: @escaping (TerminalWorkspace) -> Void) {
         waiting.append(action)
+    }
+
+    /// Le dossier où part le terminal de la prochaine fenêtre neuve, posé par `openTabs`.
+    static var folderForNewWindow: String?
+
+    /// Un onglet par dossier dans la fenêtre au premier plan. Sans fenêtre, dans la première qui
+    /// s'ouvre : neuve, son terminal part du premier dossier plutôt que d'avoir un onglet vide à
+    /// côté ; rouverte par la session au lancement, elle reçoit un onglet pour chacun.
+    static func openTabs(in folders: [String]) {
+        guard let first = folders.first else { return }
+        let claimsNewWindow = all.isEmpty && folderForNewWindow == nil
+        if claimsNewWindow { folderForNewWindow = first }
+        let action = { (workspace: TerminalWorkspace) in
+            let tookFirst = claimsNewWindow && folderForNewWindow == nil
+            if claimsNewWindow { folderForNewWindow = nil }
+            workspace.showingTerminals { workspace in
+                for folder in tookFirst ? Array(folders.dropFirst()) : folders {
+                    workspace.newTab(in: folder)
+                }
+            }
+        }
+        if all.contains(where: { $0.window != nil }) { return withFront(action) }
+        whenOpened(action)
+        // Sinon, une fenêtre s'ouvre déjà : celle du lancement, ou celle d'un dossier reçu juste avant.
+        if claimsNewWindow { openNewWindow?() }
     }
 
     /// Une fenêtre vient d'être rattachée, ou une feuille de se fermer : un tour plus tard, la

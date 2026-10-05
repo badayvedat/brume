@@ -16,9 +16,10 @@ enum TabItem: Hashable {
 
 extension TerminalWorkspace {
     /// ⌘T l'ouvre après l'onglet actif, comme Ghostty ; les boutons +, en bout de liste où ils sont.
-    func newTab(atEnd: Bool = false) {
+    /// `folder` : un dossier ouvert dans Brume, à la place de celui du terminal actif.
+    func newTab(atEnd: Bool = false, in folder: String? = nil) {
         let pane = UUID()
-        states[pane] = makeState(pane, inheriting: focused, as: .window)
+        states[pane] = makeState(pane, inheriting: focused, as: .window, in: folder)
         apply(atEnd ? layout.appendingTab(UUID(), pane: pane) : layout.addingTab(UUID(), pane: pane))
     }
 

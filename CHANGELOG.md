@@ -16,6 +16,7 @@ What changes in each version of Brume. The newest version comes first.
 - ⌃Tab and ⌃⇧Tab switch tabs, Clear Screen (⌘K) in the Edit menu, and a Help menu with links to Brume on GitHub and to report an issue.
 - A confirmation before closing a terminal where a command is still running.
 - Drop files or folders from Finder onto a terminal to type their paths at the cursor, escaped for the shell. In a split tab, they go to the terminal under the pointer. Dropped text is pasted as is.
+- Open a folder in Brume: drop it on the Dock icon, use `open -a Brume <folder>`, or right-click it in Finder › Services › New Brume Tab Here.
 - Reset Window (⌥⌘R, or Settings › General) brings a window back to a single tab with default names, colors and size, after a confirmation. Your settings are kept.
 - SSH sessions keep working with servers that don't know Ghostty's terminal type.
 - An app icon and a DMG to install Brume by dragging it to Applications.

@@ -1,4 +1,5 @@
 import AppKit
+import BrumeCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var terminationSignal: DispatchSourceSignal?
@@ -27,6 +28,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         source.resume()
         terminationSignal = source
+        NSApp.servicesProvider = FolderService()
+        NSUpdateDynamicServices()
+    }
+
+    /// Un dossier glissé sur l'icône du Dock, ou `open -a Brume <dossier>`. Lancé ainsi, Brume
+    /// n'ouvre aucune fenêtre de lui-même : `openTabs` s'en charge.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        TerminalWorkspace.openTabs(in: OpenedFolders.paths(for: urls))
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

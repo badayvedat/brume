@@ -20,7 +20,6 @@ struct TerminalScreen: View {
         }
         .onAppear {
             guard workspace == nil else { return }
-            TerminalWorkspace.openNewWindow = { [openWindow] in openWindow(id: BrumeApp.terminalWindowID) }
             TerminalWorkspace.prepareEngine(settings.settings)
             workspace = session.makeWorkspace()
             // `open Brume.app --args -BrumeSettings welcome` ouvre une page des réglages pour la vérifier

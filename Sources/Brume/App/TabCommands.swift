@@ -7,6 +7,8 @@ struct TabCommands: Commands {
     let settings: SettingsStore
 
     var body: some Commands {
+        // Posé dès le lancement, avant toute fenêtre : un dossier ouvert dans Brume fermé en ouvre une.
+        let _ = TerminalWorkspace.openNewWindow = { [openWindow] in openWindow(id: BrumeApp.terminalWindowID) }
         CommandGroup(after: .newItem) {
             // Sans fenêtre active : dans celle ramenée devant, sinon dans une neuve, comme ⌘N.
             Button(L10n.text(.newTab)) {
