@@ -1,6 +1,6 @@
 # Visuels de la page de démarrage
 
-Les visuels en pixel art affichés par fastfetch à l'ouverture d'un terminal (Réglages › Démarrage).
+Les visuels en pixel art affichés par fastfetch à l'ouverture d'un terminal (Réglages › Accueil).
 
 ## Comment c'est fait
 
@@ -34,4 +34,4 @@ Il demande Python 3 avec Pillow, et `rsvg-convert` (Homebrew : `librsvg`).
 ## Vérifier
 
 - L'aperçu du script montre les grilles exactes, aux couleurs de deux accents.
-- Dans l'app : Réglages › Démarrage. Une copie lancée à part ne passe pas au premier plan pendant qu'on utilise Brume, et son terminal sort vide à la capture. Pour voir ce que fastfetch affiche vraiment, rends en image le fichier généré par l'app : `~/Library/Application Support/Brume/welcome-logo-medium.txt`.
+- Dans l'app : Réglages › Accueil. Une copie lancée à part ne passe pas au premier plan pendant qu'on utilise Brume, et son terminal sort vide à la capture. Pour voir ce que fastfetch affiche vraiment, rends en image le fichier généré par l'app : `~/Library/Application Support/Brume/welcome-logo-medium.txt`.

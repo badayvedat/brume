@@ -4,7 +4,7 @@ import Foundation
 public struct AppSettings: Codable, Hashable, Sendable {
     public var appearance = Appearance()
     public var font = TerminalFont.standard
-    public var language = Language.french
+    public var language = Language.preferred(in: Locale.preferredLanguages)
     /// Rouvrir au lancement les fenêtres et les onglets de la dernière fois.
     public var restoresSession = true
     /// La commande déjà tapée proposée en gris (zsh-autosuggestions).

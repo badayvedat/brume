@@ -32,6 +32,7 @@ struct TabSidebarRow: View {
             }
             .font(.system(size: 13))
             .frame(maxWidth: .infinity, alignment: .leading)
+            .tabTooltip(.tab(tab), in: workspace, isDragging: isDragging)
             TabStatus(
                 isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),
                 // Ni sur un groupe, où elle fermerait tous ses terminaux, ni sur le seul onglet, qui

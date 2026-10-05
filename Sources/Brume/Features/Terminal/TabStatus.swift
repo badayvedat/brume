@@ -29,6 +29,18 @@ struct TabStatus: View {
         // navigateur : en fondu, elle se mêlait à la pastille et traînait sous un onglet qui glisse.
         .animation(Ink.feedback, value: hasActivity)
     }
+
+    /// Ce que montre la pastille, en mots : pour l'infobulle de l'onglet et VoiceOver.
+    static func text(progress: TerminalProgress?, hasActivity: Bool) -> String? {
+        guard let progress else { return hasActivity ? L10n.text(.newActivity) : nil }
+        switch progress.state {
+        case .error: return L10n.text(.progressError)
+        case .pause: return L10n.text(.progressPaused)
+        default:
+            guard let percent = progress.percent else { return L10n.text(.inProgress) }
+            return L10n.text(.inProgressPercent, (Double(percent) / 100).formatted(.percent.locale(L10n.language.locale)))
+        }
+    }
 }
 
 private struct Dot: View {

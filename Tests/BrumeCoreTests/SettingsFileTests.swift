@@ -31,6 +31,14 @@ struct SettingsFileTests {
         #expect(settings?.completesCommands == true)
     }
 
+    @Test func savedLanguageIsKeptAndAMissingOneFollowsTheMac() {
+        #expect(AppSettings.decoded(from: Data(#"{"language": "english"}"#.utf8))?.language == .english)
+        #expect(AppSettings.decoded(from: Data(#"{"language": "french"}"#.utf8))?.language == .french)
+        let mac = Language.preferred(in: Locale.preferredLanguages)
+        #expect(AppSettings.decoded(from: Data(#"{"restoresSession": false}"#.utf8))?.language == mac)
+        #expect(AppSettings().language == mac)
+    }
+
     @Test func unreadableSettingKeepsItsDefaultAndTheOthersSurvive() {
         let settings = AppSettings.decoded(from: Data(#"{"appearance": {"commandColors": "nord", "isGlass": "plaid"}}"#.utf8))
         #expect(settings?.appearance.commandColors == .nord)

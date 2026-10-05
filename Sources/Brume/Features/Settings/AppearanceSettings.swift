@@ -10,20 +10,22 @@ struct AppearanceSettings: View {
         @Bindable var settings = settings
         VStack(alignment: .leading, spacing: 32) {
             SettingsGroup(title: L10n.text(.window), hint: L10n.text(.windowHint)) {
-                SettingsRow(title: L10n.text(.glass), hint: L10n.text(.glassHint), isLast: !settings.appearance.isGlass) {
+                SettingsRow(title: L10n.text(.glass), hint: L10n.text(.glassHint)) {
                     Switch(label: L10n.text(.glass), isOn: $settings.appearance.isGlass)
                 }
-                if settings.appearance.isGlass {
-                    SettingsRow(title: L10n.text(.opacity), hint: L10n.text(.opacityHint)) {
-                        Segmented(label: L10n.text(.opacity), options: strengths(), selection: $settings.appearance.glassOpacity)
-                    }
-                    SettingsRow(title: L10n.text(.blur), hint: L10n.text(.blurHint), isLast: true) {
-                        Segmented(
-                            label: L10n.text(.blur),
-                            options: strengths(medium: .blurMedium, high: .blurHigh),
-                            selection: $settings.appearance.glassBlur
-                        )
-                    }
+                SettingsRow(title: L10n.text(.opacity), hint: L10n.text(.opacityHint)) {
+                    Segmented(label: L10n.text(.opacity), options: strengths(), selection: $settings.appearance.glassOpacity)
+                        .disabled(!settings.appearance.isGlass)
+                        .opacity(settings.appearance.isGlass ? 1 : 0.4)
+                }
+                SettingsRow(title: L10n.text(.blur), hint: L10n.text(.blurHint), isLast: true) {
+                    Segmented(
+                        label: L10n.text(.blur),
+                        options: strengths(medium: .blurMedium, high: .blurHigh),
+                        selection: $settings.appearance.glassBlur
+                    )
+                    .disabled(!settings.appearance.isGlass)
+                    .opacity(settings.appearance.isGlass ? 1 : 0.4)
                 }
             }
             SettingsGroup(title: L10n.text(.colors), hint: L10n.text(.colorsHint)) {

@@ -8,7 +8,9 @@ final class SettingsStore {
     private(set) var settings: AppSettings {
         didSet {
             guard settings != oldValue else { return }
-            L10n.language = settings.language
+            if settings.language != oldValue.language {
+                applyLanguage()
+            }
             if (settings.welcome, settings.appearance.accent, settings.language) != (oldValue.welcome, oldValue.appearance.accent, oldValue.language) {
                 applyWelcome()
             }
@@ -34,7 +36,7 @@ final class SettingsStore {
             loaded.font.family = nil
         }
         settings = loaded
-        L10n.language = loaded.language
+        applyLanguage()
         applyWelcome()
         applyShellOptions()
         terminateObserver = NotificationCenter.default.addObserver(
@@ -102,6 +104,13 @@ final class SettingsStore {
     func welcomePreview() async -> [[AnsiSpan]] {
         guard let page = welcomePages.first, let output = await Fastfetch.output(config: page.config) else { return [] }
         return AnsiText.lines(output)
+    }
+
+    /// Les menus fournis par macOS (Fichier, Édition, Sparkle) suivent `AppleLanguages`, lu au
+    /// lancement seulement : ils changent de langue au prochain.
+    private func applyLanguage() {
+        L10n.language = settings.language
+        UserDefaults.standard.set([settings.language.code], forKey: "AppleLanguages")
     }
 
     /// Le shell de chaque nouveau terminal hérite de ces variables : le patch zsh y lit les versions

@@ -11,6 +11,7 @@ struct TerminalSearchBar: View {
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
+        let findsNothing = count.findsNothing(for: search.needle)
         HStack(spacing: 4) {
             TextField(L10n.text(.findPlaceholder), text: $search.needle)
                 .textFieldStyle(.plain)
@@ -24,11 +25,11 @@ struct TerminalSearchBar: View {
                         Text(label)
                             .font(.caption)
                             .monospacedDigit()
-                            .foregroundStyle(Ink.muted)
+                            .foregroundStyle(findsNothing ? Ink.warning : Ink.muted)
                             .padding(.trailing, 8)
                     }
                 }
-                .accessibilityValue(count.label ?? "")
+                .accessibilityValue(findsNothing ? L10n.text(.noResults) : count.label ?? "")
                 .focused($isFieldFocused)
                 .onSubmit { search.next() }
                 .onKeyPress(.return, phases: .down) { press in
@@ -41,9 +42,11 @@ struct TerminalSearchBar: View {
                     search.needle.isEmpty ? onClose() : onLeave()
                 }
 
-            SearchButton(icon: "chevron.up", label: L10n.text(.findNext), action: search.next)
-            SearchButton(icon: "chevron.down", label: L10n.text(.findPrevious), action: search.previous)
-            SearchButton(icon: "xmark", label: L10n.text(.closeFind), action: onClose)
+            SearchButton(icon: "chevron.up", label: L10n.text(.findNext), shortcut: Shortcut("g").label, action: search.next)
+            SearchButton(
+                icon: "chevron.down", label: L10n.text(.findPrevious), shortcut: Shortcut("g", [.command, .shift]).label, action: search.previous
+            )
+            SearchButton(icon: "xmark", label: L10n.text(.closeFind), shortcut: L10n.text(.keyEscape), action: onClose)
         }
         .padding(8)
         .background(.background, in: .rect(cornerRadius: 8))
@@ -62,6 +65,7 @@ struct TerminalSearchBar: View {
 private struct SearchButton: View {
     let icon: String
     let label: String
+    let shortcut: String
     let action: () -> Void
 
     @State private var isHovered = false
@@ -76,7 +80,7 @@ private struct SearchButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
-        .help(label)
+        .tooltip(label, shortcut: shortcut)
         .onHover { isHovered = $0 }
     }
 }

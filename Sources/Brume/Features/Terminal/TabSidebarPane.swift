@@ -34,6 +34,7 @@ struct TabSidebarPane: View {
             }
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
+            .tabTooltip(.pane(pane), in: workspace, isDragging: isDragging)
             TabStatus(
                 isHovered: isHovered, progress: workspace.paneProgress[pane], hasActivity: workspace.activity.contains(pane),
                 closeLabel: L10n.text(.closeTerminal)

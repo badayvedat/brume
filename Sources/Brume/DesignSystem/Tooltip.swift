@@ -2,10 +2,11 @@ import AppKit
 import SwiftUI
 
 extension View {
-    /// Infobulle maison sous la vue, avec le raccourci à droite. Dans sa propre petite fenêtre :
-    /// une vue SwiftUI serait coupée par la barre qui défile et passerait sous le terminal.
-    func tooltip(_ text: String, shortcut: String? = nil) -> some View {
-        modifier(TooltipModifier(text: text, shortcut: shortcut))
+    /// Infobulle maison sous la vue, avec le raccourci à droite et au besoin une seconde ligne.
+    /// Dans sa propre petite fenêtre : une vue SwiftUI serait coupée par la barre qui défile et
+    /// passerait sous le terminal.
+    func tooltip(_ text: String, detail: String? = nil, shortcut: String? = nil, isEnabled: Bool = true) -> some View {
+        modifier(TooltipModifier(text: text, detail: detail, shortcut: shortcut, isEnabled: isEnabled))
     }
 }
 
@@ -14,7 +15,9 @@ extension View {
 /// `allowsHitTesting`) n'en reçoit pas.
 private struct TooltipModifier: ViewModifier {
     let text: String
+    let detail: String?
     let shortcut: String?
+    let isEnabled: Bool
 
     @State private var tip = Tooltip()
 
@@ -22,8 +25,9 @@ private struct TooltipModifier: ViewModifier {
         content
             .background(TooltipAnchor(tip: tip))
             .onHover { hovering in
-                if hovering { tip.schedule(text: text, shortcut: shortcut) } else { tip.hide() }
+                if hovering && isEnabled { tip.schedule(text: text, detail: detail, shortcut: shortcut) } else { tip.hide() }
             }
+            .onChange(of: isEnabled) { if !$1 { tip.hide() } }
             .onDisappear { tip.hide() }
     }
 }
@@ -54,9 +58,9 @@ private final class Tooltip {
     private var pending: DispatchWorkItem?
     private var clickMonitor: Any?
 
-    func schedule(text: String, shortcut: String?) {
+    func schedule(text: String, detail: String?, shortcut: String?) {
         pending?.cancel()
-        let work = DispatchWorkItem { [weak self] in self?.show(text: text, shortcut: shortcut) }
+        let work = DispatchWorkItem { [weak self] in self?.show(text: text, detail: detail, shortcut: shortcut) }
         pending = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
         // Un clic laisserait le délai courir, et l'infobulle s'ouvrirait sur le menu du bouton.
@@ -78,9 +82,9 @@ private final class Tooltip {
         panel = nil
     }
 
-    private func show(text: String, shortcut: String?) {
+    private func show(text: String, detail: String?, shortcut: String?) {
         guard let anchor, let window = anchor.window, panel == nil else { return }
-        let host = NSHostingView(rootView: TooltipLabel(text: text, shortcut: shortcut))
+        let host = NSHostingView(rootView: TooltipLabel(text: text, detail: detail, shortcut: shortcut))
         host.frame.size = host.fittingSize
         let panel = NSPanel(contentRect: host.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
         panel.contentView = host
@@ -101,11 +105,17 @@ private final class Tooltip {
 
 private struct TooltipLabel: View {
     let text: String
+    let detail: String?
     let shortcut: String?
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(text)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(text)
+                if let detail {
+                    Text(detail).foregroundStyle(.secondary)
+                }
+            }
             if let shortcut {
                 Text(shortcut).foregroundStyle(.secondary)
             }

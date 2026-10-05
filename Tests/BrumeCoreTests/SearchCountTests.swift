@@ -12,6 +12,13 @@ struct SearchCountTests {
         #expect(SearchCount(total: nil, selected: nil).label == nil)
     }
 
+    @Test func nothingFoundNeedsANeedleAndAZeroTotal() {
+        #expect(SearchCount(total: 0, selected: nil).findsNothing(for: "xyz"))
+        #expect(!SearchCount(total: 0, selected: nil).findsNothing(for: ""))
+        #expect(!SearchCount(total: 3, selected: nil).findsNothing(for: "xyz"))
+        #expect(!SearchCount(total: nil, selected: nil).findsNothing(for: "xyz"))
+    }
+
     @Test func shortNeedlesWait() {
         #expect(SearchCount.delay(for: "ab") == .milliseconds(300))
         #expect(SearchCount.delay(for: "abc") == .zero)

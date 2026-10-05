@@ -15,6 +15,27 @@ extension View {
     ) -> some View {
         modifier(TabBehavior(item: item, workspace: workspace, highlight: highlight, isHovered: isHovered, isDragging: isDragging, isVertical: isVertical))
     }
+
+    /// Sur le titre seul : la croix, à côté, a la sienne. Le titre entier, que l'onglet peut couper,
+    /// et l'état de la pastille, que la croix remplace au survol.
+    func tabTooltip(_ item: TabItem, in workspace: TerminalWorkspace, isDragging: Bool) -> some View {
+        contentShape(.rect)
+            .tooltip(
+                workspace.displayedTitle(of: item),
+                detail: workspace.statusText(of: item),
+                isEnabled: !isDragging && workspace.renaming != item
+            )
+    }
+}
+
+extension TerminalWorkspace {
+    /// Ce que dit la pastille d'un onglet, d'un groupe ou d'un terminal d'un groupe.
+    func statusText(of item: TabItem) -> String? {
+        switch item {
+        case let .tab(tab): TabStatus.text(progress: progress(of: tab), hasActivity: hasActivity(tab))
+        case let .pane(pane): TabStatus.text(progress: paneProgress[pane], hasActivity: activity.contains(pane))
+        }
+    }
 }
 
 private struct TabBehavior: ViewModifier {
@@ -55,7 +76,7 @@ private struct TabBehavior: ViewModifier {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(workspace.displayedTitle(of: item))
-            .accessibilityValue(accessibilityValue)
+            .accessibilityValue(workspace.statusText(of: item) ?? "")
             .accessibilityAddTraits(highlight == .none ? .isButton : [.isButton, .isSelected])
             .accessibilityAction(.default, show)
             // Le menu du clic droit est une fenêtre à part, hors de portée de VoiceOver.
@@ -71,23 +92,6 @@ private struct TabBehavior: ViewModifier {
         case let .tab(tab): workspace.select(tab)
         case let .pane(pane): workspace.focus(pane)
         }
-    }
-
-    private var accessibilityValue: String {
-        let progress = switch item {
-        case let .tab(tab): workspace.progress(of: tab)
-        case let .pane(pane): workspace.paneProgress[pane]
-        }
-        let hasActivity = switch item {
-        case let .tab(tab): workspace.hasActivity(tab)
-        case let .pane(pane): workspace.activity.contains(pane)
-        }
-        var parts: [String] = []
-        if let progress {
-            parts.append(progress.percent.map { (Double($0) / 100).formatted(.percent.locale(L10n.language.locale)) } ?? L10n.text(.inProgress))
-        }
-        if hasActivity { parts.append(L10n.text(.newActivity)) }
-        return parts.joined(separator: ", ")
     }
 
     /// Un onglet seul, un groupe, ou un terminal d'un groupe : les mots du menu suivent.

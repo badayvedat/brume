@@ -28,6 +28,7 @@ struct TabCell: View {
             }
             .font(.system(size: 12))
             .frame(maxWidth: .infinity, alignment: .leading)
+            .tabTooltip(.tab(tab), in: workspace, isDragging: isDragging)
             // Seul, l'onglet se ferme avec la fenêtre, par le bouton rouge : sa croix fermerait Brume.
             TabStatus(
                 isHovered: isHovered, progress: workspace.progress(of: tab), hasActivity: workspace.hasActivity(tab),

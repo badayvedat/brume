@@ -18,6 +18,11 @@ public struct SearchCount: Equatable, Sendable {
         }
     }
 
+    /// Un texte cherché et aucun résultat : le compteur passe en avertissement.
+    public func findsNothing(for needle: String) -> Bool {
+        !needle.isEmpty && total == 0
+    }
+
     /// Ghostty attend sur les recherches de moins de 3 caractères : elles trouvent
     /// des milliers de résultats et coûtent cher à chaque frappe.
     public static func delay(for needle: String) -> Duration {

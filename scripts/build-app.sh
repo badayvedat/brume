@@ -116,7 +116,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
     <key>CFBundleDisplayName</key>
     <string>$APP_NAME</string>
     <key>CFBundleDevelopmentRegion</key>
-    <string>fr</string>
+    <string>en</string>
     <key>CFBundleLocalizations</key>
     <array>
         <string>fr</string>

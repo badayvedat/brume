@@ -17,6 +17,17 @@ public enum Language: String, CaseIterable, Codable, Sendable {
         case .english: "English"
         }
     }
+
+    /// Le code d'`AppleLanguages`.
+    public var code: String {
+        self == .french ? "fr" : "en"
+    }
+
+    /// Au premier lancement, celle du Mac : le français s'il vient en tête de ses langues, l'anglais sinon.
+    public static func preferred(in languages: [String]) -> Language {
+        let first = languages.first.flatMap { Locale.Language(identifier: $0).languageCode?.identifier }
+        return first == Language.french.code ? .french : .english
+    }
 }
 
 /// Textes de l'interface par clé. Un `switch` exhaustif par langue : une clé
@@ -32,7 +43,7 @@ public enum TextKey: CaseIterable, Sendable {
     case splitRight, splitDown, newWindow
     case focusPreviousSplit, focusNextSplit, focusSplitLeft, focusSplitRight, focusSplitUp, focusSplitDown
     case equalizeSplits, moveTabLeft, moveTabRight, moveTabUp, moveTabDown
-    case find, findPlaceholder, findNext, findPrevious, findSelection, closeFind
+    case find, findPlaceholder, findNext, findPrevious, findSelection, closeFind, noResults
     case increaseFontSize, decreaseFontSize, resetFontSize, resetAllSizes
     case moreOptions, showInFinder, openIn, copyPath, noFolderYet
     case closeTabsTitle, closeTabsMessage, closeOtherTabs, closeTabsToTheRight
@@ -49,13 +60,13 @@ public enum TextKey: CaseIterable, Sendable {
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
     case visualSlime, visualGem, visualMoon, visualMushroom, visualBreath, visualPrompt
     case visualSaturn, visualCloud, content, contentHint, contentVisual, contentText, contentBoth, welcomeSize, welcomeSizeHint, sizeSmall, sizeMedium, sizeLarge, informationGroup, informationGroupHint, showContent, showContentHint, characters, welcomeTextPlaceholder
-    case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress
+    case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress, inProgressPercent, progressError, progressPaused
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
     case upToDate, upToDateMessage, updateError, updateInstalled, ok
     case brumeOnGitHub, reportIssue
-    case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace
+    case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace, keyEscape
     case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
     case pressShortcut, noShortcut, changeShortcut, restoreDefault, restoreAllShortcuts, replace, useAnyway, shortcutHint
     case shortcutNeedsModifier, shortcutNeedsDigit, shortcutInUse, shortcutInTerminal, shortcutWithoutCommand
@@ -90,17 +101,17 @@ public enum TextKey: CaseIterable, Sendable {
         case .lastTab: "Dernier onglet"
         case .terminal: "Terminal"
         case .renameTab: "Renommer l'onglet"
-        case .resetTabName: "Rendre le nom automatique"
+        case .resetTabName: "Rétablir le nom automatique"
         case .splitRight: "Diviser à droite"
         case .splitDown: "Diviser en dessous"
         case .newWindow: "Nouvelle fenêtre"
-        case .focusPreviousSplit: "Split précédent"
-        case .focusNextSplit: "Split suivant"
-        case .focusSplitLeft: "Split à gauche"
-        case .focusSplitRight: "Split à droite"
-        case .focusSplitUp: "Split au-dessus"
-        case .focusSplitDown: "Split en dessous"
-        case .equalizeSplits: "Égaliser les splits"
+        case .focusPreviousSplit: "Terminal précédent"
+        case .focusNextSplit: "Terminal suivant"
+        case .focusSplitLeft: "Terminal à gauche"
+        case .focusSplitRight: "Terminal à droite"
+        case .focusSplitUp: "Terminal au-dessus"
+        case .focusSplitDown: "Terminal en dessous"
+        case .equalizeSplits: "Égaliser les terminaux"
         case .moveTabLeft: "Déplacer l'onglet à gauche"
         case .moveTabRight: "Déplacer l'onglet à droite"
         case .moveTabUp: "Déplacer l'onglet vers le haut"
@@ -111,6 +122,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .findPrevious: "Résultat précédent"
         case .findSelection: "Rechercher la sélection"
         case .closeFind: "Fermer la recherche"
+        case .noResults: "Aucun résultat"
         case .increaseFontSize: "Agrandir le texte"
         case .decreaseFontSize: "Réduire le texte"
         case .resetFontSize: "Taille réelle"
@@ -127,7 +139,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .resetWindow: "Réinitialiser la fenêtre"
         case .resetWindowHint: "Rend à la fenêtre son état d'origine."
         case .resetWindowTitle: "Réinitialiser la fenêtre ?"
-        case .resetWindowMessage: "Seul le terminal actif reste ouvert. Les autres onglets, groupes et splits se ferment, et les noms, couleurs, icônes, la taille du texte et celle de la fenêtre reviennent par défaut. Vos réglages sont conservés."
+        case .resetWindowMessage: "Seul le terminal actif reste ouvert. Les autres onglets, groupes et terminaux se ferment, et les noms, couleurs, icônes, la taille du texte et celle de la fenêtre reviennent par défaut. Vos réglages sont conservés."
         case .resetWindowRunning: "Une commande tourne encore dans un autre terminal. Elle sera arrêtée."
         case .reset: "Réinitialiser"
         case .tabColor: "Couleur"
@@ -141,7 +153,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .settings: "Réglages"
         case .back: "Retour"
         case .general: "Général"
-        case .generalHint: "Démarrage, langue, comportement et mises à jour de l'application."
+        case .generalHint: "Session, saisie, interface et mises à jour."
         case .appearance: "Apparence"
         case .appearanceHint: "Style des fenêtres, couleurs et police des terminaux. Les changements s'appliquent immédiatement."
         case .window: "Fenêtre"
@@ -182,20 +194,20 @@ public enum TextKey: CaseIterable, Sendable {
         case .larger: "Plus grand"
         case .interface: "Interface"
         case .language: "Langue"
-        case .languageHint: "Langue des menus et de l'interface."
+        case .languageHint: "Langue des menus et de l'interface. Les menus de macOS changent au prochain lancement."
         case .startup: "Session"
         case .restoreTabs: "Restaurer la session"
         case .restoreTabsHint: "Au démarrage, rouvre les fenêtres à leur place et à leur taille, avec leurs onglets, groupes, noms, couleurs, icônes et le dossier de chaque terminal. Les commandes en cours ne sont pas relancées."
         case .input: "Saisie"
         case .historySuggestions: "Suggestions de l'historique"
-        case .historySuggestionsHint: "Complète en gris la commande en cours d'après celles déjà saisies. La flèche → accepte la suggestion."
+        case .historySuggestionsHint: "Complète en gris la commande en cours d'après celles déjà saisies. La flèche → accepte la suggestion. S'applique aux nouveaux terminaux."
         case .completion: "Autocomplétion"
-        case .completionHint: "La touche Tab propose les sous-commandes, options, fichiers et dossiers disponibles pour la commande en cours."
-        case .welcome: "Démarrage"
+        case .completionHint: "La touche Tab propose les sous-commandes, options, fichiers et dossiers disponibles pour la commande en cours. S'applique aux nouveaux terminaux."
+        case .welcome: "Accueil"
         case .welcomeHint: "L'écran affiché à l'ouverture de chaque terminal : un visuel, un mot et les informations du Mac."
         case .welcomePage: "Affichage"
-        case .showWelcome: "Afficher l'écran de démarrage"
-        case .welcomePageHint: "À l'ouverture de chaque terminal, onglet ou split."
+        case .showWelcome: "Afficher l'écran d'accueil"
+        case .welcomePageHint: "À l'ouverture de chaque nouveau terminal."
         case .visual: "Visuel"
         case .visualHint: "Pixel art teinté de la couleur d'accent."
         case .visualGhost: "Fantôme"
@@ -209,7 +221,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .infoEssential: "Essentiel"
         case .infoCategories: "Par catégorie"
         case .position: "Position"
-        case .positionHint: "Alignement de l'écran de démarrage dans la largeur du terminal."
+        case .positionHint: "Alignement de l'écran d'accueil dans la largeur du terminal."
         case .alignLeft: "Gauche"
         case .alignCenter: "Centre"
         case .alignRight: "Droite"
@@ -234,7 +246,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .informationGroup: "Informations"
         case .showContent: "En-tête"
         case .showContentHint: "Ce qui s'affiche en grand, au-dessus des informations."
-        case .informationGroupHint: "Ce que l'écran de démarrage indique du Mac, et sa place dans le terminal."
+        case .informationGroupHint: "Ce que l'écran d'accueil indique du Mac, et sa place dans le terminal."
         case .characters: "caractères"
         case .welcomeTextPlaceholder: "Votre mot"
         case .sizeLarge: "Grande"
@@ -249,6 +261,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .zoomSplit: "Agrandir le terminal"
         case .newActivity: "Nouvelle activité"
         case .inProgress: "En cours"
+        case .inProgressPercent: "En cours : %@"
+        case .progressError: "Erreur"
+        case .progressPaused: "En pause"
         case .ungroup: "Dissocier le groupe"
         case .leaveGroup: "Sortir du groupe"
         case .closeTerminal: "Fermer le terminal"
@@ -288,11 +303,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .reportIssue: "Signaler un problème"
         case .shortcuts: "Raccourcis"
         case .shortcutsHint: "Les raccourcis clavier principaux de Brume. Cliquez sur un raccourci, puis tapez la nouvelle combinaison : Échap annule, ⌫ le retire."
-        case .splits: "Splits"
+        case .splits: "Terminaux"
         case .selectTab: "Aller à un onglet"
         case .selectTabHint: "Avec un chiffre : 1 à 8 dans l'ordre, 9 pour le dernier."
         case .closeTerminalHint: "Le terminal actif, ou l'onglet s'il n'est pas divisé."
         case .keySpace: "Espace"
+        case .keyEscape: "Échap"
         case .hideApp: "Masquer Brume"
         case .hideOthers: "Masquer les autres"
         case .minimize: "Minimiser"
@@ -339,13 +355,13 @@ public enum TextKey: CaseIterable, Sendable {
     private var english: String {
         switch self {
         case .closeTerminalTitle: "Close Terminal?"
-        case .closeTerminalMessage: "The terminal still has a running process. If you close the terminal the process will be killed."
+        case .closeTerminalMessage: "A command is still running in this terminal. Closing it will stop the command."
         case .closeTabTitle: "Close Tab?"
-        case .closeTabMessage: "The terminal still has a running process. If you close the tab the process will be killed."
+        case .closeTabMessage: "A command is still running in this tab. Closing it will stop the command."
         case .closeWindowTitle: "Close Window?"
-        case .closeWindowMessage: "All terminal sessions in this window will be terminated."
+        case .closeWindowMessage: "A command is still running in a tab of this window. Closing it will stop the command."
         case .quitTitle: "Quit Brume?"
-        case .quitMessage: "The terminal still has a running process. If you quit, the process will be killed."
+        case .quitMessage: "A command is still running in a terminal. Quitting will stop the command."
         case .close: "Close"
         case .closeWindow: "Close Window"
         case .quit: "Quit"
@@ -358,17 +374,17 @@ public enum TextKey: CaseIterable, Sendable {
         case .lastTab: "Last Tab"
         case .terminal: "Terminal"
         case .renameTab: "Rename Tab"
-        case .resetTabName: "Reset Tab Name"
+        case .resetTabName: "Restore Automatic Name"
         case .splitRight: "Split Right"
         case .splitDown: "Split Down"
         case .newWindow: "New Window"
-        case .focusPreviousSplit: "Select Previous Split"
-        case .focusNextSplit: "Select Next Split"
-        case .focusSplitLeft: "Select Split Left"
-        case .focusSplitRight: "Select Split Right"
-        case .focusSplitUp: "Select Split Above"
-        case .focusSplitDown: "Select Split Below"
-        case .equalizeSplits: "Equalize Splits"
+        case .focusPreviousSplit: "Select Previous Terminal"
+        case .focusNextSplit: "Select Next Terminal"
+        case .focusSplitLeft: "Select Terminal on the Left"
+        case .focusSplitRight: "Select Terminal on the Right"
+        case .focusSplitUp: "Select Terminal Above"
+        case .focusSplitDown: "Select Terminal Below"
+        case .equalizeSplits: "Equalize Terminals"
         case .moveTabLeft: "Move Tab Left"
         case .moveTabRight: "Move Tab Right"
         case .moveTabUp: "Move Tab Up"
@@ -379,9 +395,10 @@ public enum TextKey: CaseIterable, Sendable {
         case .findPrevious: "Find Previous"
         case .findSelection: "Use Selection for Find"
         case .closeFind: "Close Find Bar"
+        case .noResults: "No results"
         case .increaseFontSize: "Increase Font Size"
         case .decreaseFontSize: "Decrease Font Size"
-        case .resetFontSize: "Reset Font Size"
+        case .resetFontSize: "Actual Size"
         case .resetAllSizes: "Reset All Sizes"
         case .moreOptions: "More Options"
         case .showInFinder: "Show in Finder"
@@ -389,13 +406,13 @@ public enum TextKey: CaseIterable, Sendable {
         case .copyPath: "Copy Path"
         case .noFolderYet: "Terminal folder unknown"
         case .closeTabsTitle: "Close Tabs?"
-        case .closeTabsMessage: "A terminal still has a running process. If you close these tabs the process will be killed."
+        case .closeTabsMessage: "A command is still running in one of these tabs. Closing them will stop the command."
         case .closeOtherTabs: "Close Other Tabs"
         case .closeTabsToTheRight: "Close Tabs to the Right"
         case .resetWindow: "Reset Window"
         case .resetWindowHint: "Returns the window to its original state."
         case .resetWindowTitle: "Reset Window?"
-        case .resetWindowMessage: "Only the active terminal stays open. Other tabs, groups and splits are closed, and names, colors, icons, text size and window size go back to their defaults. Your settings are kept."
+        case .resetWindowMessage: "Only the active terminal stays open. Other tabs, groups and terminals are closed, and names, colors, icons, text size and window size go back to their defaults. Your settings are kept."
         case .resetWindowRunning: "A command is still running in another terminal. It will be stopped."
         case .reset: "Reset"
         case .tabColor: "Color"
@@ -409,7 +426,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .settings: "Settings"
         case .back: "Back"
         case .general: "General"
-        case .generalHint: "Startup, language, app behavior and updates."
+        case .generalHint: "Session, input, interface and updates."
         case .appearance: "Appearance"
         case .appearanceHint: "Window style, colors and terminal font. Changes apply immediately."
         case .window: "Window"
@@ -450,20 +467,20 @@ public enum TextKey: CaseIterable, Sendable {
         case .larger: "Larger"
         case .interface: "Interface"
         case .language: "Language"
-        case .languageHint: "Language of menus and the interface."
+        case .languageHint: "Language of menus and the interface. macOS menus change at the next launch."
         case .startup: "Session"
         case .restoreTabs: "Restore Session"
         case .restoreTabsHint: "At startup, reopens your windows where they were and at the same size, with their tabs, groups, names, colors, icons and each terminal's folder. Running commands are not restarted."
         case .input: "Input"
         case .historySuggestions: "History Suggestions"
-        case .historySuggestionsHint: "Completes the current command in gray based on commands you have already entered. The → key accepts the suggestion."
+        case .historySuggestionsHint: "Completes the current command in gray based on commands you have already entered. The → key accepts the suggestion. Applies to new terminals."
         case .completion: "Autocompletion"
-        case .completionHint: "The Tab key suggests the subcommands, options, files and folders available for the current command."
-        case .welcome: "Startup"
+        case .completionHint: "The Tab key suggests the subcommands, options, files and folders available for the current command. Applies to new terminals."
+        case .welcome: "Welcome"
         case .welcomeHint: "The screen shown when each terminal opens: a visual, a word and information about your Mac."
         case .welcomePage: "Display"
-        case .showWelcome: "Show Startup Screen"
-        case .welcomePageHint: "When each terminal, tab or split opens."
+        case .showWelcome: "Show Welcome Screen"
+        case .welcomePageHint: "When each new terminal opens."
         case .visual: "Visual"
         case .visualHint: "Pixel art tinted with the accent color."
         case .visualGhost: "Ghost"
@@ -477,7 +494,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .infoEssential: "Essentials"
         case .infoCategories: "By Category"
         case .position: "Position"
-        case .positionHint: "Alignment of the startup screen across the terminal width."
+        case .positionHint: "Alignment of the welcome screen across the terminal width."
         case .alignLeft: "Left"
         case .alignCenter: "Center"
         case .alignRight: "Right"
@@ -502,7 +519,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .informationGroup: "Information"
         case .showContent: "Header"
         case .showContentHint: "What appears large, above the information."
-        case .informationGroupHint: "What the startup screen shows about your Mac, and where it sits in the terminal."
+        case .informationGroupHint: "What the welcome screen shows about your Mac, and where it sits in the terminal."
         case .characters: "characters"
         case .welcomeTextPlaceholder: "Your word"
         case .sizeLarge: "Large"
@@ -517,6 +534,9 @@ public enum TextKey: CaseIterable, Sendable {
         case .zoomSplit: "Zoom Terminal"
         case .newActivity: "New activity"
         case .inProgress: "In progress"
+        case .inProgressPercent: "In progress: %@"
+        case .progressError: "Error"
+        case .progressPaused: "Paused"
         case .ungroup: "Ungroup"
         case .leaveGroup: "Move Out of Group"
         case .closeTerminal: "Close Terminal"
@@ -556,11 +576,12 @@ public enum TextKey: CaseIterable, Sendable {
         case .reportIssue: "Report an Issue"
         case .shortcuts: "Shortcuts"
         case .shortcutsHint: "Brume's main keyboard shortcuts. Click a shortcut, then type the new combination: Escape cancels, ⌫ removes it."
-        case .splits: "Splits"
+        case .splits: "Terminals"
         case .selectTab: "Go to Tab"
         case .selectTabHint: "With a digit: 1 to 8 in order, 9 for the last one."
         case .closeTerminalHint: "The active terminal, or the tab when it isn't split."
         case .keySpace: "Space"
+        case .keyEscape: "Esc"
         case .hideApp: "Hide Brume"
         case .hideOthers: "Hide Others"
         case .minimize: "Minimize"
