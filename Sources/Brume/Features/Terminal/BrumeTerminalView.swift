@@ -5,6 +5,22 @@ import GhosttyTerminal
 /// en anglais. Un programme qui capte la souris (vim, htop) garde son clic droit.
 final class BrumeTerminalView: TerminalView {
     var onContextMenu: (() -> Void)?
+    /// ⌃Tab : 1, ⌃⇧Tab : -1.
+    var onSelectTab: ((_ offset: Int) -> Void)?
+
+    /// ⌃Tab et ⌃⇧Tab changent d'onglet en plus du raccourci du menu, qui n'en porte qu'un. AppKit
+    /// passe la touche à toutes les vues de la fenêtre, terminaux cachés compris : ça marche aussi
+    /// depuis la barre latérale ou les réglages, et le shell ne la reçoit pas.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if let onSelectTab, event.keyCode == 48 {
+            switch event.modifierFlags.intersection([.command, .control, .option, .shift]) {
+            case .control: onSelectTab(1); return true
+            case [.control, .shift]: onSelectTab(-1); return true
+            default: break
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 
     override func rightMouseDown(with event: NSEvent) {
         guard showsMenu else { return super.rightMouseDown(with: event) }

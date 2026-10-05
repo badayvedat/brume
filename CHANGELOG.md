@@ -13,6 +13,7 @@ What changes in each version of Brume. The newest version comes first.
 - A welcome screen in every new terminal: a pixel-art visual tinted with your accent color, a word in large letters, and your Mac's information.
 - Full Path in Tabs (Settings › General) shows a tab's folder from your home folder, like ~/Desktop/project, instead of its name alone. Renamed tabs keep their name.
 - Keyboard shortcuts you can change in Settings › Shortcuts, for tabs, splits and vertical tabs, with a warning when a combination is already taken.
+- ⌃Tab and ⌃⇧Tab switch tabs, Clear Screen (⌘K) in the Edit menu, and a Help menu with links to Brume on GitHub and to report an issue.
 - A confirmation before closing a terminal where a command is still running.
 - Drop files or folders from Finder onto a terminal to type their paths at the cursor, escaped for the shell. In a split, they go to the terminal under the pointer. Dropped text is pasted as is.
 - Reset Window (⌥⌘R, or Settings › General) brings a window back to a single tab with default names, colors and size, after a confirmation. Your settings are kept.

@@ -56,6 +56,19 @@ struct ShortcutTests {
     @Test func macOSAndFixedShortcutsAreRefused() {
         #expect(Shortcuts().issue(assigning: Shortcut("q"), to: .newTab) == .reserved(.quit))
         #expect(Shortcuts().issue(assigning: Shortcut("f"), to: .newTab) == .reserved(.find))
+        #expect(Shortcuts().issue(assigning: Shortcut("k"), to: .newTab) == .reserved(.clearScreen))
+    }
+
+    @Test func controlTabSwitchesTabsAsWell() {
+        #expect(Shortcuts().issue(assigning: Shortcut("tab", .control), to: .splitRight) == .reserved(.nextTab))
+        #expect(Shortcuts().issue(assigning: Shortcut("tab", [.control, .shift]), to: .splitRight) == .reserved(.previousTab))
+        #expect(Shortcuts().issue(assigning: Shortcut("tab", [.control, .option]), to: .splitRight) == .terminal(nil))
+    }
+
+    @Test func closeTerminalSitsWithTheTabsBeforeCloseTab() {
+        let tabs = ShortcutCategory.tabs.actions
+        #expect(tabs.firstIndex(of: .closeTerminal).map { $0 + 1 } == tabs.firstIndex(of: .closeTab))
+        #expect(!ShortcutCategory.splits.actions.contains(.closeTerminal))
     }
 
     @Test func anotherActionsShortcutCanBeTakenBack() {
@@ -76,9 +89,9 @@ struct ShortcutTests {
     }
 
     @Test func terminalKeysOnlyWarn() {
-        #expect(Shortcuts().issue(assigning: Shortcut("k"), to: .newTab) == .terminal(.clearScreen))
+        #expect(Shortcuts().issue(assigning: Shortcut("left"), to: .newTab) == .terminal(.lineStart))
         #expect(Shortcuts().issue(assigning: Shortcut("t", .control), to: .newTab) == .terminal(nil))
-        #expect(Shortcuts().issue(assigning: Shortcut("k"), to: .newTab)?.isBlocking == false)
+        #expect(Shortcuts().issue(assigning: Shortcut("left"), to: .newTab)?.isBlocking == false)
     }
 
     @Test func comparisonsGoThroughTheKeyboardLayout() {

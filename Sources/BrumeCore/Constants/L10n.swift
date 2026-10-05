@@ -54,6 +54,7 @@ public enum TextKey: CaseIterable, Sendable {
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
     case upToDate, upToDateMessage, updateError, updateInstalled, ok
+    case brumeOnGitHub, reportIssue
     case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace
     case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
     case pressShortcut, noShortcut, changeShortcut, restoreDefault, restoreAllShortcuts, replace, useAnyway, shortcutHint
@@ -283,6 +284,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .updateError: "Erreur de mise à jour"
         case .updateInstalled: "Mise à jour installée"
         case .ok: "OK"
+        case .brumeOnGitHub: "Brume sur GitHub"
+        case .reportIssue: "Signaler un problème"
         case .shortcuts: "Raccourcis"
         case .shortcutsHint: "Les raccourcis clavier principaux de Brume. Cliquez sur un raccourci, puis tapez la nouvelle combinaison : Échap annule, ⌫ le retire."
         case .splits: "Splits"
@@ -549,6 +552,8 @@ public enum TextKey: CaseIterable, Sendable {
         case .updateError: "Update Error"
         case .updateInstalled: "Update Installed"
         case .ok: "OK"
+        case .brumeOnGitHub: "Brume on GitHub"
+        case .reportIssue: "Report an Issue"
         case .shortcuts: "Shortcuts"
         case .shortcutsHint: "Brume's main keyboard shortcuts. Click a shortcut, then type the new combination: Escape cancels, ⌫ removes it."
         case .splits: "Splits"

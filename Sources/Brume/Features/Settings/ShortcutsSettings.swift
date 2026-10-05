@@ -3,7 +3,11 @@ import SwiftUI
 
 struct ShortcutsSettings: View {
     @Environment(SettingsStore.self) private var settings
-    @State private var recorder = ShortcutRecorder()
+    @State private var recorder: ShortcutRecorder
+
+    init(window: NSWindow?) {
+        _recorder = State(initialValue: ShortcutRecorder(window: window))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {

@@ -19,13 +19,13 @@ public enum ShortcutCategory: CaseIterable, Sendable {
 /// (⌘Q, ⌘N, ⌘,) restent fixes. Le nom de chaque cas est sa clé dans le fichier des réglages :
 /// ne pas le renommer.
 public enum ShortcutAction: String, CaseIterable, Sendable {
-    case newTab, renameTab, closeTab, previousTab, nextTab, selectTab, verticalTabs, resetWindow
-    case splitRight, splitDown, closeTerminal, zoomSplit, focusPreviousSplit, focusNextSplit, equalizeSplits
+    case newTab, renameTab, closeTerminal, closeTab, previousTab, nextTab, selectTab, verticalTabs, resetWindow
+    case splitRight, splitDown, zoomSplit, focusPreviousSplit, focusNextSplit, equalizeSplits
 
     public var category: ShortcutCategory {
         switch self {
-        case .newTab, .renameTab, .closeTab, .previousTab, .nextTab, .selectTab, .verticalTabs, .resetWindow: .tabs
-        case .splitRight, .splitDown, .closeTerminal, .zoomSplit, .focusPreviousSplit, .focusNextSplit, .equalizeSplits: .splits
+        case .newTab, .renameTab, .closeTerminal, .closeTab, .previousTab, .nextTab, .selectTab, .verticalTabs, .resetWindow: .tabs
+        case .splitRight, .splitDown, .zoomSplit, .focusPreviousSplit, .focusNextSplit, .equalizeSplits: .splits
         }
     }
 
@@ -101,10 +101,12 @@ public struct ReservedShortcut: Sendable {
     }
 
     public static let all: [ReservedShortcut] = [
-        // Les autres raccourcis de Brume, dans les menus.
+        // Les autres raccourcis de Brume : ceux des menus, et ⌃Tab (`BrumeTerminalView`).
         .init(Shortcut("n"), .newWindow),
         .init(Shortcut("w", [.command, .shift]), .closeWindow),
         .init(Shortcut(","), .settings),
+        .init(Shortcut("tab", .control), .nextTab),
+        .init(Shortcut("tab", [.control, .shift]), .previousTab),
         .init(Shortcut("left", [.command, .option]), .focusSplitLeft),
         .init(Shortcut("right", [.command, .option]), .focusSplitRight),
         .init(Shortcut("up", [.command, .option]), .focusSplitUp),
@@ -121,6 +123,7 @@ public struct ReservedShortcut: Sendable {
         .init(Shortcut("-"), .decreaseFontSize),
         .init(Shortcut("0"), .resetFontSize),
         .init(Shortcut("0", [.command, .control]), .resetAllSizes),
+        .init(Shortcut("k"), .clearScreen),
         // Ceux de macOS, dans toutes les apps.
         .init(Shortcut("q"), .quit),
         .init(Shortcut("h"), .hideApp),
@@ -134,7 +137,6 @@ public struct ReservedShortcut: Sendable {
         .init(Shortcut("a"), .selectAll),
         .init(Shortcut("f", [.command, .control]), .fullScreen),
         // Ceux du moteur, dans le terminal.
-        .init(Shortcut("k"), .clearScreen, .terminal),
         .init(Shortcut("left"), .lineStart, .terminal),
         .init(Shortcut("right"), .lineEnd, .terminal),
         .init(Shortcut("delete"), .deleteLine, .terminal),

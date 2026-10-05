@@ -285,6 +285,10 @@ final class TerminalWorkspace {
         focused.surface?.performBindingAction(action)
     }
 
+    func clearScreen() {
+        focused.surface?.performBindingAction("clear_screen")
+    }
+
     func toggleSearch() {
         if searches[focusedID] == nil {
             openSearch(in: focusedID, needle: "")
@@ -419,6 +423,9 @@ final class TerminalWorkspace {
             view.onContextMenu = { [weak self] in
                 guard let self else { return }
                 TerminalContextMenu.show(for: pane, in: self)
+            }
+            view.onSelectTab = { [weak self] offset in
+                self?.showingTerminals { offset > 0 ? $0.selectNext() : $0.selectPrevious() }
             }
             return view
         }

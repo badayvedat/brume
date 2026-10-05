@@ -23,7 +23,7 @@ struct SettingsPage: View {
                 case .general: SettingsScroll(section: section) { GeneralSettings(workspace: workspace) }
                 case .appearance: SettingsScroll(section: section) { AppearanceSettings() }
                 case .welcome: WelcomeSettings(section: section, onPreview: { showsPreview = true })
-                case .shortcuts: SettingsScroll(section: section) { ShortcutsSettings() }
+                case .shortcuts: SettingsScroll(section: section) { ShortcutsSettings(window: workspace.window) }
                 }
             }
             .overlay {

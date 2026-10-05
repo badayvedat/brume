@@ -2,8 +2,9 @@ import AppKit
 import BrumeCore
 import Observation
 
-/// Le raccourci en train d'être tapé dans les réglages. Il prend les touches avant les menus :
-/// ⌘T tapé ici ne doit pas ouvrir d'onglet.
+/// Le raccourci en train d'être tapé dans les réglages. Il prend les touches de leur fenêtre avant
+/// les menus : ⌘T tapé ici ne doit pas ouvrir d'onglet. Celles des autres fenêtres passent, et la
+/// fenêtre qui perd le clavier arrête l'enregistrement.
 @MainActor @Observable
 final class ShortcutRecorder {
     struct Attempt {
@@ -17,21 +18,40 @@ final class ShortcutRecorder {
     private(set) var attempt: Attempt?
 
     @ObservationIgnored private weak var settings: SettingsStore?
+    @ObservationIgnored private weak var window: NSWindow?
     @ObservationIgnored private var monitor: Any?
+    @ObservationIgnored private var resignObserver: NSObjectProtocol?
+
+    /// `window` : celle des réglages.
+    init(window: NSWindow?) {
+        self.window = window
+    }
 
     func start(_ action: ShortcutAction, in settings: SettingsStore) {
         stop()
+        guard let window else { return }
         self.action = action
         self.settings = settings
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            let isTaken = MainActor.assumeIsolated { self?.handle(event) != nil }
+            let isTaken = MainActor.assumeIsolated {
+                guard let self, event.window === self.window else { return false }
+                self.handle(event)
+                return true
+            }
             return isTaken ? nil : event
+        }
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.stop() }
         }
     }
 
     func stop() {
         if let monitor { NSEvent.removeMonitor(monitor) }
+        if let resignObserver { NotificationCenter.default.removeObserver(resignObserver) }
         monitor = nil
+        resignObserver = nil
         action = nil
         attempt = nil
     }

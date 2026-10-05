@@ -17,6 +17,10 @@ struct SearchCommands: Commands {
                 .disabled(workspace?.focusedSearch == nil)
             Button(L10n.text(.findSelection)) { workspace?.showingTerminals { $0.searchSelection() } }
                 .keyboardShortcut("e")
+            Divider()
+            // Le menu prend ⌘K avant le moteur (patch `menu-keys`) : il efface donc lui-même, par le moteur.
+            Button(L10n.text(.clearScreen)) { workspace?.showingTerminals { $0.clearScreen() } }
+                .keyboardShortcut("k")
         }
     }
 }

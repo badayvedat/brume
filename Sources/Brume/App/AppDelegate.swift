@@ -8,6 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Toujours sombre : un terminal clair sous du verre se lit mal. Posé avant les fenêtres,
         // le moteur part directement en thème sombre.
         NSApp.appearance = NSAppearance(named: .darkAqua)
+        // Brume a ses propres onglets : sans ça, macOS ajoute ses articles d'onglets (« Fusionner
+        // toutes les fenêtres »...) aux menus Présentation et Fenêtre.
+        NSWindow.allowsAutomaticWindowTabbing = false
     }
 
     /// `kill` et `scripts/build-app.sh` envoient SIGTERM, qui saute la fin normale de l'app : la
