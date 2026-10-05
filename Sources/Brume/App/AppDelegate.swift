@@ -15,6 +15,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSWindow.allowsAutomaticWindowTabbing = false
         // Avant la fin du lancement : un clic sur une notification peut avoir lancé Brume.
         UNUserNotificationCenter.current().delegate = self
+        // Avant le moteur, qui garde un `LANG` déjà posé. Lancé depuis un terminal, Brume garde le sien.
+        let region = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["AppleLocale"] as? String
+        if getenv("LANG") == nil,
+           let lang = ShellLocale.lang(appleLocale: region, isAvailable: { FileManager.default.fileExists(atPath: "/usr/share/locale/\($0)") }) {
+            setenv("LANG", lang, 1)
+        }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
