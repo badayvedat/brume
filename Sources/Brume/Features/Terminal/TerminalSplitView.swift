@@ -36,6 +36,7 @@ struct TerminalSplitView: View {
                         TerminalPane(
                             state: state,
                             search: workspace.searches[pane],
+                            isSecured: workspace.isSecured(pane),
                             dimmed: workspace.isSplit && zoomed == nil && pane != workspace.focusedID,
                             onFocus: { workspace.didFocus(pane) },
                             onLeaveSearch: { workspace.focus(pane) },
@@ -129,6 +130,7 @@ private struct SplitHandle: View {
 private struct TerminalPane: View {
     @ObservedObject var state: TerminalViewState
     let search: TerminalSearch?
+    let isSecured: Bool
     let dimmed: Bool
     let onFocus: () -> Void
     let onLeaveSearch: () -> Void
@@ -153,13 +155,18 @@ private struct TerminalPane: View {
                 )
             }
             .overlay(alignment: .topTrailing) {
-                if let search {
-                    TerminalSearchBar(
-                        search: search,
-                        count: SearchCount(total: state.searchTotal, selected: state.searchSelected),
-                        onLeave: onLeaveSearch,
-                        onClose: onCloseSearch
-                    )
+                VStack(alignment: .trailing, spacing: 0) {
+                    if let search {
+                        TerminalSearchBar(
+                            search: search,
+                            count: SearchCount(total: state.searchTotal, selected: state.searchSelected),
+                            onLeave: onLeaveSearch,
+                            onClose: onCloseSearch
+                        )
+                    }
+                    if isSecured {
+                        SecureInputLock()
+                    }
                 }
             }
             .onChange(of: state.isFocused) { _, isFocused in

@@ -18,6 +18,8 @@ What changes in each version of Brume. The newest version comes first.
 - A confirmation before closing a terminal where a command is still running.
 - Drop files or folders from Finder onto a terminal to type their paths at the cursor, escaped for the shell. In a split tab, they go to the terminal under the pointer. Dropped text is pasted as is.
 - Open a folder in Brume: drop it on the Dock icon, use `open -a Brume <folder>`, or right-click it in Finder › Services › New Brume Tab Here.
+- ⌘-click a file path like src/App.vue:42:5 to open it at that line in your editor, relative to the terminal's folder. A folder opens in Finder.
+- While a program asks for a password (sudo, ssh), Brume turns on secure input so other apps can't read what you type, shown by a small lock.
 - Reset Window (⌥⌘R, or Settings › General) brings a window back to a single tab with default names, colors and size, after a confirmation. Your settings are kept.
 - SSH sessions keep working with servers that don't know Ghostty's terminal type.
 - An app icon and a DMG to install Brume by dragging it to Applications.

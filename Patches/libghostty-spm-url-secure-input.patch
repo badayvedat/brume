@@ -1,0 +1,170 @@
+diff --git a/Sources/GhosttyTerminal/Controller/TerminalController+Callbacks.swift b/Sources/GhosttyTerminal/Controller/TerminalController+Callbacks.swift
+index d903515..ee1124e 100644
+--- a/Sources/GhosttyTerminal/Controller/TerminalController+Callbacks.swift
++++ b/Sources/GhosttyTerminal/Controller/TerminalController+Callbacks.swift
+@@ -49,12 +49,10 @@ private enum TerminalCallbacks {
+             return false
+         }
+         return MainActor.assumeIsolated {
++            // Core spawns /usr/bin/open for an open_url reported unhandled:
++            // the host delegate says whether it opened the URL itself. Both
++            // open_url emitters run on the main thread.
+             bridge.handleAction(action)
+-            // Core spawns /usr/bin/open for an open_url reported unhandled,
+-            // so a host delegate that took the URL is reported as handling
+-            // it. Both open_url emitters run on the main thread.
+-            return action.tag == GHOSTTY_ACTION_OPEN_URL
+-                && bridge.delegate is any TerminalSurfaceOpenURLDelegate
+         }
+     }
+ 
+diff --git a/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift b/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
+index 01ee6cd..aa90e59 100644
+--- a/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
++++ b/Sources/GhosttyTerminal/InMemory/TerminalCallbackBridge.swift
+@@ -26,7 +26,10 @@ final class TerminalCallbackBridge {
+         self.delegate = delegate
+     }
+ 
+-    func handleAction(_ action: ghostty_action_s) {
++    /// Whether the host handled the action: only an open_url can be, and
++    /// the core opens one that wasn't itself (Brume).
++    @discardableResult
++    func handleAction(_ action: ghostty_action_s) -> Bool {
+         switch action.tag {
+         case GHOSTTY_ACTION_SET_TITLE:
+             if let cStr = action.action.set_title.title {
+@@ -127,8 +130,19 @@ final class TerminalCallbackBridge {
+                 .actions,
+                 "callback action=open_url kind=\(kind) url=\(TerminalDebugLog.describe(url))"
+             )
+-            (delegate as? any TerminalSurfaceOpenURLDelegate)?
+-                .terminalDidRequestOpenURL(url, kind: kind)
++            return (delegate as? any TerminalSurfaceOpenURLDelegate)?
++                .terminalDidRequestOpenURL(url, kind: kind) ?? false
++
++        // `toggle` only comes from a `toggle_secure_input` binding (Brume).
++        case GHOSTTY_ACTION_SECURE_INPUT:
++            let mode = action.action.secure_input
++            TerminalDebugLog.log(
++                .actions,
++                "callback action=secure_input mode=\(mode.rawValue)"
++            )
++            guard mode != GHOSTTY_SECURE_INPUT_TOGGLE else { break }
++            (delegate as? any TerminalSurfacePasswordInputDelegate)?
++                .terminalDidChangePasswordInput(mode == GHOSTTY_SECURE_INPUT_ON)
+ 
+         case GHOSTTY_ACTION_MOUSE_SHAPE:
+             let shape = action.action.mouse_shape
+@@ -207,6 +221,7 @@ final class TerminalCallbackBridge {
+                 "callback action=\(TerminalDebugLog.describe(action.tag))"
+             )
+         }
++        return false
+     }
+ 
+     func handleClose(processAlive: Bool) {
+diff --git a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+index 3caf50a..e85a9b0 100644
+--- a/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
++++ b/Sources/GhosttyTerminal/State/TerminalPendingPublishes.swift
+@@ -29,6 +29,7 @@ struct TerminalPendingPublishes {
+         case background
+         case commandFinished
+         case progress
++        case passwordInput
+     }
+ 
+     typealias Apply = @MainActor (TerminalViewState) -> Void
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+index ef27f98..c97267a 100644
+--- a/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState+Delegate.swift
+@@ -23,7 +23,9 @@ extension TerminalViewState:
+     TerminalSurfaceLifecycleDelegate,
+     TerminalSurfaceTextSelectionRequestDelegate,
+     TerminalSurfaceClipboardConfirmationDelegate,
+-    TerminalSurfaceColorChangeDelegate
++    TerminalSurfaceColorChangeDelegate,
++    TerminalSurfaceOpenURLDelegate,
++    TerminalSurfacePasswordInputDelegate
+ {
+     /// Applies a change to this state on the main queue's next turn.
+     ///
+@@ -192,6 +194,17 @@ extension TerminalViewState:
+         }
+     }
+ 
++    public func terminalDidChangePasswordInput(_ isPasswordInput: Bool) {
++        publishSoon(.passwordInput) {
++            guard $0.isPasswordInput != isPasswordInput else { return }
++            $0.isPasswordInput = isPasswordInput
++        }
++    }
++
++    public func terminalDidRequestOpenURL(_ url: String, kind _: TerminalOpenURLKind) -> Bool {
++        onOpenURL?(url) ?? false
++    }
++
+     public func terminalDidRequestTextSelection(_ request: TerminalTextSelectionRequest) {
+         onTextSelectionRequest?(request)
+     }
+@@ -223,5 +236,7 @@ extension TerminalViewState:
+             $0.programBackgroundColor = nil
+             $0.publishBackgroundColor()
+         }
++        // A freed surface reports no end to its prompt (Brume).
++        terminalDidChangePasswordInput(false)
+     }
+ }
+diff --git a/Sources/GhosttyTerminal/State/TerminalViewState.swift b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+index f53ba1d..b6794c6 100644
+--- a/Sources/GhosttyTerminal/State/TerminalViewState.swift
++++ b/Sources/GhosttyTerminal/State/TerminalViewState.swift
+@@ -40,6 +40,11 @@ public final class TerminalViewState: ObservableObject {
+     /// or its command finishes. Brume.
+     @Published public internal(set) var progress: TerminalProgress?
+ 
++    /// The program waits for a password (sudo, ssh): the terminal is
++    /// canonical with echo off. The core only checks while the surface has
++    /// focus, so the value can be stale until it regains it. Brume.
++    @Published public internal(set) var isPasswordInput = false
++
+     /// The effective config's `background`, or the color a program set with
+     /// OSC 11 while the surface lives.
+     @Published public internal(set) var backgroundColor: TerminalColor
+@@ -79,6 +84,9 @@ public final class TerminalViewState: ObservableObject {
+     /// The core asked to open or close the search UI (Brume).
+     public var onStartSearch: ((String) -> Void)?
+     public var onEndSearch: (() -> Void)?
++    /// A cmd-clicked link: true when the host opened it, false or nil leaves
++    /// it to the core's `/usr/bin/open` (Brume).
++    public var onOpenURL: ((String) -> Bool)?
+     @Published public internal(set) var controller: TerminalController
+ 
+     #if canImport(UIKit)
+diff --git a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+index 60c31ac..0b8aab5 100644
+--- a/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
++++ b/Sources/GhosttyTerminal/Surface/TerminalSurfaceViewDelegate.swift
+@@ -203,9 +203,19 @@ public enum TerminalOpenURLKind: Sendable {
+ }
+ 
+ /// User activated (cmd-clicked) a hyperlink inside the terminal grid.
++/// Returns whether the host opened it; when it didn't, the core hands the
++/// link to `/usr/bin/open`, as it does without a delegate. Brume.
+ @MainActor
+ public protocol TerminalSurfaceOpenURLDelegate: TerminalSurfaceViewDelegate {
+-    func terminalDidRequestOpenURL(_ url: String, kind: TerminalOpenURLKind)
++    func terminalDidRequestOpenURL(_ url: String, kind: TerminalOpenURLKind) -> Bool
++}
++
++/// A password prompt started or ended: the core polls the terminal mode,
++/// only while the surface has focus, and reports a canonical mode with echo
++/// off (sudo, ssh). Brume.
++@MainActor
++public protocol TerminalSurfacePasswordInputDelegate: TerminalSurfaceViewDelegate {
++    func terminalDidChangePasswordInput(_ isPasswordInput: Bool)
+ }
+ 
+ /// Mouse hovered over a recognized hyperlink. nil = hover ended / link lost.

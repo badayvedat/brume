@@ -60,7 +60,7 @@ public enum TextKey: CaseIterable, Sendable {
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
     case visualSlime, visualGem, visualMoon, visualMushroom, visualBreath, visualPrompt
     case visualSaturn, visualCloud, content, contentHint, contentVisual, contentText, contentBoth, welcomeSize, welcomeSizeHint, sizeSmall, sizeMedium, sizeLarge, informationGroup, informationGroupHint, showContent, showContentHint, characters, welcomeTextPlaceholder
-    case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress, inProgressPercent, progressError, progressPaused
+    case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress, inProgressPercent, progressError, progressPaused, secureInput
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
     case iconTerminal, iconProject, iconServer, iconMachine, iconCloud, iconWeb, iconDatabase, iconContainer, iconCode, iconTools, iconAI, iconProduction
     case updates, currentVersion, checkForUpdates, checkAutomatically, checkAutomaticallyHint, installAutomatically, installAutomaticallyHint
@@ -265,6 +265,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .inProgressPercent: "En cours : %@"
         case .progressError: "Erreur"
         case .progressPaused: "En pause"
+        case .secureInput: "Saisie sécurisée : les autres apps ne voient pas ce que vous tapez."
         case .notifications: "Notifications"
         case .notificationsHint: "Quand Brume est en arrière-plan, prévient quand Claude Code attend ou qu'une longue commande se termine."
         case .dockBadge: "Pastille sur l'icône du Dock"
@@ -545,6 +546,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .inProgressPercent: "In progress: %@"
         case .progressError: "Error"
         case .progressPaused: "Paused"
+        case .secureInput: "Secure input: other apps can't see what you type."
         case .notifications: "Notifications"
         case .notificationsHint: "When Brume is in the background, lets you know when Claude Code is waiting or a long command finishes."
         case .dockBadge: "Badge on Dock Icon"

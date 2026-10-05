@@ -56,6 +56,9 @@ private struct WeakWorkspace {
 /// Pour qu'un nouvel onglet ou une nouvelle fenêtre reprenne son zoom et son dossier.
 @MainActor weak var lastFocused: TerminalViewState?
 
+/// Commune à toutes les fenêtres : un seul terminal a le clavier.
+@MainActor private let secureInput = SecureInput()
+
 enum FontSizeChange {
     case increase, decrease, reset
 }
@@ -240,6 +243,9 @@ final class TerminalWorkspace {
         onSnapshotChange?()
         updateDockBadge()
         Self.withdrawNotifications(of: states.keys)
+        for pane in states.keys {
+            secureInput.set(pane, isAsking: false)
+        }
     }
 
     /// Aucun terminal ne reprend le clavier avant le retour : la frappe irait dans un terminal qu'on
@@ -349,6 +355,12 @@ final class TerminalWorkspace {
         paneProgress[pane] = nil
         paneActivity[pane] = nil
         Self.withdrawNotifications(of: [pane])
+        secureInput.set(pane, isAsking: false)
+    }
+
+    /// Le terminal attend un mot de passe, et macOS cache sa frappe aux autres apps.
+    func isSecured(_ pane: UUID) -> Bool {
+        secureInput.isSecured(pane)
     }
 
     /// Seul l'onglet affiché dessine ; les autres gardent leurs shells. Le focus suit le split actif.
@@ -431,6 +443,8 @@ final class TerminalWorkspace {
             state.$title.removeDuplicates().sink { [weak self] in self?.terminalTitles[pane] = $0 },
             state.$workingDirectory.removeDuplicates().dropFirst().sink { [weak self] _ in self?.onSnapshotChange?() },
             state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
+            state.$isPasswordInput.combineLatest(state.$isFocused).map { $0 && $1 }.removeDuplicates()
+                .sink { secureInput.set(pane, isAsking: $0) },
             Self.events(of: state).sink { [weak self] in self?.note($0, in: pane) },
         ]
         state.makePlatformView = { [weak self] in
@@ -446,6 +460,9 @@ final class TerminalWorkspace {
         }
         state.onStartSearch = { [weak self] in self?.openSearch(in: pane, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: pane) }
+        state.onOpenURL = { [weak state] in
+            LinkOpener.open($0, from: state?.workingDirectory ?? state?.configuration.workingDirectory)
+        }
         return state
     }
 

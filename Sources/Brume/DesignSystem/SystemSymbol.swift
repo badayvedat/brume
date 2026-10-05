@@ -36,6 +36,7 @@ enum SystemSymbol {
         Variant(name: "keyboard", size: 14),
         Variant(name: "arrow.counterclockwise", size: 11, weight: .medium),
         Variant(name: "exclamationmark.triangle.fill", size: 11),
+        Variant(name: "lock.fill", size: 11),
         Variant(name: "apple.logo", size: 32),
         Variant(name: "chevron.left", size: 14),
         // Les glyphes des raccourcis dans les menus de macOS : chargés après le moteur, ils
