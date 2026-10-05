@@ -43,6 +43,7 @@ pin_plugin zsh-syntax-highlighting 0.8.0 db085e4661f6aafd24e5acb5b2e17e4dd5dddf3
 pin_plugin zsh-autosuggestions v0.7.1 e52ee8ca55bcc56a17c828767a3f98f22a68d4eb
 
 # fastfetch précompilé pour la page d'accueil des terminaux, vérifié par son empreinte.
+# Monter de version : revérifier la taille de la pomme (`appleLogo` de WelcomeBuilder).
 FASTFETCH_VERSION="2.69.0"
 if [ "$(uname -m)" = "arm64" ]; then
     FASTFETCH_ARCH="aarch64"

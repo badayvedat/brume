@@ -21,8 +21,10 @@ enum Fastfetch {
                 process.standardOutput = pipe
                 process.standardError = FileHandle.nullDevice
                 guard (try? process.run()) != nil else { return continuation.resume(returning: nil) }
-                let pid = process.processIdentifier
-                let timeout = DispatchWorkItem { kill(pid, SIGTERM) }
+                // Process lance zsh dans son propre groupe : on le tue en entier, car fastfetch
+                // survivrait à zsh en gardant la sortie ouverte, et la lecture attendrait sa fin.
+                let group = process.processIdentifier
+                let timeout = DispatchWorkItem { kill(-group, SIGKILL) }
                 DispatchQueue.global().asyncAfter(deadline: .now() + 3, execute: timeout)
                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
                 process.waitUntilExit()

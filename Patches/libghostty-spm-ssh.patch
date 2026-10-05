@@ -12,7 +12,7 @@
  #
  # Loaded by the .zshenv next to it after the user's .zshrc, or sourced by
  # hand from a .zshrc — both work; it only attaches hooks.
-@@ -98,3 +99,43 @@
+@@ -98,3 +99,71 @@
  
  add-zsh-hook precmd _ghostty_precmd
  add-zsh-hook preexec _ghostty_preexec
@@ -25,19 +25,47 @@
 +        emulate -L zsh
 +        [[ "$TERM" == xterm-ghostty ]] || { command ssh "$@"; return }
 +
++        # La fiche ne s'installe qu'avant une session interactive : la connexion
++        # d'installation lancerait aussi la commande distante (`ssh hôte cmd`).
++        # Les arguments sont lus comme ssh le fait : options avant et après l'hôte, `--`.
++        local -a args=("$@")
++        local arg flags host= interactive=1 ended=0
++        while (( $#args )); do
++            arg="$args[1]"
++            shift args
++            if (( ! ended )) && [[ "$arg" == -?* ]]; then
++                [[ "$arg" == -- ]] && { ended=1; continue }
++                # Une option à valeur prend la fin du groupe (-p22) ou l'argument suivant.
++                flags="${${arg#-}%%[BbcDEeFIiJLlmOoPpQRSWw]*}"
++                if (( $#flags + 1 < $#arg )); then
++                    flags+="${arg[$#flags + 2]}"
++                    (( $#flags + 1 == $#arg && $#args )) && shift args
++                fi
++                # Sans terminal ni shell distant : -N, -T, -G, -O, -W.
++                [[ "$flags" == *[NTGOW]* ]] && interactive=0
++            elif [[ -z "$host" ]]; then
++                host="$arg"
++            else
++                interactive=0
++                break
++            fi
++        done
++
 +        local installed=0 reuse=()
 +        if _ghostty_feature ssh-terminfo; then
-+            local target cache socket
++            local target cache socket terminfo
 +            target="$(command ssh -G "$@" 2>/dev/null | command awk '$1 == "user" { u = $2 } $1 == "hostname" { h = $2 } END { if (h != "") print u "@" h }')"
 +            cache="${XDG_CACHE_HOME:-$HOME/.cache}/brume/ssh-terminfo"
 +            if [[ -n "$target" ]] && command grep -qxF -- "$target" "$cache" 2>/dev/null; then
 +                installed=1
-+            elif [[ -n "$target" ]]; then
++            elif [[ -n "$target" ]] && (( interactive )); then
++                # Lue d'abord : `tic` réussit sur une entrée vide, le serveur serait noté à tort.
++                terminfo="$(command infocmp -x xterm-ghostty 2>/dev/null)"
 +                # La connexion d'installation reste ouverte 60 s et sert à la
 +                # session : on ne s'authentifie qu'une fois.
 +                socket="${TMPDIR:-/tmp}/brume-ssh-$$-$RANDOM"
 +                builtin print -r -- "Brume : installation de xterm-ghostty sur ${target#*@}..." >&2
-+                if command infocmp -x xterm-ghostty 2>/dev/null | command ssh \
++                if [[ -n "$terminfo" ]] && builtin print -r -- "$terminfo" | command ssh \
 +                    -o ControlMaster=yes -o ControlPath="$socket" -o ControlPersist=60 "$@" \
 +                    'infocmp xterm-ghostty >/dev/null 2>&1 || tic -x - >/dev/null 2>&1'; then
 +                    installed=1

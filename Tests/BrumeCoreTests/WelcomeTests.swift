@@ -157,6 +157,51 @@ struct WelcomeTests {
         try FileManager.default.removeItem(at: files.directory)
     }
 
+    @Test func minimumSizeLeavesOutWhatMayBeMissing() {
+        var welcome = Welcome()
+        welcome.content = .visual
+        let categories = WelcomeVariant(visualSize: nil, textSize: .small, info: .categories)
+        // Trois cadres, deux lignes de couleurs : 22 lignes, moins les paquets et l'IP locale.
+        #expect(WelcomeBuilder.minimumSize(for: welcome, variant: categories, language: .french) == (48, 20))
+        let essential = WelcomeVariant(visualSize: nil, textSize: .small, info: .essential)
+        #expect(WelcomeBuilder.minimumSize(for: welcome, variant: essential, language: .french).height == 8)
+    }
+
+    @Test func minimumSizePutsTheVisualBesideTheInfo() throws {
+        var welcome = Welcome()
+        welcome.visual = .ghost
+        let variant = WelcomeVariant(visualSize: .medium, textSize: .small, info: .categories)
+        let logo = try #require(WelcomeBuilder.logo(for: .ghost, size: .medium, accent: .brume))
+        #expect(WelcomeBuilder.minimumSize(for: welcome, variant: variant, language: .english).width == logo.width + 4 + 48)
+    }
+
+    @Test func aVisualAloneTakesOnlyItsDrawnCells() throws {
+        for visual in WelcomeVisual.allCases where visual != .apple {
+            for size in WelcomeSize.allCases {
+                var welcome = Welcome()
+                welcome.visual = visual
+                welcome.info = .none
+                let variant = WelcomeVariant(visualSize: size, textSize: .small, info: .none)
+                let logo = try #require(WelcomeBuilder.logo(for: visual, size: size, accent: .brume))
+                let drawn = AnsiText.lines(logo.text).map { $0.map(\.text).joined() }
+                let widths = drawn.map { $0.count - $0.reversed().prefix { $0 == " " }.count }
+                let minimum = WelcomeBuilder.minimumSize(for: welcome, variant: variant, language: .french)
+                #expect(minimum.width == widths.max(), "\(visual) \(size)")
+                #expect(minimum.height == (widths.lastIndex { $0 > 0 } ?? -1) + 1, "\(visual) \(size)")
+            }
+        }
+    }
+
+    @Test func savedPagesKeepTheirMinimumSize() throws {
+        let files = WelcomeFiles(directory: FileManager.default.temporaryDirectory.appending(path: "brume-\(UUID())"))
+        let welcome = Welcome()
+        let pages = try files.save(welcome, accent: .brume, language: .french)
+        let sizes = WelcomeBuilder.variants(for: welcome).map { WelcomeBuilder.minimumSize(for: welcome, variant: $0, language: .french) }
+        #expect(pages.map(\.minimumWidth) == sizes.map(\.width))
+        #expect(pages.map(\.minimumHeight) == sizes.map(\.height))
+        try FileManager.default.removeItem(at: files.directory)
+    }
+
     @Test func spacesAloneAreNoText() {
         var welcome = Welcome()
         welcome.content = .text

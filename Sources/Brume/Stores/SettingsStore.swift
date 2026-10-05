@@ -21,7 +21,7 @@ final class SettingsStore {
 
     @ObservationIgnored private let file: SettingsFile
     @ObservationIgnored private let welcomeFiles: WelcomeFiles
-    @ObservationIgnored private var welcomeConfigs: [URL] = []
+    @ObservationIgnored private var welcomePages: [WelcomePage] = []
     @ObservationIgnored private var pendingSave: DispatchWorkItem?
     @ObservationIgnored nonisolated(unsafe) private var terminateObserver: NSObjectProtocol?
 
@@ -100,21 +100,22 @@ final class SettingsStore {
 
     /// L'écran de démarrage tel que fastfetch le dessinera, aux tailles choisies, pour l'aperçu.
     func welcomePreview() async -> [[AnsiSpan]] {
-        guard let config = welcomeConfigs.first, let output = await Fastfetch.output(config: config) else { return [] }
+        guard let page = welcomePages.first, let output = await Fastfetch.output(config: page.config) else { return [] }
         return AnsiText.lines(output)
     }
 
     /// Le shell de chaque nouveau terminal hérite de ces variables : le patch zsh y lit les versions
     /// de l'écran de démarrage (`Patches/libghostty-spm-zsh-welcome.patch`).
     private func applyWelcome() {
-        welcomeConfigs = (try? welcomeFiles.save(settings.welcome, accent: settings.appearance.accent, language: settings.language)) ?? []
-        guard !welcomeConfigs.isEmpty, let fastfetch = Fastfetch.executable else {
-            for name in ["BRUME_WELCOME_CONFIGS", "BRUME_WELCOME_ALIGN", "BRUME_FASTFETCH"] {
+        welcomePages = (try? welcomeFiles.save(settings.welcome, accent: settings.appearance.accent, language: settings.language)) ?? []
+        guard !welcomePages.isEmpty, let fastfetch = Fastfetch.executable else {
+            for name in ["BRUME_WELCOME_CONFIGS", "BRUME_WELCOME_SIZES", "BRUME_WELCOME_ALIGN", "BRUME_FASTFETCH"] {
                 unsetenv(name)
             }
             return
         }
-        setenv("BRUME_WELCOME_CONFIGS", welcomeConfigs.map(\.path).joined(separator: ":"), 1)
+        setenv("BRUME_WELCOME_CONFIGS", welcomePages.map(\.config.path).joined(separator: ":"), 1)
+        setenv("BRUME_WELCOME_SIZES", welcomePages.map { "\($0.minimumWidth)x\($0.minimumHeight)" }.joined(separator: ":"), 1)
         setenv("BRUME_WELCOME_ALIGN", settings.welcome.alignment.rawValue, 1)
         setenv("BRUME_FASTFETCH", fastfetch.path, 1)
     }

@@ -65,6 +65,69 @@ public enum WelcomeBuilder {
     public static func config(
         for welcome: Welcome, variant: WelcomeVariant, accent: Accent, language: Language, logoPath: String
     ) -> String {
+        let root = page(for: welcome, variant: variant, accent: accent, language: language, logoPath: logoPath)
+        let data = try? JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+        return data.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+    }
+
+    /// La place qu'une version de la page prend au moins dans le terminal, mesurée comme le shell :
+    /// il écarte sans lancer fastfetch celles qui ne tiendraient pas. Au moins, car les valeurs
+    /// (nom du Mac, mémoire...) ne se connaissent qu'à l'affichage.
+    public static func minimumSize(for welcome: Welcome, variant: WelcomeVariant, language: Language) -> (width: Int, height: Int) {
+        let root = page(for: welcome, variant: variant, accent: .brume, language: language, logoPath: "")
+        let logoConfig = root["logo"] as? [String: Any] ?? [:]
+        let padding = logoConfig["padding"] as? [String: Int] ?? [:]
+        var logo = (width: 0, visibleWidth: 0, visibleHeight: 0)
+        if logoConfig["type"] as? String == "builtin" {
+            logo = (appleLogo.width, appleLogo.width, appleLogo.height)
+        } else if logoConfig["type"] as? String == "file-raw", let size = variant.visualSize,
+                  let drawn = self.logo(for: welcome.visual, size: size, accent: .brume) {
+            // Le bas d'un visuel agrandi peut n'être qu'une ligne vide, que le shell retire.
+            let widths = drawn.text.split(separator: "\n").map { visibleWidth(String($0)) }
+            logo = (drawn.width, widths.max() ?? 0, (widths.lastIndex { $0 > 0 } ?? -1) + 1)
+        }
+
+        var rows = 0
+        var lastRow = 0
+        var columnWidth = 0
+        for module in root["modules"] as? [Any] ?? [] {
+            let module = module as? [String: Any] ?? [:]
+            var width = 0
+            var height = 1
+            switch module["type"] as? String {
+            case nil: break // "break", une ligne vide
+            // Sans Homebrew ou sans réseau, fastfetch n'en écrit rien : tout module qui peut manquer va ici.
+            case "packages", "localip": height = 0
+            case "custom": width = visibleWidth(module["format"] as? String ?? "")
+            // Deux rangées de huit couleurs, de trois cases chacune.
+            case "colors": (width, height) = ((module["paddingLeft"] as? Int ?? 0) + 24, 2)
+            default: width = max(1, visibleWidth(module["key"] as? String ?? ""))
+            }
+            rows += height
+            if width > 0 {
+                lastRow = rows
+                columnWidth = max(columnWidth, width)
+            }
+        }
+
+        let logoArea = logo.width > 0 ? logo.width + (padding["right"] ?? 0) : 0
+        let width = columnWidth > 0 ? logoArea + columnWidth : logo.visibleWidth
+        let height = max(lastRow, logo.visibleHeight > 0 ? (padding["top"] ?? 0) + logo.visibleHeight : 0)
+        return (width, height)
+    }
+
+    /// Les cases qu'occupe une ligne, sans ses styles (ANSI ou `{#…}` de fastfetch) ni ses espaces de fin.
+    private static func visibleWidth(_ line: String) -> Int {
+        let plain = line.replacing(/\x1B\[[0-9;]*m|\{#[^}]*\}/, with: "")
+        return plain.count - plain.reversed().prefix { $0.isWhitespace }.count
+    }
+
+    /// La pomme `macOS` de fastfetch 2.69, en cases.
+    private static let appleLogo = (width: 30, height: 17)
+
+    private static func page(
+        for welcome: Welcome, variant: WelcomeVariant, accent: Accent, language: Language, logoPath: String
+    ) -> [String: Any] {
         let accentCode = "38;2;" + Hex.channels(accent.hex).map(String.init).joined(separator: ";")
         var root: [String: Any] = [
             "display": [
@@ -81,7 +144,7 @@ public enum WelcomeBuilder {
             // La pomme officielle de fastfetch, à toutes les tailles : sa petite (`macOS_small`)
             // est en traits grossiers. Quand elle ne tient pas, la page passe sans visuel.
             root["logo"] = ["type": "builtin", "source": "macOS", "padding": ["right": 4]]
-            visualHeight = 17
+            visualHeight = appleLogo.height
         } else if let size = variant.visualSize, let logo = logo(for: welcome.visual, size: size, accent: accent) {
             root["logo"] = ["type": "file-raw", "source": logoPath, "width": logo.width, "height": logo.height, "padding": ["right": 4]]
             visualHeight = logo.height
@@ -130,9 +193,7 @@ public enum WelcomeBuilder {
             }
         }
         root["modules"] = modules
-
-        let data = try? JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
-        return data.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        return root
     }
 
     /// Décale des modules vers la droite : les clés et les lignes libres commencent par des espaces.

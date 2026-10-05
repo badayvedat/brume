@@ -1,5 +1,13 @@
 import Foundation
 
+/// Une version de l'écran de démarrage écrite pour fastfetch, et la place qu'elle prend au moins
+/// dans le terminal (`WelcomeBuilder.minimumSize`).
+public struct WelcomePage: Hashable, Sendable {
+    public let config: URL
+    public let minimumWidth: Int
+    public let minimumHeight: Int
+}
+
 /// La config fastfetch et le visuel de l'écran de démarrage, dans Application Support à côté des
 /// réglages. Le shell les lit à chaque nouveau terminal.
 public struct WelcomeFiles: Sendable {
@@ -11,7 +19,7 @@ public struct WelcomeFiles: Sendable {
 
     /// Écrit une config par version de la page (`WelcomeBuilder.variants`) et rend leur liste, de
     /// la version choisie à la plus petite. Vide quand il n'y a rien à afficher.
-    public func save(_ welcome: Welcome, accent: Accent, language: Language) throws -> [URL] {
+    public func save(_ welcome: Welcome, accent: Accent, language: Language) throws -> [WelcomePage] {
         var written: [URL] = []
         defer { removeFiles(except: written) }
         guard welcome.isEnabled, !welcome.isEmpty else { return [] }
@@ -25,7 +33,8 @@ public struct WelcomeFiles: Sendable {
             let config = directory.appending(path: "welcome-\(index).jsonc")
             try write(WelcomeBuilder.config(for: welcome, variant: variant, accent: accent, language: language, logoPath: logo.path), to: config)
             written.append(config)
-            return config
+            let size = WelcomeBuilder.minimumSize(for: welcome, variant: variant, language: language)
+            return WelcomePage(config: config, minimumWidth: size.width, minimumHeight: size.height)
         }
     }
 

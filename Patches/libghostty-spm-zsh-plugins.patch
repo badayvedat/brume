@@ -1,6 +1,6 @@
 --- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
 +++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
-@@ -139,3 +139,59 @@
+@@ -167,3 +167,59 @@
          fi
      }
  fi

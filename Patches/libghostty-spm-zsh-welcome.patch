@@ -1,6 +1,6 @@
 --- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
 +++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
-@@ -195,3 +195,43 @@
+@@ -223,3 +223,46 @@
  if (( ! ${+ZSH_HIGHLIGHT_VERSION} )) && [[ -r "${BRUME_RESOURCES_DIR-}/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
      builtin source -- "$BRUME_RESOURCES_DIR/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
  fi
@@ -12,12 +12,15 @@
 +        emulate -L zsh -o extended_glob
 +        # Sans locale UTF-8, ${(m)#...} compterait les octets : un trait de cadre en vaut trois.
 +        local LC_ALL=en_US.UTF-8
-+        local config output line plain pad width fits=0
-+        local -a lines
++        local config output line plain pad width fits=0 i
++        local -a lines configs=("${(@s.:.)BRUME_WELCOME_CONFIGS}") sizes=("${(@s.:.)BRUME_WELCOME_SIZES-}")
 +        # Les versions vont de la taille choisie à la plus petite : la première qui tient l'emporte,
-+        # et si aucune ne tient (split étroit ou bas), rien ne s'affiche.
-+        for config in "${(@s.:.)BRUME_WELCOME_CONFIGS}"; do
++        # et si aucune ne tient (split étroit ou bas), rien ne s'affiche. Leur place minimale, connue
++        # d'avance, écarte sans lancer fastfetch celles qui ne tiendraient pas.
++        for (( i = 1; i <= $#configs; i++ )); do
++            config="$configs[i]"
 +            [[ -r "$config" ]] || continue
++            (( ${${sizes[i]%x*}:-0} + 2 <= COLUMNS && ${${sizes[i]#*x}:-0} + 3 <= LINES )) || continue
 +            output="$("$BRUME_FASTFETCH" --config "$config" --pipe false 2>/dev/null)" || return
 +            lines=("${(@f)output}")
 +            # Une seule ligne vide avant le prompt, que la page finisse par le visuel ou le texte.
