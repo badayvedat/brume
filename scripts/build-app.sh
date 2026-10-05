@@ -105,6 +105,7 @@ for entry in "${PERMISSIONS[@]}"; do
 done
 
 # Le service du Finder sur un dossier. macOS traduit son titre (NSMenuItem plus bas) par ces fichiers.
+# Déclaré par NSSendTypes comme Ghostty : avec NSSendFileTypes seul, le Finder ne le proposait pas.
 SERVICE_TITLE="New Brume Tab Here"
 echo "\"$SERVICE_TITLE\" = \"$SERVICE_TITLE\";" > "$APP_BUNDLE/Contents/Resources/en.lproj/ServicesMenu.strings"
 echo "\"$SERVICE_TITLE\" = \"Nouvel onglet Brume ici\";" > "$APP_BUNDLE/Contents/Resources/fr.lproj/ServicesMenu.strings"
@@ -183,9 +184,10 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << PLIST
                 <key>NSTextContent</key>
                 <string>FilePath</string>
             </dict>
-            <key>NSSendFileTypes</key>
+            <key>NSSendTypes</key>
             <array>
-                <string>public.folder</string>
+                <string>NSFilenamesPboardType</string>
+                <string>public.plain-text</string>
             </array>
         </dict>
     </array>

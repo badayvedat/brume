@@ -6,7 +6,11 @@ import BrumeCore
 @MainActor
 final class FolderService: NSObject {
     @objc func openTab(_ pasteboard: NSPasteboard, userData: String?, error: AutoreleasingUnsafeMutablePointer<NSString?>) {
-        let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+        var urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+        // Un chemin sélectionné dans un texte arrive en texte, pas en fichier.
+        if urls.isEmpty, let text = pasteboard.string(forType: .string) {
+            urls = [URL(fileURLWithPath: (text.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath)]
+        }
         TerminalWorkspace.openTabs(in: OpenedFolders.paths(for: urls))
     }
 }
