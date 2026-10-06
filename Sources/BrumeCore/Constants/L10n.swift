@@ -58,7 +58,7 @@ public enum TextKey: CaseIterable, Sendable {
     case welcome, welcomeHint, welcomePage, showWelcome, welcomePageHint, visual, visualHint, visualGhost
     case visualSaucer, visualApple, welcomeText, welcomeTextHint, information
     case informationHint, infoNone, infoEssential, infoCategories, position, positionHint, alignLeft, alignCenter, alignRight, preview
-    case visualSlime, visualGem, visualMoon, visualMushroom, visualBreath, visualPrompt
+    case visualSlime, visualGem, visualMoon, visualMushroom, visualTurtle, visualBreath, visualPrompt
     case visualSaturn, visualCloud, content, contentHint, contentVisual, contentText, contentBoth, welcomeSize, welcomeSizeHint, sizeSmall, sizeMedium, sizeLarge, informationGroup, informationGroupHint, showContent, showContentHint, characters, welcomeTextPlaceholder
     case tabs, verticalTabs, verticalTabsHint, fullPath, fullPathHint, closeTabsBelow, tabIcon, sidebarWidth, zoomSplit, newActivity, inProgress, inProgressPercent, progressError, progressPaused, secureInput
     case ungroup, leaveGroup, closeTerminal, expandGroup, collapseGroup, group, copy, paste, renameGroup, renameTerminal, closeGroup
@@ -232,6 +232,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .visualGem: "Diamant"
         case .visualMoon: "Lune"
         case .visualMushroom: "Champignon"
+        case .visualTurtle: "Tortue"
         case .visualBreath: "Souffle"
         case .visualPrompt: "Terminal"
         case .visualCloud: "Nuage"
@@ -513,6 +514,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .visualGem: "Diamond"
         case .visualMoon: "Moon"
         case .visualMushroom: "Mushroom"
+        case .visualTurtle: "Turtle"
         case .visualBreath: "Breath"
         case .visualPrompt: "Terminal"
         case .visualCloud: "Cloud"

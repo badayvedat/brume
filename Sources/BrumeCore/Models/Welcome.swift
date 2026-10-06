@@ -54,7 +54,7 @@ public enum WelcomeContent: String, CaseIterable, Codable, Sendable {
 }
 
 public enum WelcomeVisual: String, CaseIterable, Codable, Sendable {
-    case apple, breath, prompt, ghost, saturn, cloud, saucer, slime, gem, moon, mushroom
+    case apple, breath, prompt, ghost, saturn, cloud, saucer, slime, gem, moon, mushroom, turtle
 }
 
 public enum WelcomeSize: String, CaseIterable, Codable, Comparable, Sendable {
@@ -121,6 +121,7 @@ public extension WelcomeVisual {
         case .gem: .visualGem
         case .moon: .visualMoon
         case .mushroom: .visualMushroom
+        case .turtle: .visualTurtle
         case .apple: .visualApple
         case .breath: .visualBreath
         case .prompt: .visualPrompt

@@ -35,6 +35,7 @@ public enum PixelArt {
             case .gem: gemSmall
             case .moon: moonSmall
             case .mushroom: mushroomSmall
+            case .turtle: turtleSmall
             case .breath: breathSmall
             case .prompt: promptSmall
             case .apple: nil
@@ -49,6 +50,7 @@ public enum PixelArt {
         case .gem: gem
         case .moon: moon
         case .mushroom: mushroom
+        case .turtle: turtle
         case .breath: breath
         case .prompt: prompt
         case .apple: nil
@@ -324,6 +326,33 @@ public enum PixelArt {
         "....GSSGSSGSSGSSGSSGSSGSSGSSGSSGS...",
     ]
 
+    private static let turtle = [
+        "................................OOOOOOO.....",
+        "...............................OZZZZZZYO....",
+        "............OOOOOOOOOO........OZZZZZYYYYO...",
+        "..........OOLLLLAAAAADOO.....OZZZZZYYYYYYO..",
+        "........OOLLALLAAAAADADDOO..OZZZZZYYYYYYYYO.",
+        ".......OLLLLAAAAAAAADADDDDO.OZZZYKKYYYKKYYO.",
+        "......OLLLLLAEDDDDDEAAADDDDOOZZYYHKYYYHKYYO.",
+        ".....OLLLLLADAAAAAAADAADDDDDOYYYYKKYYYKKyyO.",
+        ".....OLLLAAADAAAAAAADAADDDDDOYYYYKKYYYKKyyO.",
+        "....OLLLAAADAAAAAAAAADADDDDDOYYLLYYKYKyyLLO.",
+        "....OADDDDEAAAAAAAAAAAEDEEEEEOYYYYYYKyyyyO..",
+        "...OLAAAAAADAAAAAAAAADAADDDDDDOYYYYyyyyyO...",
+        "...OAAAAAAAADAAAAAAADAAADDDDDDOYYyyyyyyO....",
+        ".OOOAAAAAAAADAAAAAAADAAAADDDDDOYyyOOOOO.....",
+        "OYYOAAAAAAAAAEDDDDDEAAAAADDDDDOYyyO.........",
+        ".OOHHHHHHHWWWWWWWWWWWWGGGGGGGGGOyyO.........",
+        "..OHHHHHHHWWWWWWWWWWWWGGGGGGGGGOOO..........",
+        "...OHHHHHHWWWWWWWWWWWWGGGGGGGGO.............",
+        "....OOOOOOOOOOOOOOOOOOOOOOOOOO..............",
+        ".....OZZYYyyO........OZZYYyyO...............",
+        ".....OZZYYyyO........OZZYYyyO...............",
+        "......OyyyyO..........OyyyyO................",
+        ".......OOOO............OOOO.................",
+        ".....EEEDDDDDDDDDDDDDDDDDDDDDDDDDDEEE.......",
+    ]
+
     private static let ghostSmall = [
         ".......O...O...O.......",
         "......OZO.OZO.OZO......",
@@ -489,6 +518,25 @@ public enum PixelArt {
         "....OWWWWWWWWGGO....",
         "....OWWWWWWWWGGO....",
         "..GSSGSSGSSGSSGSSG..",
+    ]
+
+    private static let turtleSmall = [
+        "......OOOOOO....OOOOO...",
+        "....OOLLLAAAOO.OZZZYYO..",
+        "...OLLLAAAADDOOZZYYYYYO.",
+        "..OLLLADDDDADDOZKYYYKYYO",
+        ".OLLLADAAAAEDDOYKYYYKyyO",
+        ".OLLAADAAAAEDDOLYYKYYyLO",
+        "OLAAAADDDDEDDDDOYyyyyyO.",
+        "OAAAAADAAAADDDDOYyyOOO..",
+        "OAAAAAAAAAAADDDOYyyO....",
+        "OHHHWWWWWWWGGGGGGGO.....",
+        ".OHHWWWWWWWWGGGGGO......",
+        "..OOOOOOOOOOOOOOO.......",
+        "...OZYyO....OZYyO.......",
+        "...OyyyO....OyyyO.......",
+        "....OOO......OOO........",
+        "..EEDDDDDDDDDDDDDEE.....",
     ]
 
     private static let breath = [
