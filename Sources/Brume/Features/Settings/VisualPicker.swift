@@ -63,7 +63,7 @@ private struct Tile: View {
     }
 
     @ViewBuilder private var thumbnail: some View {
-        if let pixels = PixelArt.pixels(for: visual, small: true) {
+        if let pixels = PixelArt.pixels(for: visual) {
             let colors = PixelArt.colors(accent)
             Canvas { context, size in
                 let width = pixels.map(\.count).max() ?? 1

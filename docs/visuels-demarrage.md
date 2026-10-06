@@ -5,8 +5,8 @@ Les visuels en pixel art affichés par fastfetch à l'ouverture d'un terminal (R
 ## Comment c'est fait
 
 - Chaque visuel est une grille de lettres dans `Sources/BrumeCore/Constants/PixelArt.swift`, une lettre par pixel. Le codage des couleurs est en tête du fichier : `A` `L` `D` `E` sont des nuances de l'accent, `H` `W` `G` `S` des gris, `O` le contour, `K` le noir, `Z` `Y` `y` l'or, et `.` le vide.
-- Deux tailles dessinées : la normale et la petite (`…Small`), redessinée et non réduite pour garder les détails. La grande est la normale agrandie ×1,5 au plus proche voisin (`WelcomeBuilder.enlarged`).
-- Dans le terminal, `WelcomeBuilder` met deux pixels par case avec les demi-blocs `▀` `▄`, en couleurs 24 bits. Les vignettes des réglages (`VisualPicker`) dessinent la petite grille.
+- Deux tailles dessinées : la normale et la petite (`…Small`). La petite est le même dessin : silhouette de la normale réduite de moitié, puis visage et détails reposés à la main avec la même expression. Une réduction seule fond les yeux et la bouche en taches noires. La grande est la normale agrandie ×1,5 au plus proche voisin (`WelcomeBuilder.enlarged`).
+- Dans le terminal, `WelcomeBuilder` met deux pixels par case avec les demi-blocs `▀` `▄`, en couleurs 24 bits. Les vignettes des réglages (`VisualPicker`) dessinent la normale.
 
 ## Ajouter un visuel
 
