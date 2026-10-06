@@ -1,3 +1,4 @@
+import BrumeCore
 import SwiftUI
 
 @main
@@ -8,6 +9,10 @@ struct BrumeApp: App {
     @State private var updater: UpdaterStore
 
     init() {
+        // Avant tout terminal : le shell hérite de l'environnement de Brume.
+        for name in InheritedEnvironment.excluded(from: ProcessInfo.processInfo.environment.keys) {
+            unsetenv(name)
+        }
         let settings = SettingsStore()
         _settings = State(initialValue: settings)
         _session = State(initialValue: SessionStore(settings: settings))
