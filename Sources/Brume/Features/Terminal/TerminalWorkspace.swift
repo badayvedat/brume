@@ -110,6 +110,7 @@ final class TerminalWorkspace {
     @ObservationIgnored private(set) weak var window: NSWindow?
     @ObservationIgnored private var closeGuard: WindowCloseGuard?
     @ObservationIgnored private var watchers: [UUID: [AnyCancellable]] = [:]
+    @ObservationIgnored private var visitedFolders: [UUID: RecentFolders] = [:]
     @ObservationIgnored private var windowWatchers: [AnyCancellable] = []
     /// La place de la fenêtre restaurée, posée quand elle s'ouvre.
     @ObservationIgnored private var savedFrame: CGRect?
@@ -351,6 +352,7 @@ final class TerminalWorkspace {
         states[pane] = nil
         searches[pane] = nil
         watchers[pane] = nil
+        visitedFolders[pane] = nil
         terminalTitles[pane] = nil
         paneProgress[pane] = nil
         paneActivity[pane] = nil
@@ -442,6 +444,9 @@ final class TerminalWorkspace {
         watchers[pane] = [
             Self.steadyTitle(of: state).sink { [weak self] in self?.terminalTitles[pane] = $0 },
             state.$workingDirectory.removeDuplicates().dropFirst().sink { [weak self] _ in self?.onSnapshotChange?() },
+            state.$workingDirectory.compactMap { $0 }.removeDuplicates().sink { [weak self] in
+                self?.visitedFolders[pane, default: RecentFolders()].visit($0)
+            },
             state.$progress.removeDuplicates().sink { [weak self] in self?.paneProgress[pane] = $0 },
             state.$isPasswordInput.combineLatest(state.$isFocused).map { $0 && $1 }.removeDuplicates()
                 .sink { secureInput.set(pane, isAsking: $0) },
@@ -460,8 +465,9 @@ final class TerminalWorkspace {
         }
         state.onStartSearch = { [weak self] in self?.openSearch(in: pane, needle: $0) }
         state.onEndSearch = { [weak self] in self?.endSearch(in: pane) }
-        state.onOpenURL = { [weak state] in
-            LinkOpener.open($0, from: state?.workingDirectory ?? state?.configuration.workingDirectory)
+        state.onOpenURL = { [weak self, weak state] in
+            let current = state?.workingDirectory ?? state?.configuration.workingDirectory
+            return LinkOpener.open($0, from: [current].compactMap { $0 } + (self?.visitedFolders[pane]?.all ?? []))
         }
         return state
     }
