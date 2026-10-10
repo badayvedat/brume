@@ -14,7 +14,7 @@ BUNDLE_ID="app.brume.Brume"
 CERT_NAME="Brume Dev"
 VERSION="0.1.0"
 # Monté de 1 par scripts/release.sh : Sparkle le compare au `sparkle:version` de l'appcast.
-BUILD_NUMBER="1"
+BUILD_NUMBER="2"
 FEED_URL="https://raw.githubusercontent.com/jeremy-prt/brume/main/appcast.xml"
 # Clé publique EdDSA, partagée avec Orby : la clé privée est dans le trousseau de Jérémy.
 SPARKLE_PUBLIC_KEY="4NnmxyV0FR0GIFCf0hShB1k4vSkYsl5D55knxLeopgQ="

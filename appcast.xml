@@ -5,5 +5,46 @@
         <link>https://github.com/jeremy-prt/brume</link>
         <description>New versions of Brume, the simple and beautiful terminal for macOS.</description>
         <language>en</language>
+        <item>
+            <title>Version 0.1.0</title>
+            <pubDate>Sun, 11 Oct 2026 00:54:50 +0200</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>Added</h2>
+                <ul>
+                    <li>A terminal built on the Ghostty engine: tabs in the top bar or in a vertical sidebar, split terminals grouped inside a tab, search, text zoom, and your windows and tabs restored on relaunch.</li>
+                    <li>Tabs with a name, a color and an icon, reordered by dragging, with ⌘1 to ⌘9 shown while ⌘ is held.</li>
+                    <li>A badge on each tab that follows Claude Code and long commands: progress, finished, bell, and red when a command failed.</li>
+                    <li>When Brume is in the background, a notification tells you when Claude Code is waiting or a long command finishes; click it to jump to the terminal. The Dock icon shows how many terminals need a look. Both can be turned off in Settings › General.</li>
+                    <li>Command highlighting, suggestions from history and a Tab completion menu, on by default.</li>
+                    <li>Settings inside the window: glass effect, 10 accent colors, 12 fonts, 16 command color palettes, English and French (Brume follows your Mac's language on first launch).</li>
+                    <li>A welcome screen in every new terminal: a pixel-art visual tinted with your accent color, a word in large letters, and your Mac's information.</li>
+                    <li>Full Path in Tabs (Settings › General) shows a tab's folder from your home folder, like ~/Desktop/project, instead of its name alone. Renamed tabs keep their name.</li>
+                    <li>Keyboard shortcuts you can change in Settings › Shortcuts, for tabs, terminals and vertical tabs, with a warning when a combination is already taken.</li>
+                    <li>⌃Tab and ⌃⇧Tab switch tabs, Clear Screen (⌘K) in the Edit menu, and a Help menu with links to Brume on GitHub and to report an issue.</li>
+                    <li>A confirmation before closing a terminal where a command is still running.</li>
+                    <li>Drop files or folders from Finder onto a terminal to type their paths at the cursor, escaped for the shell. In a split tab, they go to the terminal under the pointer. Dropped text is pasted as is.</li>
+                    <li>Open a folder in Brume: drop it on the Dock icon, use <code>open -a Brume &lt;folder&gt;</code>, or right-click it in Finder › Services › New Brume Tab Here.</li>
+                    <li>⌘-click a file path like src/App.vue:42:5 to open it at that line in your editor, relative to the terminal's folder. A folder opens in Finder.</li>
+                    <li>While a program asks for a password (sudo, ssh), Brume turns on secure input so other apps can't read what you type, shown by a small lock.</li>
+                    <li>Reset Window (⌥⌘R, or Settings › General) brings a window back to a single tab with default names, colors and size, after a confirmation. Your settings are kept.</li>
+                    <li>SSH sessions keep working with servers that don't know Ghostty's terminal type.</li>
+                    <li>An app icon and a DMG to install Brume by dragging it to Applications.</li>
+                    <li>Automatic updates, and a button to check for updates in Settings › General.</li>
+                </ul>
+                <h2>Fixed</h2>
+                <ul>
+                    <li>With vertical tabs on, a new window opens wider to make room for the sidebar, so the terminal and its welcome screen keep their full size.</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/jeremy-prt/brume/releases/download/v0.1.0/Brume.dmg"
+                sparkle:edSignature="hVruW3mcVUUBLyJqhdWorJW8R7AwHY0mJjJfVT1X+nkuUZuH3apQISB0FcLvA4/Hd68CZuCsZssDs1I3oX3SDQ=="
+                length="11268202"
+                type="application/octet-stream"
+            />
+        </item>
     </channel>
 </rss>
