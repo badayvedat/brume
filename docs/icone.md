@@ -2,7 +2,7 @@
 
 ## L'icône actuelle
 
-`Resources/AppIcon.svg` : un écran dans son cadre, à la façon de Ghostty, avec le souffle de Brume en haut à gauche et un petit `>_` dessous, en palette neutre. `bash scripts/make-icon.sh` en tire `Resources/AppIcon.icns`, que le script de build copie dans l'app.
+`Resources/AppIcon.svg` : un écran dans son cadre, à la façon de Ghostty, avec le souffle de Brume en grand au centre, en palette neutre. Sa queue tire la forme vers le bas : centré sur ses coordonnées, il paraît trop bas. Il est remonté pour que sa boîte englobante soit centrée, un peu plus haut que le milieu exact. `bash scripts/make-icon.sh` en tire `Resources/AppIcon.icns`, que le script de build copie dans l'app.
 
 Les autres propositions et leurs générateurs Python vivent hors du dépôt, dans un dossier de travail local. Chaque générateur reproduit son SVG à l'identique. Deux outils servent à les vérifier : un rendu rsvg de 1024 à 16 px avec planche de contrôle, et un rendu WebKit.
 
