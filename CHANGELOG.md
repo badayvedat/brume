@@ -2,7 +2,7 @@
 
 What changes in each version of Brume. The newest version comes first.
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-10-11
 
 ### Added
 - A terminal built on the Ghostty engine: tabs in the top bar or in a vertical sidebar, split terminals grouped inside a tab, search, text zoom, and your windows and tabs restored on relaunch.
