@@ -3,7 +3,7 @@
     <channel>
         <title>Brume Updates</title>
         <link>https://github.com/jeremy-prt/brume</link>
-        <description>New versions of Brume, the simple and beautiful terminal for macOS.</description>
+        <description>New versions of Brume, the macOS terminal reimagined.</description>
         <language>en</language>
         <item>
             <title>Version 0.1.0</title>

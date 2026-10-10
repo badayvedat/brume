@@ -1,6 +1,6 @@
 # Distribuer Brume
 
-Rien n'est encore publié. Le choix retenu : un DMG propre, un bouton de téléchargement sur le site, une release GitHub, et Homebrew.
+Publié depuis la 0.1.0 (2026-10-11), sans licence Apple : un DMG, une release GitHub et le dépôt Homebrew `jeremy-prt/homebrew-tap`. Reste à faire : la landing page et son bouton de téléchargement.
 
 ## Comment font les autres
 
@@ -30,7 +30,7 @@ Ces deux dernières étapes se placent dans `scripts/release.sh` entre le DMG et
 
 Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par jour, ou par « Rechercher les mises à jour… », l'app lit `appcast.xml` sur la branche `main` (`SUFeedURL` dans `scripts/build-app.sh`) et compare son numéro de build (`CFBundleVersion`, tiré de `BUILD_NUMBER`) au `sparkle:version` de chaque entrée. Une entrée plus récente lui propose le DMG de la release GitHub, dont elle vérifie la signature EdDSA avec la clé publique de l'Info.plist (`SUPublicEDKey`).
 
-**Le flux ne marche que si le dépôt est public.** Il est privé aujourd'hui : `appcast.xml` et les DMG des releases répondent 404 aux apps installées. Le rendre public avant la première version.
+**Le flux ne marche que si le dépôt est public** : sinon `appcast.xml` et les DMG des releases répondent 404 aux apps installées.
 
 1. **Changelog** : ajouter en tête de `CHANGELOG.md` une section datée, `## 0.2.0 - 2026-10-04`, avec ses listes sous `### Added`, `### Changed` et `### Fixed`. Elle sert de notes à la fenêtre de Sparkle et à la release GitHub.
 2. **Préparer** : depuis `main`, arbre propre, `bash scripts/release.sh 0.2.0` (0.1.0 → 0.1.1 pour un correctif, 0.2.0 pour une évolution). Le script :
@@ -46,7 +46,7 @@ Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par j
 4. **Publier** : lancer les commandes affichées, dans l'ordre : commit, tag, push du tag, `gh release create`, puis push de `main`. L'appcast ne passe en ligne qu'avec ce dernier push, une fois le DMG téléchargeable.
    Le fichier garde le nom `Brume.dmg` à chaque version : le lien `https://github.com/jeremy-prt/brume/releases/latest/download/Brume.dmg` mène donc toujours à la dernière.
 5. **Site** : le bouton « Télécharger » pointe vers ce lien. Rien à changer à chaque version.
-6. **Homebrew** : dans le dépôt `jeremy-prt/homebrew-tap`, mettre à jour `Casks/brume.rb` avec la version et l'empreinte du DMG affichées par le script. On installe alors avec `brew install --cask jeremy-prt/tap/brume`. `auto_updates` dit à Homebrew que Sparkle met l'app à jour lui-même.
+6. **Homebrew** : dans le dépôt `jeremy-prt/homebrew-tap`, mettre à jour `Casks/brume.rb` avec la version et l'empreinte du DMG affichées par le script. On installe alors avec `brew install --cask jeremy-prt/tap/brume`. Vérifier le fichier avec `brew style Casks/brume.rb` avant de pousser : Homebrew refuse la plateforme dans `desc`. `auto_updates` dit à Homebrew que Sparkle met l'app à jour lui-même.
 
    ```ruby
    cask "brume" do
@@ -55,12 +55,12 @@ Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par j
 
      url "https://github.com/jeremy-prt/brume/releases/download/v#{version}/Brume.dmg"
      name "Brume"
-     desc "Simple, beautiful terminal for macOS"
+     desc "Terminal, reimagined"
      homepage "https://github.com/jeremy-prt/brume"
 
      auto_updates true
-     depends_on macos: ">= :tahoe"
      depends_on arch: :arm64
+     depends_on macos: :tahoe
 
      app "Brume.app"
 

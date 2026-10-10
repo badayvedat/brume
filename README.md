@@ -1,10 +1,16 @@
 # Brume
 
-Brume is a simple, beautiful terminal for macOS, built on the [Ghostty](https://ghostty.org) engine through the [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package. It adds only the essentials: tabs at the top or in a sidebar, split terminals, a translucent window over the blurred desktop, and an interface in English and French.
+Brume is the macOS terminal, reimagined. Built on the [Ghostty](https://ghostty.org) engine through the [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package, it adds only the essentials: tabs at the top or in a sidebar, split terminals, a translucent window over the blurred desktop, and an interface in English and French.
 
 ## Install
 
 Download `Brume.dmg` from the [latest release](../../releases/latest), open it and drag Brume to Applications.
+
+Or with Homebrew:
+
+```bash
+brew install --cask jeremy-prt/tap/brume
+```
 
 Brume is not notarized by Apple yet. The first time you open it, macOS blocks it: go to **System Settings › Privacy & Security** and click **Open Anyway**. This is only needed once.
 

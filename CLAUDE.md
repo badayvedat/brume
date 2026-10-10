@@ -1,6 +1,6 @@
 # Brume
 
-Terminal macOS simple et beau, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
+Terminal macOS revisité, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
 
 Avant de toucher à l'icône de l'app, aux visuels de la page Accueil, de tester ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md`, `docs/tester-une-version.md` ou `docs/distribution.md`.
 
