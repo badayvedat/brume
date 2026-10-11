@@ -39,14 +39,14 @@ Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par j
    - lance les tests, puis `scripts/make-dmg.sh`, qui produit `.build/Brume.dmg` ;
    - signe le DMG avec `sign_update`, qui lit la clé privée EdDSA dans le trousseau : macOS peut demander d'y autoriser l'accès ;
    - ajoute l'entrée de la version en tête de `appcast.xml` : notes du changelog en HTML, URL du DMG, signature, taille, macOS 26 minimum ;
-   - affiche les commandes de publication et le bloc Homebrew, sans rien lancer.
+   - affiche les commandes de publication, Homebrew compris, sans rien lancer.
 
    En cas d'échec, il remet `scripts/build-app.sh` et `appcast.xml` comme avant.
 3. **Essai** : ouvrir le DMG, glisser Brume dans Applications, le lancer. Idéalement sur une autre session ou un autre Mac.
 4. **Publier** : lancer les commandes affichées, dans l'ordre : commit, tag, push du tag, `gh release create`, puis push de `main`. L'appcast ne passe en ligne qu'avec ce dernier push, une fois le DMG téléchargeable.
    Le fichier garde le nom `Brume.dmg` à chaque version : le lien `https://github.com/jeremy-prt/brume/releases/latest/download/Brume.dmg` mène donc toujours à la dernière.
 5. **Site** : le bouton « Télécharger » pointe vers ce lien. Rien à changer à chaque version.
-6. **Homebrew** : dans le dépôt `jeremy-prt/homebrew-tap`, mettre à jour `Casks/brume.rb` avec la version et l'empreinte du DMG affichées par le script. On installe alors avec `brew install --cask jeremy-prt/tap/brume`. Vérifier le fichier avec `brew style Casks/brume.rb` avant de pousser : Homebrew refuse la plateforme dans `desc`. `auto_updates` dit à Homebrew que Sparkle met l'app à jour lui-même.
+6. **Homebrew** : la dernière commande affichée, `scripts/update-tap.sh`, met à jour `Casks/brume.rb` du dépôt `jeremy-prt/homebrew-tap` par l'API GitHub (version et empreinte), après avoir vérifié que le DMG en ligne a bien cette empreinte et que `brew style` accepte le fichier. On installe avec `brew install --cask jeremy-prt/tap/brume`. `auto_updates` dit à Homebrew que Sparkle met l'app à jour lui-même.
 
    ```ruby
    cask "brume" do
@@ -56,7 +56,7 @@ Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par j
      url "https://github.com/jeremy-prt/brume/releases/download/v#{version}/Brume.dmg"
      name "Brume"
      desc "Terminal, reimagined"
-     homepage "https://github.com/jeremy-prt/brume"
+     homepage "https://brume-terminal.vercel.app/"
 
      auto_updates true
      depends_on arch: :arm64
@@ -67,8 +67,6 @@ Brume se met à jour par [Sparkle](https://sparkle-project.org) : une fois par j
      zap trash: "~/Library/Application Support/Brume"
    end
    ```
-
-   Comme Muxy, on peut confier cette mise à jour à un workflow GitHub déclenché par chaque release.
 
 ### Sparkle
 

@@ -123,9 +123,5 @@ Brume $VERSION est prête : $DMG (build $BUILD), entrée ajoutée en tête de ap
    git push origin $TAG
    gh release create $TAG $DMG --title "Brume $VERSION" --notes-file $NOTES
    git push origin main
-
-3. Homebrew : dans Casks/brume.rb du dépôt homebrew-tap, remplacer ces deux lignes.
-
-   version "$VERSION"
-   sha256 "$SHA256"
+   bash scripts/update-tap.sh $VERSION $SHA256
 EOF
