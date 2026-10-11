@@ -1,6 +1,19 @@
-# Brume
+<p align="center">
+  <img src=".github/readme/icon.png" width="128" height="128" alt="Brume app icon">
+</p>
 
-Brume is the macOS terminal, reimagined. Built on the [Ghostty](https://ghostty.org) engine through the [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package, it adds only the essentials: tabs at the top or in a sidebar, split terminals, a translucent window over the blurred desktop, and an interface in English and French.
+<h1 align="center">Brume</h1>
+
+<p align="center">
+  The macOS terminal, reimagined.<br>
+  <a href="https://brume-terminal.vercel.app">Website</a> · <a href="https://github.com/jeremy-prt/brume/releases/latest/download/Brume.dmg">Download</a> · <a href="#install">Install with Homebrew</a>
+</p>
+
+<p align="center">
+  <img src=".github/readme/screenshot.jpg" alt="Brume with tabs in the sidebar and its welcome screen">
+</p>
+
+Built on the [Ghostty](https://ghostty.org) engine through the [libghostty-spm](https://github.com/Lakr233/libghostty-spm) package, Brume adds only the essentials: tabs at the top or in a sidebar, split terminals, a translucent window over the blurred desktop, and an interface in English and French.
 
 ## Install
 

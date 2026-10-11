@@ -1,6 +1,6 @@
 # Distribuer Brume
 
-Publié depuis la 0.1.0 (2026-10-11), sans licence Apple : un DMG, une release GitHub et le dépôt Homebrew `jeremy-prt/homebrew-tap`. Reste à faire : la landing page et son bouton de téléchargement.
+Publié depuis la 0.1.0 (2026-10-11), sans licence Apple : un DMG, une release GitHub et le dépôt Homebrew `jeremy-prt/homebrew-tap`. Site : https://brume-terminal.vercel.app, dépôt privé `jeremy-prt/brume-site`, déployé par Vercel à chaque push sur `main`.
 
 ## Comment font les autres
 
