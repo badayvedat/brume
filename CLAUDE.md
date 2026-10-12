@@ -2,7 +2,7 @@
 
 Terminal macOS revisité, bâti sur le moteur de Ghostty (paquet libghostty-spm), en Swift et SwiftUI.
 
-Avant de toucher à l'icône de l'app, aux visuels de la page Accueil, de tester ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md`, `docs/tester-une-version.md` ou `docs/distribution.md`.
+Avant de toucher à l'icône de l'app, aux visuels de la page Accueil, de tester ou de publier une version : lire `docs/icone.md`, `docs/visuels-demarrage.md`, `docs/tester-une-version.md` ou `docs/distribution.md`. Avant de toucher à l'intégration shell ou au premier lancement : `docs/onboarding-configs-existantes.md`.
 
 ## Build
 
