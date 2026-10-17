@@ -43,6 +43,10 @@ extension TerminalWorkspace {
         layout = layout.moving(tab, to: index)
     }
 
+    func move(_ tab: UUID, beside target: UUID, after: Bool) {
+        layout = layout.moving(tab, beside: target, after: after)
+    }
+
     func moveSelectedTab(by offset: Int) {
         layout = layout.moving(layout.selectedTab, by: offset)
     }
