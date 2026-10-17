@@ -62,7 +62,7 @@ private struct TerminalWindow: View {
             let showsNumbers = commandKey.isHeld && isActive
             let sidebarWidth = showsSidebar ? draggedSidebarWidth ?? settings.verticalTabs.width : nil
             // Cachés et non retirés : une vue terminal recréée tuerait son shell. La barre latérale
-            // et l'en-tête s'ajoutent à côté, sans déplacer `TerminalSplitView` dans l'arbre.
+            // s'ajoute à côté, sans déplacer `TerminalSplitView` dans l'arbre.
             ZStack(alignment: .topLeading) {
                 TerminalSplitView(workspace: workspace, titlebar: titlebar, showsNumbers: showsNumbers, sidebarWidth: sidebarWidth)
                 if let sidebarWidth {
@@ -77,8 +77,6 @@ private struct TerminalWindow: View {
                             draggedSidebarWidth = nil
                         }
                     )
-                    TerminalHeader(state: workspace.focused, workspace: workspace, height: titlebar.buttonsCenterY * 2)
-                        .padding(.leading, sidebarWidth + 1)
                 }
             }
             .coordinateSpace(.named(TerminalScreen.space))

@@ -2,8 +2,7 @@ import BrumeCore
 import GhosttyTerminal
 import SwiftUI
 
-/// Les splits de l'onglet affiché, sous la barre d'onglets du haut, ou à droite de la barre
-/// latérale et sous l'en-tête.
+/// Les splits de l'onglet affiché, sous la barre d'onglets du haut, ou à droite de la barre latérale.
 struct TerminalSplitView: View {
     let workspace: TerminalWorkspace
     let titlebar: WindowTitlebar
@@ -14,7 +13,7 @@ struct TerminalSplitView: View {
     var body: some View {
         GeometryReader { geometry in
             let window = CGRect(origin: .zero, size: geometry.size)
-            let barHeight = titlebar.buttonsCenterY * 2
+            let barHeight = sidebarWidth == nil ? titlebar.buttonsCenterY * 2 : 0
             // Le trait du bord de la barre latérale a sa propre colonne.
             let bounds = window.divided(atDistance: sidebarWidth.map { $0 + 1 } ?? 0, from: .minXEdge).remainder
                 .divided(atDistance: barHeight, from: .minYEdge).remainder
