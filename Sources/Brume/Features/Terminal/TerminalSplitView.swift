@@ -58,7 +58,7 @@ struct TerminalSplitView: View {
                         showsNumbers: showsNumbers
                     )
                 } else if sidebarWidth == nil {
-                    WindowDragArea()
+                    WindowDragArea { workspace.window?.zoom(nil) }
                         .frame(width: window.width, height: barHeight)
                 }
                 // Identifiées par leur place dans l'arbre : stable pendant un glissé.

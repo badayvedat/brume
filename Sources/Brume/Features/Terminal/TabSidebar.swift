@@ -108,6 +108,10 @@ struct TabSidebar: View {
         .frame(width: width)
         .background(Color.black.opacity(0.12))
         .background { WindowDragArea() }
+        .overlay(alignment: .top) {
+            WindowDragArea { workspace.window?.zoom(nil) }
+                .frame(height: topInset)
+        }
         .overlay(alignment: .trailing) {
             TabSidebarEdge(width: width, onResize: onResize, onResizeEnd: onResizeEnd)
         }
