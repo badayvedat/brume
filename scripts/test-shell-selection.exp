@@ -19,18 +19,18 @@ proc prompt {} {
     }
 }
 
-proc selection {name keys expected} {
+proc check {name keys probe expected} {
     send -- "\x18s"
     redraw
     foreach key $keys {
         send -- $key
         redraw
     }
-    send -- "\x18t"
+    send -- $probe
     expect {
-        -re {STATE\|[^\r\n]*} {
-            if {$expect_out(0,string) ne "STATE|$expected"} {
-                puts stderr "$name: expected STATE|$expected, got $expect_out(0,string)"
+        -re {(STATE|EDIT)\|[^\r\n]*} {
+            if {$expect_out(0,string) ne $expected} {
+                puts stderr "$name: expected $expected, got $expect_out(0,string)"
                 exit 1
             }
         }
@@ -39,6 +39,9 @@ proc selection {name keys expected} {
     }
     redraw
 }
+
+proc selection {name keys expected} { check $name $keys "\x18t" "STATE|$expected" }
+proc edit {name keys expected} { check $name $keys "\030b" "EDIT|$expected" }
 
 foreach preloaded {0 1} {
     spawn env TERM=xterm-256color BRUME_COMPLETION=0 BRUME_HISTORY_SUGGESTIONS=1 BRUME_TEST_PRELOADED=$preloaded zsh -f -i
@@ -71,6 +74,28 @@ foreach preloaded {0 1} {
         selection "$mode clamp at end" [string repeat "\033\[1;2C" 20] "17|12|1|thing|"
         selection "$mode plain arrow clears selection" [list "\033\[1;2D" "\033\[D"] "10|12|0||"
         selection "$mode new selection resets anchor" [list "\033\[1;2D" "\033\[D" "\033\[1;2D"] "9|10|1|o|"
+        edit "$mode replace character" [list "\033\[1;2D" "x"] "12|0|jj edit somxthing|"
+        edit "$mode replace word" [list "\033\[1;4D" "new"] "11|0|jj edit newthing|"
+        edit "$mode replace rightward selection" [list "\033\[1;4C" "x"] "13|0|jj edit somex|"
+        edit "$mode replace line start" [list "\033\[1;10D" "x"] "1|0|xthing|"
+        edit "$mode backspace character" [list "\033\[1;2D" "\177"] "11|0|jj edit somthing|"
+        edit "$mode backspace word" [list "\033\[1;4D" "\177"] "8|0|jj edit thing|"
+        edit "$mode backspace rightward selection" [list "\033\[1;4C" "\177"] "12|0|jj edit some|"
+        edit "$mode delete word" [list "\033\[1;4D" "\033\[3~"] "8|0|jj edit thing|"
+        edit "$mode paste over word" [list "\033\[1;4D" "\033\[200~new value\033\[201~"] "17|0|jj edit new valuething|"
+        edit "$mode yank over selection" [list "\033\[1;4D" "\030y"] "14|0|jj edit PASTEDthing|"
+        edit "$mode replacement preserves yank buffer" [list "\033\[1;4D" "x" "\030y"] "15|0|jj edit xPASTEDthing|"
+        edit "$mode undo replacement" [list "\033\[1;4D" "x" "\x18u"] "8|0|jj edit something|"
+        edit "$mode empty selection inserts normally" [list "\033\[1;2D\033\[1;2C" "x"] "13|0|jj edit somexthing|"
+        edit "$mode plain typing" [list "x"] "13|0|jj edit somexthing|"
+        edit "$mode plain backspace" [list "\177"] "11|0|jj edit somthing|"
+        edit "$mode repeated backspace" [list "\033\[1;4D" "\177" "\177"] "7|0|jj editthing|"
+        edit "$mode selection then suggestion callback" [list "\033\[1;4D" "\030a" "x"] "9|0|jj edit xthing|"
+        edit "$mode preserve custom insert widget" [list "\033\[1;4D" "~"] "14|0|jj edit CUSTOMthing|"
+        edit "$mode nested widget without WIDGET override" [list "\033\[1;4D" "#"] "9|0|jj edit  thing|"
+        edit "$mode magic space replaces selection" [list "\033\[1;4D" "\030g"] "9|0|jj edit  thing|"
+        edit "$mode queued arrow cancels before typing" [list "\033\[1;4D\033\[Cx"] "10|0|jj edit sxomething|"
+        edit "$mode canceled selection inserts normally" [list "\033\[1;4D" "\033\[C" "x"] "10|0|jj edit sxomething|"
         send -- "\030c"
         redraw
     }
@@ -84,6 +109,8 @@ foreach preloaded {0 1} {
     prompt
     selection "Unicode character" "\033\[1;2D" "10|11|1|é|"
     selection "Unicode word" "\033\[1;4D" "8|11|1|été|"
+    edit "Unicode replacement" [list "\033\[1;4D" "x"] "9|0|jj edit xthing|"
+    edit "Unicode backspace" [list "\033\[1;2D" "\177"] "10|0|jj edit étthing|"
     send -- "\030c"
     redraw
     send -- {_brume_test_seed() { BUFFER=$'first\njj edit something\nlast'; CURSOR=18; REGION_ACTIVE=0; }; print MULTILINE_READY}
@@ -96,6 +123,7 @@ foreach preloaded {0 1} {
     prompt
     selection "Multiline line start" "\033\[1;10D" "6|18|1|jj edit some|"
     selection "Multiline line end" "\033\[1;10C" "23|18|1|thing|"
+    edit "Multiline replacement" [list "\033\[1;10D" "x"] "7|0|first\\nxthing\\nlast|"
     close
     wait
 }

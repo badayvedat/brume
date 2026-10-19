@@ -1,21 +1,47 @@
 --- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
 +++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
-@@ -167,6 +167,49 @@
+@@ -167,6 +167,84 @@
          fi
      }
  fi
  
 +# Ajout Brume : sélection du texte éditable avec Maj, par caractère, mot ou jusqu'au bord de la ligne.
 +# Le shell possède le curseur et le tampon ; une sélection du terminal viserait aussi la sortie.
++_brume_selection_is_current() {
++    # Une réponse asynchrone des suggestions change LASTWIDGET sans déplacer le curseur.
++    (( ${_brume_selection_active:-0} && REGION_ACTIVE && CURSOR == ${_brume_selection_cursor:--1} )) &&
++        [[ "$LASTWIDGET" == brume-select-* || "$LASTWIDGET" == autosuggest-* ]]
++}
++
 +_brume_select() {
-+    [[ "$LASTWIDGET" == brume-select-* ]] || MARK=$CURSOR
++    _brume_selection_is_current || MARK=$CURSOR
 +    zle ".${WIDGET#brume-select-}"
 +    REGION_ACTIVE=1
-+    typeset -g _brume_selection_active=1
++    typeset -g _brume_selection_active=1 _brume_selection_cursor=$CURSOR
++}
++
++_brume_edit_selection() {
++    local widget=$1
++    shift
++    if _brume_selection_is_current && (( CURSOR != MARK )); then
++        # Supprimer sans écraser le texte que yank doit éventuellement coller ensuite.
++        () {
++            local CUTBUFFER
++            local -a killring
++            zle .kill-region
++        }
++        REGION_ACTIVE=0
++        _brume_selection_active=0
++        POSTDISPLAY=''
++        case "$widget" in
++            *delete*|*kill*) return 0 ;;
++        esac
++    fi
++    zle "_brume_original_$widget" -- "$@"
 +}
 +
 +_brume_selection_redraw() {
-+    if (( ${_brume_selection_active:-0} )) && [[ "$LASTWIDGET" != brume-select-* ]]; then
++    if (( ${_brume_selection_active:-0} )) && ! _brume_selection_is_current; then
 +        REGION_ACTIVE=0
 +        _brume_selection_active=0
 +    fi
@@ -25,7 +51,7 @@
 +add-zle-hook-widget line-pre-redraw _brume_selection_redraw
 +
 +() {
-+    local map motion hook
++    local map motion hook widget
 +    local -a hooks ordered=(0:_brume_selection_redraw)
 +    # Avant tous les dessinateurs, même si le .zshrc a déjà chargé la coloration.
 +    zstyle -a zle-line-pre-redraw widgets hooks
@@ -34,6 +60,15 @@
 +        ordered+=("$(( ${hook%%:*} + 1 )):${hook#*:}")
 +    done
 +    zstyle zle-line-pre-redraw widgets "${ordered[@]}"
++
++    # Garder les widgets du .zshrc et des greffons dans la chaîne d'édition normale.
++    for widget in self-insert self-insert-unmeta quoted-insert vi-quoted-insert magic-space bracketed-paste yank \
++        backward-delete-char vi-backward-delete-char delete-char delete-char-or-list vi-delete-char \
++        backward-delete-word backward-kill-word vi-backward-kill-word kill-word backward-kill-line kill-line kill-whole-line; do
++        zle -A "$widget" "_brume_original_$widget"
++        eval "_brume_edit_${widget}() { _brume_edit_selection ${(q)widget} \"\$@\"; }"
++        zle -N "$widget" "_brume_edit_$widget"
++    done
 +
 +    for motion in backward-char forward-char backward-word forward-word beginning-of-line end-of-line; do
 +        zle -N "brume-select-$motion" _brume_select
