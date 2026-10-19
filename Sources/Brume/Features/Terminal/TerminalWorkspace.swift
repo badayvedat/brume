@@ -33,9 +33,6 @@ private func engineConfiguration(_ options: EngineOptions) -> TerminalConfigurat
         // Shift+Entrée : saut de ligne dans Claude Code.
         $0.withCustom("keybind", "shift+enter=text:\\n")
         $0.withCustom("macos-option-as-alt", "left")
-        // Option+flèche brut, sans le « mot précédent / suivant » de Ghostty.
-        $0.withCustom("keybind", "alt+left=unbind")
-        $0.withCustom("keybind", "alt+right=unbind")
         // En verre, le voile vient du fond de la fenêtre, d'un seul tenant sous les onglets et
         // les terminaux : le moteur ne peint plus son fond par-dessus.
         $0.withBackgroundOpacity(options.isTranslucent ? 0 : 1)
