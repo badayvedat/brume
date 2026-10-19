@@ -94,6 +94,18 @@ struct ShortcutTests {
         #expect(Shortcuts().issue(assigning: Shortcut("left"), to: .newTab)?.isBlocking == false)
     }
 
+    @Test func shellSelectionKeysWarnBeforeBeingReassigned() {
+        let modifierSets: [Shortcut.Modifiers] = [[.option, .shift], [.command, .shift]]
+        for key in ["left", "right"] {
+            #expect(Shortcuts().issue(assigning: Shortcut(key, [.shift]), to: .newTab) == .needsModifier)
+            for modifiers in modifierSets {
+                let issue = Shortcuts().issue(assigning: Shortcut(key, modifiers), to: .newTab)
+                #expect(issue == .terminal(.selectText))
+                #expect(issue?.isBlocking == false)
+            }
+        }
+    }
+
     @Test func comparisonsGoThroughTheKeyboardLayout() {
         // Un clavier où ⇧⌘[ s'écrit ⇧⌘^ : le ^ tapé retrouve le raccourci par défaut.
         let azerty: Shortcuts.Normalize = { $0.key == "[" ? Shortcut("^", $0.modifiers) : $0 }

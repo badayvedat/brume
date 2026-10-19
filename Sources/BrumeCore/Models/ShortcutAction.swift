@@ -142,5 +142,11 @@ public struct ReservedShortcut: Sendable {
         .init(Shortcut("left"), .lineStart, .terminal),
         .init(Shortcut("right"), .lineEnd, .terminal),
         .init(Shortcut("delete"), .deleteLine, .terminal),
+        .init(Shortcut("left", [.shift]), .selectText, .terminal),
+        .init(Shortcut("right", [.shift]), .selectText, .terminal),
+        .init(Shortcut("left", [.option, .shift]), .selectText, .terminal),
+        .init(Shortcut("right", [.option, .shift]), .selectText, .terminal),
+        .init(Shortcut("left", [.command, .shift]), .selectText, .terminal),
+        .init(Shortcut("right", [.command, .shift]), .selectText, .terminal),
     ]
 }

@@ -1,0 +1,102 @@
+#!/usr/bin/expect -f
+set timeout 10
+log_user 0
+cd [file dirname [file dirname [file normalize [info script]]]]
+
+proc redraw {} {
+    expect {
+        -re {DRAW_READY\r\n} {}
+        timeout { puts stderr "Timed out waiting for shell redraw"; exit 1 }
+        eof { puts stderr "Shell exited before redraw"; exit 1 }
+    }
+}
+
+proc prompt {} {
+    expect {
+        -exact "\033\[?2004h" {}
+        timeout { puts stderr "Timed out waiting for shell prompt"; exit 1 }
+        eof { puts stderr "Shell exited before prompt"; exit 1 }
+    }
+}
+
+proc selection {name keys expected} {
+    send -- "\x18s"
+    redraw
+    foreach key $keys {
+        send -- $key
+        redraw
+    }
+    send -- "\x18t"
+    expect {
+        -re {STATE\|[^\r\n]*} {
+            if {$expect_out(0,string) ne "STATE|$expected"} {
+                puts stderr "$name: expected STATE|$expected, got $expect_out(0,string)"
+                exit 1
+            }
+        }
+        timeout { puts stderr "$name: timed out"; exit 1 }
+        eof { puts stderr "$name: shell exited"; exit 1 }
+    }
+    redraw
+}
+
+foreach preloaded {0 1} {
+    spawn env TERM=xterm-256color BRUME_COMPLETION=0 BRUME_HISTORY_SUGGESTIONS=1 BRUME_TEST_PRELOADED=$preloaded zsh -f -i
+    send -- "source Tests/ShellSelection/setup.zsh\r"
+    expect {
+        -re {\r\nREADY\r\n} {}
+        timeout { puts stderr "Shell integration did not start"; exit 1 }
+        eof { puts stderr "Shell exited during setup"; exit 1 }
+    }
+    prompt
+
+    foreach mode {emacs viins} {
+        if {$mode eq "viins"} {
+            send -- "bindkey -v\r"
+            prompt
+        }
+        selection "$mode character left" "\033\[1;2D" "11|12|1|e|"
+        selection "$mode repeated left" "\033\[1;2D\033\[1;2D" "10|12|1|me|"
+        selection "$mode character right" "\033\[1;2C" "13|12|1|t|"
+        selection "$mode reverse selection" "\033\[1;2D\033\[1;2C" "12|12|1||"
+        selection "$mode word left" "\033\[1;4D" "8|12|1|some|"
+        selection "$mode word right" "\033\[1;4C" "17|12|1|thing|"
+        selection "$mode line start" "\033\[1;10D" "0|12|1|jj edit some|"
+        selection "$mode line end" "\033\[1;10C" "17|12|1|thing|"
+        selection "$mode extend character to line start" [list "\033\[1;2D" "\033\[1;10D"] "0|12|1|jj edit some|"
+        selection "$mode reverse across line" [list "\033\[1;10D" "\033\[1;10C"] "17|12|1|thing|"
+        selection "$mode extend by word" "\033\[1;2D\033\[1;4D" "8|12|1|some|"
+        selection "$mode cross anchor" "\033\[1;2D\033\[1;2C\033\[1;2C" "13|12|1|t|"
+        selection "$mode clamp at start" [string repeat "\033\[1;2D" 20] "0|12|1|jj edit some|"
+        selection "$mode clamp at end" [string repeat "\033\[1;2C" 20] "17|12|1|thing|"
+        selection "$mode plain arrow clears selection" [list "\033\[1;2D" "\033\[D"] "10|12|0||"
+        selection "$mode new selection resets anchor" [list "\033\[1;2D" "\033\[D" "\033\[1;2D"] "9|10|1|o|"
+        send -- "\030c"
+        redraw
+    }
+    send -- {_brume_test_seed() { BUFFER='jj edit ététhing'; CURSOR=11; REGION_ACTIVE=0; }; print UNICODE_READY}
+    send -- "\r"
+    expect {
+        -re {UNICODE_READY\r\n} {}
+        timeout { puts stderr "Unicode setup timed out"; exit 1 }
+        eof { puts stderr "Shell exited during Unicode setup"; exit 1 }
+    }
+    prompt
+    selection "Unicode character" "\033\[1;2D" "10|11|1|é|"
+    selection "Unicode word" "\033\[1;4D" "8|11|1|été|"
+    send -- "\030c"
+    redraw
+    send -- {_brume_test_seed() { BUFFER=$'first\njj edit something\nlast'; CURSOR=18; REGION_ACTIVE=0; }; print MULTILINE_READY}
+    send -- "\r"
+    expect {
+        -re {MULTILINE_READY\r\n} {}
+        timeout { puts stderr "Multiline setup timed out"; exit 1 }
+        eof { puts stderr "Shell exited during multiline setup"; exit 1 }
+    }
+    prompt
+    selection "Multiline line start" "\033\[1;10D" "6|18|1|jj edit some|"
+    selection "Multiline line end" "\033\[1;10C" "23|18|1|thing|"
+    close
+    wait
+}
+puts "Shell selection tests passed (emacs and vi insert mode, both plugin-loading orders)."

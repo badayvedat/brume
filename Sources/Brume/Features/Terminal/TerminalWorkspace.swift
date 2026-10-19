@@ -33,6 +33,13 @@ private func engineConfiguration(_ options: EngineOptions) -> TerminalConfigurat
         // Shift+Entrée : saut de ligne dans Claude Code.
         $0.withCustom("keybind", "shift+enter=text:\\n")
         $0.withCustom("macos-option-as-alt", "left")
+        // Séquences distinctes pour que zsh puisse étendre sa sélection, sans déplacer seulement le curseur.
+        $0.withCustom("keybind", "shift+left=csi:1;2D")
+        $0.withCustom("keybind", "shift+right=csi:1;2C")
+        $0.withCustom("keybind", "alt+shift+left=csi:1;4D")
+        $0.withCustom("keybind", "alt+shift+right=csi:1;4C")
+        $0.withCustom("keybind", "super+shift+left=csi:1;10D")
+        $0.withCustom("keybind", "super+shift+right=csi:1;10C")
         // En verre, le voile vient du fond de la fenêtre, d'un seul tenant sous les onglets et
         // les terminaux : le moteur ne peint plus son fond par-dessus.
         $0.withBackgroundOpacity(options.isTranslucent ? 0 : 1)

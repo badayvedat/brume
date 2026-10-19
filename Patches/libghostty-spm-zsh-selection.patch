@@ -1,0 +1,52 @@
+--- a/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
++++ b/Sources/GhosttyTerminal/Resources/Ghostty/shell-integration/zsh/ghostty-integration
+@@ -167,6 +167,49 @@
+         fi
+     }
+ fi
+ 
++# Ajout Brume : sélection du texte éditable avec Maj, par caractère, mot ou jusqu'au bord de la ligne.
++# Le shell possède le curseur et le tampon ; une sélection du terminal viserait aussi la sortie.
++_brume_select() {
++    [[ "$LASTWIDGET" == brume-select-* ]] || MARK=$CURSOR
++    zle ".${WIDGET#brume-select-}"
++    REGION_ACTIVE=1
++    typeset -g _brume_selection_active=1
++}
++
++_brume_selection_redraw() {
++    if (( ${_brume_selection_active:-0} )) && [[ "$LASTWIDGET" != brume-select-* ]]; then
++        REGION_ACTIVE=0
++        _brume_selection_active=0
++    fi
++    return 0
++}
++builtin autoload -Uz add-zle-hook-widget
++add-zle-hook-widget line-pre-redraw _brume_selection_redraw
++
++() {
++    local map motion hook
++    local -a hooks ordered=(0:_brume_selection_redraw)
++    # Avant tous les dessinateurs, même si le .zshrc a déjà chargé la coloration.
++    zstyle -a zle-line-pre-redraw widgets hooks
++    for hook in "${hooks[@]}"; do
++        [[ "${hook#*:}" == _brume_selection_redraw ]] && continue
++        ordered+=("$(( ${hook%%:*} + 1 )):${hook#*:}")
++    done
++    zstyle zle-line-pre-redraw widgets "${ordered[@]}"
++
++    for motion in backward-char forward-char backward-word forward-word beginning-of-line end-of-line; do
++        zle -N "brume-select-$motion" _brume_select
++    done
++    for map in emacs viins; do
++        bindkey -M "$map" '^[[1;2D' brume-select-backward-char
++        bindkey -M "$map" '^[[1;2C' brume-select-forward-char
++        bindkey -M "$map" '^[[1;4D' brume-select-backward-word
++        bindkey -M "$map" '^[[1;4C' brume-select-forward-word
++        bindkey -M "$map" '^[[1;10D' brume-select-beginning-of-line
++        bindkey -M "$map" '^[[1;10C' brume-select-end-of-line
++    done
++}
++
+ # Ajout Brume : suggestions de l'historique et coloration des commandes par défaut, sauf si
+ # le .zshrc les a déjà chargées. Le réglage qui coupe les suggestions coupe aussi celles du .zshrc.

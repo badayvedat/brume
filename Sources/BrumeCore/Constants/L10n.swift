@@ -68,7 +68,7 @@ public enum TextKey: CaseIterable, Sendable {
     case brumeOnGitHub, reportIssue
     case notifications, notificationsHint, dockBadge, dockBadgeHint, commandFinished, commandFailed, commandFailedWithCode
     case shortcuts, shortcutsHint, splits, selectTab, selectTabHint, closeTerminalHint, keySpace, keyEscape
-    case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
+    case hideApp, hideOthers, minimize, undo, redo, cut, selectAll, selectText, fullScreen, clearScreen, lineStart, lineEnd, deleteLine
     case pressShortcut, noShortcut, changeShortcut, restoreDefault, restoreAllShortcuts, replace, useAnyway, shortcutHint
     case shortcutNeedsModifier, shortcutNeedsDigit, shortcutInUse, shortcutInTerminal, shortcutWithoutCommand
     case welcomeHardware, welcomeSoftware, welcomeSession, welcomeOS, welcomeHost, welcomeCPU, welcomeGPU, welcomeMemory, welcomeDisk, welcomePackages, welcomeShell, welcomeTerminal, welcomeUser, welcomeUptime, welcomeLocalIP
@@ -327,6 +327,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .redo: "Rétablir"
         case .cut: "Couper"
         case .selectAll: "Tout sélectionner"
+        case .selectText: "Sélectionner du texte"
         case .fullScreen: "Plein écran"
         case .clearScreen: "Effacer l'écran"
         case .lineStart: "Aller au début de la ligne"
@@ -610,6 +611,7 @@ public enum TextKey: CaseIterable, Sendable {
         case .redo: "Redo"
         case .cut: "Cut"
         case .selectAll: "Select All"
+        case .selectText: "Select Text"
         case .fullScreen: "Full Screen"
         case .clearScreen: "Clear Screen"
         case .lineStart: "Go to Start of Line"
