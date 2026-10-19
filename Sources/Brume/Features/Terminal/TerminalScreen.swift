@@ -15,7 +15,7 @@ struct TerminalScreen: View {
     var body: some View {
         ZStack {
             if let workspace {
-                TerminalWindow(workspace: workspace, translucency: settings.appearance.translucency, showsSidebar: settings.verticalTabs.isOn)
+                TerminalWindow(workspace: workspace, translucency: settings.appearance.translucency)
             }
         }
         .onAppear {
@@ -42,18 +42,13 @@ private struct TerminalWindow: View {
     @State private var translucency: TranslucencyTransition
     /// La largeur de la barre latérale pendant qu'on glisse son bord : enregistrée au lâcher.
     @State private var draggedSidebarWidth: CGFloat?
-    /// Les onglets affichés en haut ou sur le côté, en retard sur le réglage le temps d'un fondu :
-    /// une vue terminal ne s'anime pas, elle sauterait à sa nouvelle place sous les yeux.
-    @State private var showsSidebar: Bool
-    @State private var isSwitchingTabs = false
     @Environment(SettingsStore.self) private var settings
     /// Cmd+chiffre n'agit que sur la fenêtre active : les autres ne montrent pas de numéros.
     @Environment(\.appearsActive) private var isActive
 
-    init(workspace: TerminalWorkspace, translucency: Translucency, showsSidebar: Bool) {
+    init(workspace: TerminalWorkspace, translucency: Translucency) {
         self.workspace = workspace
         _translucency = State(initialValue: TranslucencyTransition(translucency))
-        _showsSidebar = State(initialValue: showsSidebar)
     }
 
     var body: some View {
@@ -61,7 +56,7 @@ private struct TerminalWindow: View {
         ZStack {
             let showsTerminals = workspace.settingsSection == nil
             let showsNumbers = commandKey.isHeld && isActive
-            let sidebarWidth = showsSidebar ? draggedSidebarWidth ?? settings.verticalTabs.width : nil
+            let sidebarWidth = sidebarVisible ? draggedSidebarWidth ?? settings.verticalTabs.width : nil
             // Cachés et non retirés : une vue terminal recréée tuerait son shell. La barre latérale
             // s'ajoute à côté, sans déplacer `TerminalSplitView` dans l'arbre.
             ZStack(alignment: .topLeading) {
@@ -84,7 +79,7 @@ private struct TerminalWindow: View {
                 }
             }
             .coordinateSpace(.named(TerminalScreen.space))
-            .opacity(showsTerminals && !isSwitchingTabs ? 1 : 0)
+            .opacity(showsTerminals ? 1 : 0)
             .allowsHitTesting(showsTerminals)
             .accessibilityHidden(!showsTerminals)
             if let section = workspace.settingsSection {
@@ -124,12 +119,5 @@ private struct TerminalWindow: View {
         .onChange(of: TerminalThemes.colors(for: settings.appearance)) { ThemeFade.run(to: $1) }
         .onChange(of: settings.font) { TerminalWorkspace.setFont($1) }
         .task(id: settings.shortcuts[.selectTab]) { commandKey.modifiers = settings.tabNumberModifiers }
-        .onChange(of: sidebarVisible) { _, isOn in
-            withAnimation(Ink.motion(.easeIn(duration: 0.1))) { isSwitchingTabs = true } completion: {
-                showsSidebar = isOn
-                // Un tour de plus : les terminaux se redessinent à leur taille avant de réapparaître.
-                withAnimation(Ink.motion(.easeOut(duration: 0.18).delay(0.03))) { isSwitchingTabs = false }
-            }
-        }
     }
 }
