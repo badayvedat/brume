@@ -24,6 +24,7 @@ private struct EngineOptions {
 
 private func engineConfiguration(_ options: EngineOptions) -> TerminalConfiguration {
     TerminalConfiguration {
+        $0.withCursorStyle(.bar)
         // Gérées par le patch zsh de Patches/ : le script du paquet les ignore.
         $0.withCustom("shell-integration-features", "ssh-env,ssh-terminfo")
         // L'app Ghostty double les deltas du trackpad avant le moteur, le paquet non :
