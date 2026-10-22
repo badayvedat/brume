@@ -15,7 +15,7 @@ enum TerminalContextMenu {
                 _ = state.surface?.performBindingAction("copy_to_clipboard")
             },
             .item(L10n.text(.paste), shortcut: "⌘V") {
-                _ = state.surface?.performBindingAction("paste_from_clipboard")
+                TerminalClipboard.paste(to: state.surface)
             },
             .separator,
             .item(L10n.text(.splitRight), shortcut: label(.splitRight)) { workspace.split(.horizontal, from: pane) },

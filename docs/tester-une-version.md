@@ -27,6 +27,12 @@ xattr -w com.apple.quarantine "0081;$(printf %x $(date +%s));Safari;" ~/Download
 
 Tant que l'app n'est pas vérifiée par Apple (voir `distribution.md`), macOS bloque la première ouverture : Réglages Système › Confidentialité et sécurité › « Ouvrir quand même ».
 
+## Coller une image dans un assistant CLI
+
+Copier une capture dans le presse-papiers, puis utiliser ⌘V ou « Coller » au clic droit dans Claude Code, pi ou Codex. Brume transmet Ctrl+V quand le presse-papiers contient une image sans URL de fichier : le CLI lit lui-même le presse-papiers macOS. Brume ne crée aucun fichier et ne modifie pas le presse-papiers. Vérifier aussi qu'un texte se colle normalement et qu'un fichier copié dans le Finder se colle toujours comme chemin.
+
+Cette prise en charge vise les CLI locaux qui utilisent Ctrl+V pour lire une image. Elle ne transfère pas les images à travers SSH et ne remplace pas les raccourcis personnalisés du CLI. Un transfert distant demanderait un protocole de presse-papiers binaire pris en charge par le CLI et le moteur ; revoir cette limite quand un assistant ciblé le proposera.
+
 ## Si macOS redemande des autorisations
 
 macOS lie les autorisations (Documents, Bureau...) à l'identifiant de l'app et à sa signature. Il les redemande si l'un des deux change : nouvel identifiant, ou build signé sans le certificat « Brume Dev ».

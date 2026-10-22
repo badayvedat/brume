@@ -19,7 +19,25 @@ final class BrumeTerminalView: TerminalView {
             default: break
             }
         }
+        if event.type == .keyDown,
+           window?.firstResponder === self,
+           event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command,
+           event.charactersIgnoringModifiers == "v",
+           TerminalClipboard.containsImage()
+        {
+            paste(nil)
+            return true
+        }
         return super.performKeyEquivalent(with: event)
+    }
+
+    override func paste(_ sender: Any?) {
+        if TerminalClipboard.containsImage() {
+            // CLI editors read the native clipboard on Ctrl+V, not bracketed paste.
+            sendKey(.v, modifiers: .ctrl)
+        } else {
+            super.paste(sender)
+        }
     }
 
     override func rightMouseDown(with event: NSEvent) {

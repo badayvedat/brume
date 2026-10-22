@@ -1,0 +1,11 @@
+--- a/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift
++++ b/Sources/GhosttyTerminal/Platform/AppKit/AppTerminalView+Input.swift
+@@ -128,7 +128,7 @@
+             _ = copySelectedTextToPasteboard()
+         }
+ 
+-        @IBAction func paste(_: Any?) {
++        @IBAction open func paste(_: Any?) {
+             if let text = NSPasteboard.general.string(forType: .string) {
+                 TerminalDebugLog.log(
+                     .input,
